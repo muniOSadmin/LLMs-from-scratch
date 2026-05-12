@@ -1,6 +1,29 @@
 # Reports
 reports/
 
+# ── pantocraft // — client data (NEVER commit) ───────────────────────────────
+pantocraft/clients/
+pantocraft/reports/
+**/*.enc
+**/.pantocraft_keystore
+
+# NY SHIELD Act: no PII in repo history
+**/client_data/
+**/bbl_records/
+
+# API keys and secrets (pantocraft)
+PANTOCRAFT_DEV_KEY
+tailscale_authkey*
+geoclient_api_key*
+dob_api_key*
+
+# CoreML exports (large binary)
+*.mlpackage/
+*.mlmodel
+
+# Simulation reports (may contain derived client data)
+iphone-llm/sim/reports/
+
 # Configs and keys
 .chainlit
 ch05/07_gpt_to_llama/config.json

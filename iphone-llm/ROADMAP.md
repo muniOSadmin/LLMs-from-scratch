@@ -1,203 +1,201 @@
-# MoswalkLLM — iPhone 17 Pro Roadmap
+# MoswalkLLM — iPhone 17 Pro Production Roadmap
+**Platform: moswalk | Target: production in 5 days**
 
-A mini causal LLM designed to run natively on iPhone 17 Pro (8 GB RAM, 2 TB storage)
-using the Apple Neural Engine (ANE) via CoreML.
+Skip pre-training entirely. Use Llama 3.2 1B (Apache 2.0) as the base weight donor,
+re-skin into MoswalkLLM's architecture, quantize, export to CoreML, and ship.
+Multi-agent swarm inference splits the model across N iPhones via Apple Multipeer
+Connectivity for near-zero latency at scale.
 
 ---
 
-## 1. Hardware Budget
+## Hardware Budget
 
 | Resource | Available | Reserved (OS + App) | LLM Budget |
 |---|---|---|---|
 | RAM | 8 GB | ~2.5 GB | **~5.5 GB** |
-| Storage | 2 TB | — | Multiple model tiers |
+| Storage | 2 TB | — | All model tiers |
 | ANE | ~38 TOPS (A19 Pro) | — | primary compute |
-| GPU | 6-core Apple GPU | — | fallback / prefill |
+| GPU | 6-core Apple GPU | — | prefill / fallback |
+| P2P WiFi (swarm) | ~1 Gbps | — | inter-device activations |
 
-**RAM breakdown at inference (1.3B INT4 model):**
+**Runtime footprint (INT4, 1.1B, swarm-1 / single device):**
 
 | Component | Size |
 |---|---|
-| Model weights (INT4) | ~700 MB |
-| KV cache (4096 ctx, GQA) | ~256 MB |
+| Model weights INT4 | ~700 MB |
+| KV cache (GQA, 4096 ctx) | ~256 MB |
 | Activation buffers | ~128 MB |
-| CoreML runtime overhead | ~200 MB |
+| CoreML runtime | ~200 MB |
 | **Total** | **~1.3 GB** |
 
-Leaves 4.2 GB free for the iOS app, UI, and other processes. Very comfortable.
+---
+
+## 5-Day Sprint
+
+### Day 1 — Weight Acquisition + Architecture Alignment
+- [ ] Download `meta-llama/Llama-3.2-1B` (HuggingFace, Apache 2.0)
+- [ ] Map Llama 3.2 weights → `MoswalkLLM` state dict (`micro_model.py` is already compatible: RMSNorm, RoPE, GQA, SwiGLU)
+- [ ] Run `python micro_model.py` smoke test with transplanted weights
+- [ ] Validate perplexity on 500 WikiText-103 tokens (target < 12)
+
+**Weight mapping script:** `python convert_llama.py --hf-model meta-llama/Llama-3.2-1B --out weights/moswalk_1b_fp16.pt`
+
+### Day 2 — Quantization + Baseline Benchmark
+- [ ] INT4 group-wise PTQ via `micro_quantize.py` (group_size=128)
+- [ ] Measure PPL degradation (target: < 0.5 vs FP16)
+- [ ] Benchmark on M-series Mac (proxy for A19 Pro ANE)
+- [ ] Export CoreML FP16 baseline via `micro_export.py`
+
+### Day 3 — CoreML INT4 + Swarm Sharding
+- [ ] Apply CoreML INT4 palettization → `MoswalkLLM.mlpackage` (~700 MB)
+- [ ] Profile on-device: latency, peak RAM, thermal (Instruments)
+- [ ] Partition model into swarm shards: `python swarm_inference.py --build-shards --n-agents 4`
+- [ ] Export per-shard `.mlpackage` files for pipeline-parallel deployment
+
+### Day 4 — iOS App + Swarm Integration
+- [ ] Integrate `MoswalkLLM.mlpackage` into Xcode project
+- [ ] Wire Swift `MicroInference` wrapper (streaming `AsyncStream<String>`)
+- [ ] Implement `SwarmSession` (Multipeer Connectivity coordinator + workers)
+- [ ] Test single-device generation: target > 80 tok/s
+- [ ] Test 4-device swarm: target > 200 tok/s combined throughput
+
+### Day 5 — Production Hardening + Ship
+- [ ] Stress test: 1 000 generations, measure p95 latency
+- [ ] Thermal throttle detection + graceful degradation (drop to single-device)
+- [ ] TestFlight build + internal QA
+- [ ] App Store submission
 
 ---
 
-## 2. Target Specs
+## Swarm Inference Architecture
 
-| Property | Value |
-|---|---|
-| Parameters | **~1.1 B** |
-| Architecture | Decoder-only Transformer |
-| Attention | **Grouped-Query Attention (GQA)** — 16 Q heads / 4 KV heads |
-| Context | **4096 tokens** with **Sliding Window Attention (SWA)** (window=512) |
-| FFN | **SwiGLU** (gated linear unit) |
-| Normalization | **RMSNorm** (no bias, faster on ANE) |
-| Position encoding | **RoPE** (Rotary Position Embedding) |
-| Quantization | **INT4** (group-wise, group_size=128) for weights; FP16 activations |
-| Target throughput | **80–150 tokens/s** on ANE |
-| Vocab | 32 000 (BPE, tiktoken-compatible) |
+```
+┌─────────────────── moswalk Swarm ──────────────────────────────────┐
+│                                                                     │
+│   iPhone A (Coordinator)          iPhone B / C / D (Workers)       │
+│   ┌──────────────────────┐        ┌──────────────────────────┐     │
+│   │  Tokenizer           │        │  Layer Shard  (layers    │     │
+│   │  Embedding           │──act──▶│  6–11 / 12–17 / 18–23)  │     │
+│   │  Layers 0–5          │◀─act──│  GQA + SWA + SwiGLU      │     │
+│   │  LM Head + Sampler   │        │  Local KV cache          │     │
+│   └──────────────────────┘        └──────────────────────────┘     │
+│                                                                     │
+│   Transport: Apple Multipeer Connectivity (P2P WiFi, ~1 Gbps)      │
+│   Activation tensor per boundary: (1, 1, 2048) FP16 = 4 KB/token  │
+│   Round-trip overhead per token: < 1 ms on local P2P WiFi         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Two Swarm Modes
+
+**Mode A — Pipeline Parallel (multi-device, max throughput)**
+- Each device owns a contiguous range of transformer layers
+- Activations streamed token-by-token between devices
+- Throughput scales with number of devices (batch pipelining)
+- 4 devices × 6 layers each → ~3× throughput vs single device
+
+**Mode B — Speculative Decoding (single or dual device)**
+- **Draft agent**: MoswalkLLM-300M (4 layers, ~250 MB INT4) generates K=5 tokens speculatively
+- **Verify agent**: MoswalkLLM-1B validates all K tokens in one parallel forward pass
+- Accept/reject per token, resample on first rejection
+- Expected speedup: **3–4×** token throughput at same quality
+
+### Combined mode (4+ devices)
+```
+Device 1 (Coordinator): Draft model + layers 0-5  + verify head
+Device 2: Layers 6-11
+Device 3: Layers 12-17
+Device 4: Layers 18-23
+```
 
 ---
 
-## 3. Model Configuration
+## Performance Targets
+
+| Mode | Devices | Decode tok/s | First-token latency |
+|---|---|---|---|
+| Single device | 1 | > 80 | < 500 ms |
+| Speculative (single) | 1 | > 240 | < 500 ms |
+| Pipeline parallel | 2 | > 140 | < 600 ms |
+| Pipeline parallel | 4 | > 280 | < 800 ms |
+| Speculative + pipeline | 4 | > 400 | < 800 ms |
+
+---
+
+## Model Configuration
 
 ```python
 MICRO_1B_CONFIG = {
     "vocab_size":       32_000,
     "context_length":   4_096,
     "emb_dim":          2_048,
-    "n_heads":          16,       # query heads
-    "n_kv_heads":       4,        # key/value heads (GQA 4:1)
+    "n_heads":          16,        # query heads
+    "n_kv_heads":       4,         # GQA 4:1
     "n_layers":         24,
-    "ffn_hidden_dim":   5_504,    # SwiGLU: 8/3 * emb_dim, rounded to multiple of 64
-    "sliding_window":   512,      # SWA window size
-    "rope_theta":       10_000.0,
+    "ffn_hidden_dim":   5_504,     # SwiGLU
+    "sliding_window":   512,
+    "rope_theta":       500_000.0, # Llama 3.2 uses 500k
     "rms_norm_eps":     1e-5,
-    "drop_rate":        0.0,      # disabled at inference
+    "drop_rate":        0.0,
     "qkv_bias":         False,
+    "tie_embeddings":   True,
+}
+
+MICRO_DRAFT_CONFIG = {            # speculative draft model
+    **MICRO_1B_CONFIG,
+    "n_layers":         4,
+    "emb_dim":          1_024,
+    "n_heads":          8,
+    "n_kv_heads":       2,
+    "ffn_hidden_dim":   2_752,
 }
 ```
 
-**Parameter count breakdown:**
-
-| Component | Params |
-|---|---|
-| Token embedding | 65.5 M |
-| Per layer (× 24) | ~44 M |
-| — GQA (Q+K+V+out) | ~10.5 M |
-| — SwiGLU FFN (gate+up+down) | ~33.6 M |
-| — RMSNorm (×2) | ~8 K |
-| LM head (tied weights) | 0 (shared with embedding) |
-| **Total** | **~1.12 B** |
-
 ---
 
-## 4. Architecture Innovations (vs base GPT in this repo)
+## Architecture vs Base GPT
 
 | Feature | Base GPT (ch04) | MoswalkLLM |
 |---|---|---|
 | Attention | MHA | **GQA** (4× smaller KV cache) |
-| Context handling | Full attention | **SWA** (O(n·w) vs O(n²)) |
-| FFN activation | GELU | **SwiGLU** (~10% better perplexity) |
-| Normalization | LayerNorm | **RMSNorm** (no mean subtract, ANE-friendly) |
-| Position encoding | Learned absolute | **RoPE** (length generalisation) |
-| Tied embeddings | No | **Yes** (saves 65.5 M params) |
-| Quantization | FP32/FP16 | **INT4** group-wise |
+| Context | Full O(n²) | **SWA** window=512 |
+| FFN | GELU | **SwiGLU** |
+| Norm | LayerNorm | **RMSNorm** |
+| Position | Learned abs | **RoPE** (θ=500k) |
+| Inference | Single device | **Multi-agent swarm** |
+| Decoding | Autoregressive | **Speculative** (3–4× faster) |
 
 ---
 
-## 5. Training Roadmap
-
-### Phase 1 — Prototype (Weeks 1–4)
-- [ ] Implement `MoswalkLLM` architecture (`micro_model.py`)
-- [ ] Verify forward pass, parameter count, memory estimates
-- [ ] Train tiny smoke-test run on Shakespeare / OpenWebText subset
-- [ ] Validate INT4 quantization accuracy on toy model
-
-### Phase 2 — Pre-training (Weeks 5–16)
-- [ ] Dataset: FineWeb-Edu (10B token subset, Apache 2.0)
-- [ ] Tokenizer: train BPE with vocab_size=32 000 using `tiktoken` or `sentencepiece`
-- [ ] Training hardware: 4× A100 80 GB (or equivalent cloud)
-- [ ] Batch size: 2M tokens (gradient accumulation)
-- [ ] Learning rate: cosine decay, peak 3e-4, warmup 2 000 steps
-- [ ] Total tokens: ~100 B (Chinchilla-optimal for 1.1 B params)
-- [ ] Mixed precision: BF16
-
-### Phase 3 — Post-training (Weeks 17–20)
-- [ ] Supervised fine-tuning (SFT) on instruction dataset (e.g. Alpaca-cleaned)
-- [ ] Direct Preference Optimization (DPO) — lighter than RLHF, no reward model needed
-- [ ] System prompt compression: short, fixed prefix cached on-device
-
-### Phase 4 — Quantization & Export (Weeks 21–24)
-- [ ] Apply INT4 group-wise quantization (`micro_quantize.py`)
-- [ ] Measure perplexity degradation (target: < 0.5 PPL increase vs FP16)
-- [ ] Export to CoreML via `coremltools` (`micro_export.py`)
-- [ ] Profile on device: latency, memory, thermal
-- [ ] Optimize for ANE: fuse ops, static shapes, `ct.ComputeUnit.ALL`
-
-### Phase 5 — iOS Integration (Weeks 25–28)
-- [ ] Package model as `.mlpackage`
-- [ ] Build Swift inference wrapper (streaming tokens via `AsyncStream`)
-- [ ] KV cache management in Swift (pre-allocate, ring-buffer for SWA)
-- [ ] Implement on-device tokenizer (Swift port of BPE)
-- [ ] UI: streaming chat interface
-
----
-
-## 6. Quantization Strategy
-
-```
-FP16 weights  →  INT4 group-wise (group_size=128)
-                 ├── scale per group (FP16)
-                 └── zero_point per group (INT4)
-
-Activations: FP16 throughout (ANE handles FP16 natively)
-KV cache:    FP16 (quality-sensitive; can downgrade to INT8 if needed)
-```
-
-Expected model sizes:
-
-| Precision | Size on disk | RAM at inference |
-|---|---|---|
-| FP32 | 4.5 GB | 4.5 GB |
-| FP16 | 2.2 GB | 2.2 GB |
-| INT8 | 1.1 GB | ~1.5 GB |
-| **INT4** | **~700 MB** | **~1.3 GB** |
-
-2 TB storage easily holds all tiers simultaneously for A/B testing.
-
----
-
-## 7. Performance Targets
-
-| Metric | Target | Notes |
-|---|---|---|
-| Prefill speed | > 500 tok/s | GPU-accelerated prompt processing |
-| Decode speed | > 80 tok/s | ANE token-by-token generation |
-| First-token latency | < 500 ms | for 256-token prompt |
-| RAM at runtime | < 2 GB | leaves headroom for iOS |
-| Model load time | < 3 s | from 2 TB NVMe |
-| Perplexity (WikiText-103) | < 15 | quality bar |
-
----
-
-## 8. File Structure
+## File Structure
 
 ```
 iphone-llm/
-├── ROADMAP.md           ← this file
-├── micro_config.py      ← model hyperparameters
-├── micro_model.py       ← full model implementation (GQA + SWA + SwiGLU + RMSNorm + RoPE)
-├── micro_quantize.py    ← INT4 group-wise quantization
-├── micro_export.py      ← CoreML export via coremltools
-└── micro_train.py       ← training loop (extends ch05 patterns)
+├── ROADMAP.md
+├── micro_config.py          ← model configs (1B + draft)
+├── micro_model.py           ← MoswalkLLM (GQA+SWA+SwiGLU+RMSNorm+RoPE)
+├── micro_quantize.py        ← INT4 group-wise PTQ
+├── micro_export.py          ← CoreML .mlpackage export
+├── convert_llama.py         ← Llama 3.2 → MoswalkLLM weight map (Day 1)
+├── swarm_config.py          ← swarm topology + shard assignments
+├── swarm_worker.py          ← worker agent (owns layer shard + local KV)
+├── swarm_coordinator.py     ← orchestrator (tokenizer + draft + sampler)
+└── swarm_inference.py       ← unified engine (local sim + distributed)
 ```
 
 ---
 
-## 9. Key Dependencies
+## Key Dependencies
 
 ```
 torch>=2.3
-coremltools>=8.0        # CoreML export
-sentencepiece           # tokenizer training
-datasets                # HuggingFace data loading
-bitsandbytes            # INT4 quantization (training)
+transformers>=4.45    # weight download + conversion
+coremltools>=8.0      # CoreML export
+sentencepiece         # tokenizer
 ```
 
----
-
-## 10. References
-
-- GQA: `ch04/04_gqa/gpt_with_kv_gqa.py` (this repo)
-- SWA: `ch04/06_swa/gpt_with_kv_swa.py` (this repo)
-- MoE: `ch04/07_moe/gpt_with_kv_moe.py` (this repo, optional upgrade path)
-- RoPE: Appendix D / Llama 3 reference (`pkg/llms_from_scratch/llama3.py`)
-- CoreML docs: https://coremltools.readme.io
-- FineWeb-Edu: HuggingFace `HuggingFaceFW/fineweb-edu`
+iOS (Swift):
+```
+MultipeerConnectivity  # P2P swarm transport (built into iOS)
+CoreML                 # model inference (built into iOS)
+```

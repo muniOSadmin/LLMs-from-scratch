@@ -1,4 +1,4 @@
-# CoreML export for MincoLLM — targets Apple Neural Engine on iPhone 17 Pro.
+# CoreML export for MoswalkLLM — targets Apple Neural Engine on iPhone 17 Pro.
 #
 # Requires: coremltools >= 8.0  (pip install coremltools)
 #
@@ -14,15 +14,15 @@ import torch
 import torch.nn as nn
 
 sys.path.insert(0, os.path.dirname(__file__))
-from minco_model import MincoLLM
-from minco_config import MINCO_1B_CONFIG
+from micro_model import MoswalkLLM
+from micro_config import MICRO_1B_CONFIG
 
 
 # ---------------------------------------------------------------------------
 # Wrapper that exposes a static-shape interface for CoreML tracing
 # ---------------------------------------------------------------------------
 
-class MincoForCoreML(nn.Module):
+class MicroForCoreML(nn.Module):
     """
     Single-token decode step with a pre-filled KV cache.
 
@@ -37,7 +37,7 @@ class MincoForCoreML(nn.Module):
       - v_cache_out  : updated cache
     """
 
-    def __init__(self, model: MincoLLM, cache_len: int = 512):
+    def __init__(self, model: MoswalkLLM, cache_len: int = 512):
         super().__init__()
         self.model = model
         self.cache_len = cache_len
@@ -95,13 +95,13 @@ class MincoForCoreML(nn.Module):
 # ---------------------------------------------------------------------------
 
 def export_coreml(
-    model: MincoLLM,
-    output_path: str = "MincoLLM.mlpackage",
+    model: MoswalkLLM,
+    output_path: str = "MoswalkLLM.mlpackage",
     cache_len: int = 512,
     use_int4_palettization: bool = True,
 ):
     """
-    Export MincoLLM to a CoreML .mlpackage with ANE optimization.
+    Export MoswalkLLM to a CoreML .mlpackage with ANE optimization.
 
     Steps performed:
       1. Wrap model for static-shape CoreML interface
@@ -111,7 +111,7 @@ def export_coreml(
       5. Save .mlpackage
 
     Args:
-        model: Trained MincoLLM in eval mode.
+        model: Trained MoswalkLLM in eval mode.
         output_path: Destination path for the .mlpackage bundle.
         cache_len: Rolling KV cache length (must match SWA window or longer).
         use_int4_palettization: Apply CoreML INT4 weight compression.
@@ -130,7 +130,7 @@ def export_coreml(
         )
 
     model.eval()
-    wrapper = MincoForCoreML(model, cache_len=cache_len)
+    wrapper = MicroForCoreML(model, cache_len=cache_len)
     wrapper.eval()
 
     cfg = model.cfg
@@ -191,18 +191,18 @@ def export_coreml(
 # ---------------------------------------------------------------------------
 
 SWIFT_INFERENCE_TEMPLATE = '''
-// MincoInference.swift — streaming token generation using the exported .mlpackage
+// MicroInference.swift — streaming token generation using the exported .mlpackage
 //
 // Usage:
-//   let minco = try MincoInference(modelURL: Bundle.main.url(forResource: "MincoLLM", withExtension: "mlpackage")!)
-//   for await token in minco.generate(prompt: "Hello, world!", maxTokens: 256) {
+//   let micro = try MicroInference(modelURL: Bundle.main.url(forResource: "MoswalkLLM", withExtension: "mlpackage")!)
+//   for await token in micro.generate(prompt: "Hello, world!", maxTokens: 256) {
 //       print(token, terminator: "")
 //   }
 
 import CoreML
 import Foundation
 
-final class MincoInference {
+final class MicroInference {
     private let model: MLModel
     private let cacheLen = 512
     private let nLayers  = {n_layers}
@@ -271,15 +271,15 @@ def print_swift_template(cfg: dict):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Export MincoLLM to CoreML")
+    parser = argparse.ArgumentParser(description="Export MoswalkLLM to CoreML")
     parser.add_argument("--weights", type=str, default=None, help="Path to .pt checkpoint")
-    parser.add_argument("--output",  type=str, default="MincoLLM.mlpackage")
+    parser.add_argument("--output",  type=str, default="MoswalkLLM.mlpackage")
     parser.add_argument("--cache-len", type=int, default=512)
     parser.add_argument("--no-int4", action="store_true")
     parser.add_argument("--swift",   action="store_true", help="Print Swift inference template")
     args = parser.parse_args()
 
-    model = MincoLLM(MINCO_1B_CONFIG)
+    model = MoswalkLLM(MICRO_1B_CONFIG)
     if args.weights:
         state = torch.load(args.weights, map_location="cpu")
         model.load_state_dict(state)
@@ -288,7 +288,7 @@ if __name__ == "__main__":
         print("No weights provided — using random init (for export structure testing only)")
 
     if args.swift:
-        print_swift_template(MINCO_1B_CONFIG)
+        print_swift_template(MICRO_1B_CONFIG)
     else:
         export_coreml(
             model,

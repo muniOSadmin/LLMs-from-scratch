@@ -1,4 +1,4 @@
-# MincoLLM — ~1.1B parameter causal LM for iPhone 17 Pro (ANE / CoreML)
+# MoswalkLLM — ~1.1B parameter causal LM for iPhone 17 Pro (ANE / CoreML)
 #
 # Architecture: GQA + SWA + SwiGLU + RMSNorm + RoPE + tied embeddings
 # Designed to export cleanly to CoreML (static shapes, no dynamic control flow).
@@ -7,7 +7,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from minco_config import MINCO_1B_CONFIG
+from micro_config import MICRO_1B_CONFIG
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ def apply_rope(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
 # Grouped-Query Attention with SWA and KV cache
 # ---------------------------------------------------------------------------
 
-class MincoAttention(nn.Module):
+class MicroAttention(nn.Module):
     def __init__(self, cfg: dict):
         super().__init__()
         self.n_heads     = cfg["n_heads"]
@@ -154,11 +154,11 @@ class SwiGLU(nn.Module):
 # Transformer Block
 # ---------------------------------------------------------------------------
 
-class MincoBlock(nn.Module):
+class MicroBlock(nn.Module):
     def __init__(self, cfg: dict):
         super().__init__()
         self.norm1 = RMSNorm(cfg["emb_dim"], cfg["rms_norm_eps"])
-        self.attn  = MincoAttention(cfg)
+        self.attn  = MicroAttention(cfg)
         self.norm2 = RMSNorm(cfg["emb_dim"], cfg["rms_norm_eps"])
         self.ffn   = SwiGLU(cfg["emb_dim"], cfg["ffn_hidden_dim"])
 
@@ -169,15 +169,15 @@ class MincoBlock(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# Full MincoLLM
+# Full MoswalkLLM
 # ---------------------------------------------------------------------------
 
-class MincoLLM(nn.Module):
+class MoswalkLLM(nn.Module):
     def __init__(self, cfg: dict):
         super().__init__()
         self.cfg = cfg
         self.tok_emb = nn.Embedding(cfg["vocab_size"], cfg["emb_dim"])
-        self.blocks  = nn.ModuleList([MincoBlock(cfg) for _ in range(cfg["n_layers"])])
+        self.blocks  = nn.ModuleList([MicroBlock(cfg) for _ in range(cfg["n_layers"])])
         self.norm    = RMSNorm(cfg["emb_dim"], cfg["rms_norm_eps"])
         self.lm_head = nn.Linear(cfg["emb_dim"], cfg["vocab_size"], bias=False)
 
@@ -250,18 +250,18 @@ def count_params(model: nn.Module) -> str:
 
 
 if __name__ == "__main__":
-    from minco_config import MINCO_TINY_CONFIG, MINCO_1B_CONFIG
+    from micro_config import MICRO_TINY_CONFIG, MICRO_1B_CONFIG
 
     print("=== Tiny smoke test ===")
-    model = MincoLLM(MINCO_TINY_CONFIG)
-    x = torch.randint(0, MINCO_TINY_CONFIG["vocab_size"], (2, 16))
+    model = MoswalkLLM(MICRO_TINY_CONFIG)
+    x = torch.randint(0, MICRO_TINY_CONFIG["vocab_size"], (2, 16))
     logits = model(x)
-    assert logits.shape == (2, 16, MINCO_TINY_CONFIG["vocab_size"])
+    assert logits.shape == (2, 16, MICRO_TINY_CONFIG["vocab_size"])
     print(f"Forward pass OK | params: {count_params(model)}")
 
     print("\n=== 1B config param count ===")
-    model_1b = MincoLLM(MINCO_1B_CONFIG)
-    print(f"MincoLLM 1B params: {count_params(model_1b)}")
+    model_1b = MoswalkLLM(MICRO_1B_CONFIG)
+    print(f"MoswalkLLM 1B params: {count_params(model_1b)}")
     fp16_gb = sum(p.numel() for p in model_1b.parameters()) * 2 / 1e9
     int4_gb = fp16_gb / 4
     print(f"FP16 size: {fp16_gb:.2f} GB")

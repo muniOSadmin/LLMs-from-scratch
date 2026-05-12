@@ -1,6 +1,6 @@
-# MincoLLM configuration — tuned for iPhone 17 Pro (8 GB RAM, ANE)
+# MoswalkLLM configuration — tuned for iPhone 17 Pro (8 GB RAM, ANE)
 
-MINCO_1B_CONFIG = {
+MICRO_1B_CONFIG = {
     "vocab_size":       32_000,
     "context_length":   4_096,
     "emb_dim":          2_048,
@@ -17,7 +17,7 @@ MINCO_1B_CONFIG = {
 }
 
 # Smoke-test config (fits on a laptop CPU for development)
-MINCO_TINY_CONFIG = {
+MICRO_TINY_CONFIG = {
     "vocab_size":       4_096,
     "context_length":   512,
     "emb_dim":          256,

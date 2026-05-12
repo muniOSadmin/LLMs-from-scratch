@@ -1,4 +1,4 @@
-# MincoLLM — iPhone 17 Pro Roadmap
+# MoswalkLLM — iPhone 17 Pro Roadmap
 
 A mini causal LLM designed to run natively on iPhone 17 Pro (8 GB RAM, 2 TB storage)
 using the Apple Neural Engine (ANE) via CoreML.
@@ -48,7 +48,7 @@ Leaves 4.2 GB free for the iOS app, UI, and other processes. Very comfortable.
 ## 3. Model Configuration
 
 ```python
-MINCO_1B_CONFIG = {
+MICRO_1B_CONFIG = {
     "vocab_size":       32_000,
     "context_length":   4_096,
     "emb_dim":          2_048,
@@ -80,7 +80,7 @@ MINCO_1B_CONFIG = {
 
 ## 4. Architecture Innovations (vs base GPT in this repo)
 
-| Feature | Base GPT (ch04) | MincoLLM |
+| Feature | Base GPT (ch04) | MoswalkLLM |
 |---|---|---|
 | Attention | MHA | **GQA** (4× smaller KV cache) |
 | Context handling | Full attention | **SWA** (O(n·w) vs O(n²)) |
@@ -95,7 +95,7 @@ MINCO_1B_CONFIG = {
 ## 5. Training Roadmap
 
 ### Phase 1 — Prototype (Weeks 1–4)
-- [ ] Implement `MincoLLM` architecture (`minco_model.py`)
+- [ ] Implement `MoswalkLLM` architecture (`micro_model.py`)
 - [ ] Verify forward pass, parameter count, memory estimates
 - [ ] Train tiny smoke-test run on Shakespeare / OpenWebText subset
 - [ ] Validate INT4 quantization accuracy on toy model
@@ -115,9 +115,9 @@ MINCO_1B_CONFIG = {
 - [ ] System prompt compression: short, fixed prefix cached on-device
 
 ### Phase 4 — Quantization & Export (Weeks 21–24)
-- [ ] Apply INT4 group-wise quantization (`minco_quantize.py`)
+- [ ] Apply INT4 group-wise quantization (`micro_quantize.py`)
 - [ ] Measure perplexity degradation (target: < 0.5 PPL increase vs FP16)
-- [ ] Export to CoreML via `coremltools` (`minco_export.py`)
+- [ ] Export to CoreML via `coremltools` (`micro_export.py`)
 - [ ] Profile on device: latency, memory, thermal
 - [ ] Optimize for ANE: fuse ops, static shapes, `ct.ComputeUnit.ALL`
 
@@ -172,11 +172,11 @@ Expected model sizes:
 ```
 iphone-llm/
 ├── ROADMAP.md           ← this file
-├── minco_config.py      ← model hyperparameters
-├── minco_model.py       ← full model implementation (GQA + SWA + SwiGLU + RMSNorm + RoPE)
-├── minco_quantize.py    ← INT4 group-wise quantization
-├── minco_export.py      ← CoreML export via coremltools
-└── minco_train.py       ← training loop (extends ch05 patterns)
+├── micro_config.py      ← model hyperparameters
+├── micro_model.py       ← full model implementation (GQA + SWA + SwiGLU + RMSNorm + RoPE)
+├── micro_quantize.py    ← INT4 group-wise quantization
+├── micro_export.py      ← CoreML export via coremltools
+└── micro_train.py       ← training loop (extends ch05 patterns)
 ```
 
 ---

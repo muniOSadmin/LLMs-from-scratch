@@ -1,4 +1,4 @@
-# INT4 group-wise post-training quantization for MincoLLM.
+# INT4 group-wise post-training quantization for MoswalkLLM.
 #
 # Strategy:
 #   - Weights: INT4, group_size=128 (one scale + zero_point per group)
@@ -216,8 +216,8 @@ def quantized_size_bytes(model: nn.Module) -> int:
 if __name__ == "__main__":
     import sys
     sys.path.insert(0, ".")
-    from minco_model import MincoLLM, count_params
-    from minco_config import MINCO_TINY_CONFIG
+    from micro_model import MoswalkLLM, count_params
+    from micro_config import MICRO_TINY_CONFIG
 
     print("=== Quantization smoke test ===")
     cfg = QuantConfig(group_size=64, bits=4)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     print(f"Round-trip mean abs error: {err.mean():.6f} (max: {err.max():.6f})")
 
     # Full model quantization
-    model = MincoLLM(MINCO_TINY_CONFIG)
+    model = MoswalkLLM(MICRO_TINY_CONFIG)
     print(f"\nBefore quantization: {count_params(model)} params")
     fp16_bytes = sum(p.numel() * 2 for p in model.parameters())
     print(f"FP16 size: {fp16_bytes / 1e6:.1f} MB")
@@ -241,7 +241,7 @@ if __name__ == "__main__":
     print(f"INT4 size: {q_bytes / 1e6:.1f} MB  ({fp16_bytes / q_bytes:.1f}× compression)")
 
     # Verify forward pass still works
-    x = torch.randint(0, MINCO_TINY_CONFIG["vocab_size"], (1, 8))
+    x = torch.randint(0, MICRO_TINY_CONFIG["vocab_size"], (1, 8))
     out = model(x)
-    assert out.shape == (1, 8, MINCO_TINY_CONFIG["vocab_size"])
+    assert out.shape == (1, 8, MICRO_TINY_CONFIG["vocab_size"])
     print("Quantized forward pass OK")

@@ -37,6 +37,17 @@ for p in [str(_KERNEL), str(_PANTOCRAFT)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
+# moswalk-kernel: lazy imports for graceful degradation when kernel not on path
+try:
+    from property.trigger_scanner import scan as _trigger_scan, from_pluto_row as _from_pluto_row
+    from agencies.agency_navigator import AgencyNavigator as _AgencyNavigator
+    from agencies.educational import explain_pathway as _explain_pathway
+    _KERNEL_AVAILABLE = True
+    _navigator = _AgencyNavigator()
+except ImportError:
+    _KERNEL_AVAILABLE = False
+    _navigator = None
+
 
 @dataclass
 class ConsultResult:
@@ -70,7 +81,7 @@ class ConsultResult:
     # Timing
     query_ms: float = 0.0
 
-    def display_summary(self) -> str:
+    def display_summary(self, educational: bool = True) -> str:
         lines = [
             f"pantocraft // Field Consultation",
             f"BBL: {self.bbl}  |  {self.address}",
@@ -79,8 +90,11 @@ class ConsultResult:
             f"Agency pathway ({len(self.agency_pathway)} agencies):",
         ]
         for s in self.agency_pathway:
+            cond_tag = " [triggered]" if s.get("is_conditional") else ""
+            seq = ", ".join(s.get("sequential_after", [])) or "—"
             lines.append(
-                f"  {s.get('status','?'):<8} {s.get('code','?'):<12} ~{s.get('estimated_days',0)}d"
+                f"  {s.get('status','READY'):<8} {s.get('code','?'):<12} "
+                f"~{s.get('estimated_days',0)}d  seq:{seq}{cond_tag}"
             )
         lines += [
             f"",
@@ -89,22 +103,31 @@ class ConsultResult:
         ]
         if self.optimization_tracks:
             lines.append(f"Tracks: {', '.join(self.optimization_tracks)}")
+        if self.stale_agencies:
+            lines.append(f"\n⚠ Stale data (confidence < 70%): {', '.join(self.stale_agencies)} — verify before relying.")
         if self.escalation_flags or self.pantocraft_flags:
             lines.append("\nFlags:")
             for f in self.escalation_flags + self.pantocraft_flags:
-                lines.append(f"  ⚑ {f[:100]}")
+                lines.append(f"  ⚑ {f[:120]}")
+        if educational and _KERNEL_AVAILABLE:
+            lines.append("\n── What each agency means ──")
+            lines.append(_explain_pathway(self.agency_pathway, verbose=False))
         lines.append(f"\n⚖  Information only. Licensed professional sign-off required.")
         return "\n".join(lines)
 
     def to_llm_context(self) -> str:
         """Compact context string for prepending to LLM generation prompt."""
         flags_str = "; ".join(self.escalation_flags[:3]) if self.escalation_flags else "none"
+        agency_seq = " → ".join(
+            s.get("code", "") + ("*" if s.get("blocking") else "")
+            for s in self.agency_pathway
+        )
         return (
             f"Property: {self.address} (BBL {self.bbl})\n"
             f"Project: {self.project_type}\n"
             f"Critical path: ~{self.critical_path_days}d standard / ~{self.optimized_days}d optimized\n"
             f"Key flags: {flags_str}\n"
-            f"Agencies: {', '.join(s.get('code','') for s in self.agency_pathway)}\n"
+            f"Agency sequence (* = blocking): {agency_seq}\n"
         )
 
 
@@ -156,8 +179,9 @@ class FieldAPI:
         property_flags = property_flags or {}
 
         if agency_steps is None:
-            # Stub: requires kernel property_trigger_scanner (pending implementation)
-            agency_steps = self._stub_pathway(dob_filing_type)
+            agency_steps = self._resolve_pathway(
+                dob_filing_type, property_flags, bbl
+            )
 
         # Compute kernel metrics
         blocking = [s for s in agency_steps if s.get("blocking")]
@@ -236,8 +260,41 @@ class FieldAPI:
             f"and risks for this project? What should the client do first?"
         )
 
-    def _stub_pathway(self, dob_filing_type: str) -> list[dict]:
-        """Minimal stub when kernel property_trigger_scanner is not yet implemented."""
+    def _resolve_pathway(
+        self,
+        dob_filing_type: str,
+        property_flags: dict,
+        bbl: str,
+    ) -> list[dict]:
+        """
+        Resolve the full agency pathway using moswalk-kernel when available,
+        falling back to a minimal DOB-only stub if kernel is not on path.
+        """
+        if not _KERNEL_AVAILABLE or _navigator is None:
+            return self._stub_pathway(dob_filing_type, bbl)
+
+        # Map DOB filing type to kernel pathway_type
+        filing_to_pathway = {
+            "NB":  "new_building",
+            "A1":  "alteration_type_1",
+            "A2":  "alteration_type_2",
+            "A3":  "alteration_type_3",
+            "TR6": "fisp_facade",
+            "PA":  "place_of_assembly",
+        }
+        pathway_type = filing_to_pathway.get(dob_filing_type.upper(), "alteration_type_2")
+
+        # Run trigger scanner on property flags
+        trigger_result = _trigger_scan(property_flags)
+
+        # Resolve full pathway from kernel
+        pathway = _navigator.resolve(pathway_type, trigger_result.conditions)
+
+        # Convert AgencyStep objects to plain dicts (FieldAPI expects dicts)
+        return [step.to_dict() for step in pathway.steps]
+
+    def _stub_pathway(self, dob_filing_type: str, bbl: str = "") -> list[dict]:
+        """Minimal DOB-only stub when moswalk-kernel is not available on this node."""
         return [{
             "code": "DOB",
             "role": "primary",
@@ -245,8 +302,12 @@ class FieldAPI:
             "blocking": True,
             "sequential_after": [],
             "estimated_days": 45,
-            "confidence": 0.90,
-            "notes": f"DOB {dob_filing_type} filing — full pathway requires property_trigger_scanner (pending).",
+            "confidence": 0.80,
+            "notes": (
+                f"DOB {dob_filing_type} filing. "
+                "moswalk-kernel not available on this node — install kernel for full pathway. "
+                f"BBL: {bbl}"
+            ),
         }]
 
 

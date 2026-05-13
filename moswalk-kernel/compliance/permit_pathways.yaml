@@ -200,7 +200,7 @@ pathways:
         notes: "Drawings required. Self-certification available for qualifying work types. Inspection required before sign-off."
 
     conditional_agencies:
-      - condition: "Landmark or historic district"
+      - condition: "Landmark building or within historic district"
         add_agency:
           code: "LPC"
           role: approval
@@ -337,7 +337,7 @@ pathways:
           typical_days: 21
           notes: "Alt-3 or electrical permit for canopy anchors and heaters/lighting."
 
-      - condition: "Historic district"
+      - condition: "Landmark building or within historic district"
         add_agency:
           code: "LPC"
           role: approval

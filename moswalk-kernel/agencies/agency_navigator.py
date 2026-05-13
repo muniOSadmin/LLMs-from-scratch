@@ -3,7 +3,7 @@ moswalk-kernel — agency_navigator
 
 Two-engine pathway resolver:
   Engine 1 — Canonical law: reads permit_pathways.yaml
-  Engine 2 — OTI org chart: reads iphone-llm/agencies.yaml
+  Engine 2 — OTI org chart: reads agencies/agencies.yaml (falls back to iphone-llm/agencies.yaml)
 
 Given a pathway_type + TriggerResult, returns an ordered list of agency steps
 sorted by topological dependency (sequential_after), with educational metadata
@@ -31,11 +31,18 @@ from typing import Optional
 
 import yaml
 
-# Path resolution: works from any cwd
-_KERNEL   = Path(__file__).parents[2]  # moswalk-kernel/
-_REPO     = _KERNEL.parent
+# Path resolution: anchored to __file__, works from any cwd.
+# parents[0] = moswalk-kernel/agencies/
+# parents[1] = moswalk-kernel/            ← kernel root
+# parents[2] = repo root (LLMs-from-scratch/)
+_KERNEL   = Path(__file__).parents[1]   # moswalk-kernel/
+_REPO     = _KERNEL.parent              # repo root
 _PATHWAYS = _KERNEL / "compliance" / "permit_pathways.yaml"
-_AGENCIES = _REPO / "iphone-llm" / "agencies.yaml"
+# agencies.yaml canonical location: moswalk-kernel/agencies/agencies.yaml (preferred)
+# fallback: iphone-llm/agencies.yaml (legacy — kept for backward compat with sim layer)
+_AGENCIES_PRIMARY  = _KERNEL / "agencies" / "agencies.yaml"
+_AGENCIES_FALLBACK = _REPO / "iphone-llm" / "agencies.yaml"
+_AGENCIES = _AGENCIES_PRIMARY if _AGENCIES_PRIMARY.exists() else _AGENCIES_FALLBACK
 
 
 # ---------------------------------------------------------------------------

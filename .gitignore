@@ -4,6 +4,8 @@ reports/
 # ── pantocraft // — client data (NEVER commit) ───────────────────────────────
 pantocraft/clients/
 pantocraft/reports/
+pantocraft/agentic/sessions/
+pantocraft/agentic/*.log
 **/*.enc
 **/.pantocraft_keystore
 

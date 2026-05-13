@@ -222,6 +222,26 @@ class FieldAPI:
             llm_prompt=llm_prompt,
             query_ms=round((time.perf_counter() - t0) * 1000, 2),
         )
+
+        # Private agentic log — no PII, no BBL-to-client linkage, no raw prompt
+        try:
+            from agentic.session_log import AgenticLog
+            _log = AgenticLog(engagement_id)
+            _log.query(
+                pathway_type=dob_filing_type,
+                conditions_count=len([s for s in agency_steps if s.get("is_conditional")]),
+                step_count=len(agency_steps),
+            )
+            if stale:
+                _log.warning(f"Stale agencies: {stale}", flags=[f"stale:{c}" for c in stale])
+            if escalation:
+                _log.decision("Escalation flags present", flags=["escalation"])
+            if tracks:
+                _log.decision(f"Optimization tracks applied: {tracks}", confidence=result.overall_confidence)
+            _log.flush()
+        except Exception:
+            pass  # logging must never break field queries
+
         return result
 
     def _escalation_flags(self, steps: list[dict], flags: dict) -> list[str]:

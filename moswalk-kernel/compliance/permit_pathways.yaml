@@ -71,6 +71,7 @@ pathways:
           blocking: true
           confidence: 0.95
           typical_days: 45
+          inject_before: ["DOB"]
           notes: "Certificate of Appropriateness required BEFORE DOB issues permits for any exterior work."
 
       - condition: "Flood zone AE or VE"
@@ -153,6 +154,7 @@ pathways:
           blocking: true
           confidence: 0.95
           typical_days: 45
+          inject_before: ["DOB"]
           notes: "Certificate of Appropriateness before DOB permits any exterior work."
 
       - condition: "Rent-stabilized building AND building-wide capital work"
@@ -208,6 +210,7 @@ pathways:
           blocking: true
           confidence: 0.95
           typical_days: 15
+          inject_before: ["DOB"]
           notes: "Exterior work visible from a public way requires LPC approval before DOB permit. Staff-level approval for minor work: 10-15 business days. Full Certificate of Appropriateness with hearing: 60-90 days."
 
       - condition: "Open violations"

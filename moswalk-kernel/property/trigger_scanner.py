@@ -240,8 +240,9 @@ def from_pluto_row(row: dict) -> dict:
     except (ValueError, TypeError):
         lot_area = 0
 
-    # PLUTO landmark field: "Y" = individual, "" = none; HistDist = district name
-    pluto_lm  = str(row.get("LandMarked", "")).strip().upper()
+    # PLUTO v25v4 landmark field: LandmkFlag "Y" = individual landmark;
+    # HistDist = historic district name. Earlier PLUTO versions used "LandMarked".
+    pluto_lm  = str(row.get("LandmkFlag", row.get("LandMarked", ""))).strip().upper()
     hist_dist = str(row.get("HistDist", "")).strip()
     is_lm     = (pluto_lm == "Y") or bool(hist_dist)
     lm_type   = None

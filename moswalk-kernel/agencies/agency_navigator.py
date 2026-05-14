@@ -275,6 +275,11 @@ class AgencyNavigator:
             steps.append(step)
 
         # ── Engine 1b: conditional agencies ────────────────────────────────
+        # inject_before: when a conditional agency must precede a base agency
+        # (e.g. LPC before DOB for landmark properties), collect those constraints
+        # and patch the target base agency's sequential_after after dedup.
+        inject_constraints: list[tuple[str, str]] = []  # (conditional_code, target_code)
+
         for conditional in pw.get("conditional_agencies", []):
             cond_str = conditional.get("condition", "")
             if _condition_matches(cond_str, conditions):
@@ -289,6 +294,8 @@ class AgencyNavigator:
                         f"{step.code} (conditional): confidence {step.confidence:.0%} — flag as stale."
                     )
                 steps.append(step)
+                for target in raw_agency.get("inject_before", []):
+                    inject_constraints.append((step.code, target))
 
         # ── Deduplication: keep highest-confidence copy of each agency code ─
         seen: dict[str, AgencyStep] = {}
@@ -296,6 +303,15 @@ class AgencyNavigator:
             if step.code not in seen or step.confidence > seen[step.code].confidence:
                 seen[step.code] = step
         steps = list(seen.values())
+
+        # ── Apply inject_before constraints ─────────────────────────────────
+        # For each (conditional_code → target_code) pair, add conditional_code
+        # to target's sequential_after so the topological sort places it first.
+        code_map = {s.code: s for s in steps}
+        for cond_code, target_code in inject_constraints:
+            target = code_map.get(target_code)
+            if target and cond_code not in target.sequential_after:
+                target.sequential_after = list(target.sequential_after) + [cond_code]
 
         # ── Engine 2: attach OTI org chart metadata ─────────────────────────
         for step in steps:

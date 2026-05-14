@@ -455,7 +455,11 @@ def archive_summary_toon(q: ArchiveQuery) -> str:
         docs = " | ".join(r.recommended_documentation[:4])
         lines.append(f"recommended_docs: {docs}")
     if r.archive_confidence < 0.5:
-        lines.append("next[] low sample size — archive signal is directional only")
+        lines.append("sea_state:uncharted — archive signal directional, not prescriptive. Navigate with live instrument reads.")
+    elif r.archive_confidence < 0.8:
+        lines.append("sea_state:variable — archive shows pattern but conditions may differ. Verify examiner posture.")
+    else:
+        lines.append("sea_state:charted — strong archive signal. Known passage with documented conditions.")
 
     return "\n".join(lines)
 

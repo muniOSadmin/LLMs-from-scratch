@@ -4,20 +4,36 @@
 # Based on: NYC Building Code 2022, NYC Zoning Resolution, agency rules
 # and DOB NOW filing requirements as of April 2026.
 #
-# Rules:
+# TWO CONFIDENCE AXES — these are different instruments, read together:
+#
+#   confidence (this file) = RULE CONFIDENCE — the chart
+#     Certainty of the legal requirement. Does not change with voyage conditions.
+#     1.0 = codified law — exact, no interpretation required
+#     0.9 = well-established practice — consistent, well-charted
+#     0.7 = common but variable — conditions affect interpretation
+#     <0.7 = stale bearing — verify before relying on this reading
+#
+#   confidence_score (pantocraft/archive/flywheel.py) = VOYAGE CONFIDENCE — the sea state
+#     How smooth is this particular passage: examiner history, DOB backlog,
+#     site conditions, property-specific complexity. Live signal from the archive.
+#     Formula: (examiner_approval_rate × filing_type_weight × (1/backlog_days))
+#              / complexity_index
+#
+#   The chart is exact. The ocean is live. A 1.0 rule sits in front of a voyage
+#   that may still be rough. The crew reads both instruments — neither alone
+#   is sufficient. Nothing is ever fully determined before departure.
+#
+# Other fields:
 #   - sequential_after: agencies that MUST resolve before this one begins
 #   - blocking: if unresolved, ALL downstream agencies halt
-#   - confidence: 1.0 = codified law; 0.9 = well-established practice;
-#                 0.7 = common but variable; <0.7 = flag as stale
 #   - self_cert: true if licensed professional can certify without plan exam
 #   - pre_filing_meeting: true if agency offers/requires pre-application meeting
 #   - enforcement_context: posture under which this rule was validated
-#       values: current-administration | pre-2026-administration |
-#               post-major-incident-tightening | <agency>-strict-period
-#       When posture shifts, entries tagged with prior context are NOT
-#       auto-invalidated — they are flagged for operator review.
+#       When posture shifts, entries tagged with prior context are flagged for
+#       operator review — not invalidated. The chart records what was known;
+#       the navigator decides what it means under current conditions.
 #
-# LEGAL SEQUENCING INVARIANT (codified law, confidence 1.0):
+# LEGAL SEQUENCING INVARIANT (rule_confidence 1.0):
 #   Buildings with a construction date BEFORE APRIL 1, 1987 require a DEP
 #   asbestos clearance document BEFORE the DOB work permit status can advance
 #   to "Ready for Submission." This invariant cannot be waived by self-cert.
@@ -26,7 +42,7 @@
 #   Trigger condition key: "pre-1987 construction"
 #
 # DO NOT encode professional strategy here — that belongs in pantocraft //
-# This file encodes only what is legally mandated or formally documented.
+# Strategy is how we navigate. This file is the chart.
 
 pathways:
 

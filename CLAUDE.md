@@ -119,7 +119,9 @@ moswalk-kernel/
 
 pantocraft/
 ├── agentic/session_log.py    ← private append-only JSONL log, chmod 600 ✓
-├── agentic/hep.py            ← HEP v1: tier 1/2/3, hard-stop list, SLA, write_hep ✓
+├── agentic/hep.py            ← HEP v1: Mode A/B/C, tier 1/2/3, hard-stop list, SLA ✓
+├── archive/flywheel.py       ← SQLite job archive: voyage_confidence, objection history ✓
+├── prompts/intake_pipeline.py ← 8 Claude API prompt templates (address→brief) ✓
 ├── field/mobile_api.py       ← FieldAPI, kernel wired, TOON output ✓
 ├── vault/MOSWALK.md          ← business constitution (read by every workflow) ✓
 ├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE ✓
@@ -157,7 +159,8 @@ tests/
 ## What NOT to do
 
 - Do not hardcode agency codes in Python — reference `agencies.yaml`
-- Do not assume `confidence=1.0` on any pattern — Local Laws change sequencing
+- Do not conflate rule_confidence (the chart) with voyage_confidence (the sea state)
+- Do not treat Mode C as a stop — it is the highest-attention navigation state; the operator sets the course
 - Do not assume agencies are parallel by default — check `sequential_after`
 - Do not train MicroLLM from scratch — transplant Llama 3.2 1B weights (Day 1)
 - Do not push sensitive data (property owner PII, client BBLs) to remote

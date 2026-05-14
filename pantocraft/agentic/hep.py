@@ -28,12 +28,24 @@ from typing import Optional
 
 class FilingMode(Enum):
     """
-    Blueprint Layer 4 / Step 4 — Mode A/B/C classification.
-    Applied before HEP tier assignment: Mode C always triggers HEP.
+    Blueprint Layer 4 / Step 4 — voyage confidence classification.
+
+    These are navigation states, not permission levels. The voyage always
+    proceeds — the mode determines who is on deck and what instruments
+    are active. Nothing is ever fully determined before departure.
+
+    MODE_A: charted waters — voyage confidence ≥ 0.80
+            Standard crew. Operator reviews before any submission.
+    MODE_B: variable conditions — 0.40 ≤ confidence < 0.80
+            Specialist navigator required. Operator and licensed professional together.
+    MODE_C: uncharted — confidence < 0.40
+            All hands. Operator takes the helm directly. HEP payload is the
+            instrument reading; the operator decides the course from here.
+            This is not a stop — it is the highest-attention state.
     """
-    MODE_A = "A"   # confidence ≥ 0.80 — full automation, human review before submission
-    MODE_B = "B"   # 0.40 ≤ confidence < 0.80 — specialist review required
-    MODE_C = "C"   # confidence < 0.40 — immediate escalation, no filing proceeds
+    MODE_A = "A"
+    MODE_B = "B"
+    MODE_C = "C"
 
 
 def classify_filing_mode(confidence: float) -> FilingMode:
@@ -247,7 +259,8 @@ def _default_detail(
     if trigger_type == HEPTriggerType.LANDMARK:
         return f"Property is landmarked or within a historic district. LPC Certificate of Appropriateness required before any filing."
     if trigger_type == HEPTriggerType.CONFIDENCE:
-        return f"Confidence {confidence:.0%} is below threshold. Conditions: {', '.join(conditions) or 'none'}."
+        conds = ', '.join(conditions) if conditions else 'none logged'
+        return f"Voyage confidence {confidence:.0%} — conditions flagged: {conds}. Operator navigates from here with full context."
     if trigger_type == HEPTriggerType.ERROR:
         return f"Action '{action}' encountered an auth/validation/policy error. Zero retries per policy."
     return f"Escalation triggered for '{action}'."
@@ -309,7 +322,7 @@ def hep_from_pathway_result(
 
     filing_mode = classify_filing_mode(confidence)
 
-    # Mode C — confidence < 0.40: immediate escalation regardless of other signals
+    # Mode C — voyage confidence < 0.40: uncharted conditions, all hands on deck
     if filing_mode == FilingMode.MODE_C:
         return build_hep(
             proposed_action=proposed_action,
@@ -322,7 +335,7 @@ def hep_from_pathway_result(
             conditions=conditions,
             affects_landmark=affects_landmark,
             trigger_type=HEPTriggerType.CONFIDENCE,
-            trigger_detail=f"Mode C: confidence {confidence:.0%} < 0.40 threshold. Filing must not proceed. Immediate operator escalation required.",
+            trigger_detail=f"Mode C: voyage confidence {confidence:.0%} — uncharted conditions. Operator takes the helm. HEP payload is the instrument reading; course is yours to set.",
         )
 
     # No escalation needed for clean Mode A, non-landmark pathways

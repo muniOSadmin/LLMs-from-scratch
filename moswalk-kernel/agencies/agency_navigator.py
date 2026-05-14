@@ -284,8 +284,8 @@ class AgencyNavigator:
             step = self._build_step(raw, is_conditional=False, triggered_by="")
             if step.confidence < 0.70:
                 warnings.append(
-                    f"{step.code}: confidence {step.confidence:.0%} — data may be stale. "
-                    "Verify before relying on this step."
+                    f"{step.code}: rule_confidence {step.confidence:.0%} — bearing may be stale. "
+                    "Verify current agency posture before filing. Voyage proceeds with caution."
                 )
             steps.append(step)
 
@@ -306,7 +306,7 @@ class AgencyNavigator:
                 )
                 if step.confidence < 0.70:
                     warnings.append(
-                        f"{step.code} (conditional): confidence {step.confidence:.0%} — flag as stale."
+                        f"{step.code} (conditional): rule_confidence {step.confidence:.0%} — verify current agency posture."
                     )
                 steps.append(step)
                 for target in raw_agency.get("inject_before", []):

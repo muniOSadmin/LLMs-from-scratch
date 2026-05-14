@@ -59,13 +59,13 @@ Keep the harness thin.**
 
 ---
 
-## Current phase: Day 3 of 5-day sprint
+## Current phase: Day 3 complete / Day 4 pending
 
 | Day | Focus | Status |
 |---|---|---|
-| 1 | Llama 3.2 1B weight transplant → MicroLLM | pending `convert_llama.py` |
-| 2 | INT4 quantization + perplexity validation | `micro_quantize.py` done |
-| 3 | CoreML export + swarm sharding | `micro_export.py` done; swarm in progress |
+| 1 | Llama 3.2 1B weight transplant → MicroLLM | `convert_llama.py` written ✓ — run blocked on HF token + local storage |
+| 2 | INT4 quantization + perplexity validation | `micro_quantize.py` done ✓ — run blocked on Day 1 weights |
+| 3 | CoreML export + swarm sharding | all code done ✓ — 31/31 smoke tests passing |
 | 4 | iOS app + swarm integration | pending |
 | 5 | Production hardening + TestFlight | pending |
 
@@ -76,15 +76,42 @@ Keep the harness thin.**
 ```
 iphone-llm/
 ├── ROADMAP.md           ← 5-day sprint + swarm architecture
-├── agencies.yaml        ← 139 active NYC orgs (deterministic foundation)
-├── micro_config.py      ← MICRO_1B_CONFIG + MICRO_DRAFT_CONFIG
-├── micro_model.py       ← MicroLLM (GQA+SWA+SwiGLU+RMSNorm+RoPE)
+├── agencies.yaml        ← 139 active NYC orgs (OTI, April 2026) — deterministic foundation
+├── convert_llama.py     ← Llama 3.2 1B HF → MoswalkLLM weight transplant (needs HF token)
+├── micro_config.py      ← 5 configs: MICRO_1B, MICRO_TINY, MICRO_DRAFT, LLAMA32_1B, LLAMA32_1B_COMPACT
+├── micro_model.py       ← MoswalkLLM (GQA+SWA+SwiGLU+RMSNorm+RoPE)
 ├── micro_quantize.py    ← INT4 group-wise PTQ + QuantizedLinear
 ├── micro_export.py      ← CoreML .mlpackage + Swift inference template
 ├── swarm_config.py      ← SwarmConfig, ShardConfig, 4 topology factories
 ├── swarm_worker.py      ← SwarmWorker, LocalTransport, TcpTransport
-├── swarm_coordinator.py ← IN PROGRESS
-└── swarm_inference.py   ← PENDING
+├── swarm_coordinator.py ← pipeline + speculative decoding orchestrator ✓
+├── swarm_inference.py   ← unified entry point: from_checkpoint, from_random, CLI ✓
+└── sim/                 ← 8 NYC client simulation scenarios
+
+moswalk-kernel/
+├── agencies/
+│   ├── agencies.yaml         ← primary copy (fallback: iphone-llm/agencies.yaml)
+│   ├── agency_navigator.py   ← two-engine resolver + inject_before ordering ✓
+│   └── educational.py        ← plain-text agency education (11 agencies) ✓
+├── compliance/
+│   └── permit_pathways.yaml  ← 8 pathway types, conditions normalized ✓
+└── property/
+    └── trigger_scanner.py    ← PLUTO v25v4 → TriggerResult (LandmkFlag fixed) ✓
+
+pantocraft/
+├── agentic/session_log.py    ← private append-only JSONL log, chmod 600 ✓
+├── field/mobile_api.py       ← FieldAPI, kernel wired (_KERNEL_AVAILABLE=True) ✓
+├── inference/pathway_optimizer.py
+└── intake/client_intake.py   ← encrypted client PII, NY SHIELD Act compliant ✓
+
+.claude/skills/               ← 4/4 complete ✓
+├── agency_pattern_navigator.md
+├── property_trigger_scanner.md
+├── t3_discovery.md
+└── premortem.md
+
+tests/
+└── test_smoke.py             ← 31/31 passing ✓
 ```
 
 ---
@@ -111,10 +138,18 @@ iphone-llm/
 
 ---
 
-## Next action for this session
+## Blocked on (external — no code action possible)
 
-Check `iphone-llm/swarm_coordinator.py` — implement the orchestrator with:
-1. Token embedding + first-shard layers inline
-2. Speculative decoding loop (draft model → verify model)
-3. Pipeline mode: feed activation to next worker via transport
-4. LM head + sampler on coordinator
+- **HuggingFace token + local storage**: needed to run `convert_llama.py` and
+  validate real weights. All downstream Day 1-2 items (quant, PPL, CoreML) unblock
+  once this is resolved.
+- **Mac with Xcode 16**: needed for CoreML `.mlpackage` export and on-device profiling.
+- **iPhone 17 Pro hardware**: needed for on-device latency / thermal tests.
+
+## Next session — Day 4
+
+SwiftUI iOS app scaffold:
+1. `iphone-llm/ios/MoswalkApp.swift` — BBL input, project type picker
+2. `iphone-llm/ios/MicroInference.swift` — CoreML wrapper (`AsyncStream<String>`)
+3. `iphone-llm/ios/SwarmSession.swift` — MultipeerConnectivity coordinator
+4. Wire `FieldAPI` → SwiftUI (Python ↔ Swift bridge or full Swift port)

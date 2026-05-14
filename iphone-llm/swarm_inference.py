@@ -34,9 +34,12 @@ _HERE = Path(__file__).parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
-from micro_config import LLAMA32_1B_CONFIG, LLAMA32_1B_COMPACT_CONFIG, MICRO_1B_CONFIG, MICRO_TINY_CONFIG
+from micro_config import (
+    LLAMA32_1B_CONFIG, LLAMA32_1B_COMPACT_CONFIG,
+    MICRO_1B_CONFIG, MICRO_DRAFT_CONFIG, MICRO_TINY_CONFIG,
+)
 from micro_model import MoswalkLLM
-from swarm_config import SwarmConfig, single_device_config, speculative_config
+from swarm_config import SwarmConfig, single_device_speculative, pipeline_2_device
 from swarm_coordinator import SwarmCoordinator
 
 
@@ -173,9 +176,9 @@ class MoswalkInference:
 
         # Build swarm config
         if topology == "speculative":
-            swarm_cfg = speculative_config(n_layers_verify=cfg["n_layers"])
+            swarm_cfg = single_device_speculative(cfg)
         else:
-            swarm_cfg = single_device_config(n_layers=cfg["n_layers"])
+            swarm_cfg = single_device_speculative(cfg)  # single: still use speculative topology in-process
 
         coordinator, _ = SwarmCoordinator.from_model(model, swarm_cfg)
         tokenizer = TokenizerShim(tokenizer_path)
@@ -190,18 +193,19 @@ class MoswalkInference:
     ) -> "MoswalkInference":
         """
         Smoke-test mode: random weights, no checkpoint required.
-        config_name: "tiny" | "micro_1b" | "llama32_1b" | "llama32_compact"
+        config_name: "tiny" | "draft" | "micro_1b" | "llama32_1b" | "llama32_compact"
         """
         cfg_map = {
-            "tiny":          MICRO_TINY_CONFIG,
-            "micro_1b":      MICRO_1B_CONFIG,
-            "llama32_1b":    LLAMA32_1B_CONFIG,
+            "tiny":            MICRO_TINY_CONFIG,
+            "draft":           MICRO_DRAFT_CONFIG,
+            "micro_1b":        MICRO_1B_CONFIG,
+            "llama32_1b":      LLAMA32_1B_CONFIG,
             "llama32_compact": LLAMA32_1B_COMPACT_CONFIG,
         }
         cfg = cfg_map.get(config_name, MICRO_TINY_CONFIG)
         model = MoswalkLLM(cfg).to(device)
         model.eval()
-        swarm_cfg = single_device_config(n_layers=cfg["n_layers"])
+        swarm_cfg = single_device_speculative(cfg)
         coordinator, _ = SwarmCoordinator.from_model(model, swarm_cfg)
         return cls(model, coordinator, TokenizerShim(), device)
 

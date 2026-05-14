@@ -33,35 +33,44 @@ Connectivity for near-zero latency at scale.
 ## 5-Day Sprint
 
 ### Day 1 — Weight Acquisition + Architecture Alignment
-- [ ] Download `meta-llama/Llama-3.2-1B` (HuggingFace, Apache 2.0)
-- [ ] Map Llama 3.2 weights → `MoswalkLLM` state dict (`micro_model.py` is already compatible: RMSNorm, RoPE, GQA, SwiGLU)
-- [ ] Run `python micro_model.py` smoke test with transplanted weights
+- [x] `convert_llama.py` written — shape-for-shape HF→MoswalkLLM weight map
+- [x] `LLAMA32_1B_CONFIG` and `LLAMA32_1B_COMPACT_CONFIG` added to `micro_config.py`
+- [x] `MICRO_DRAFT_CONFIG` added (speculative draft: 4 layers, emb=1024)
+- [ ] Download `meta-llama/Llama-3.2-1B` weights and run transplant (needs HF token)
 - [ ] Validate perplexity on 500 WikiText-103 tokens (target < 12)
 
-**Weight mapping script:** `python convert_llama.py --hf-model meta-llama/Llama-3.2-1B --out weights/moswalk_1b_fp16.pt`
+**Weight mapping script:** `python convert_llama.py --weights-dir /path/to/Llama-3.2-1B --out weights/moswalk_1b_fp16.pt`
+**Compact (32k vocab):** `python convert_llama.py --weights-dir /path/to/Llama-3.2-1B --out weights/moswalk_1b_compact_fp16.pt --compact`
 
 ### Day 2 — Quantization + Baseline Benchmark
-- [ ] INT4 group-wise PTQ via `micro_quantize.py` (group_size=128)
+- [x] `micro_quantize.py` written — INT4 group-wise PTQ (group_size=128, asymmetric)
+- [x] `micro_export.py` written — CoreML .mlpackage export with static KV cache
+- [ ] Run quantization on transplanted weights (blocked on Day 1 weights)
 - [ ] Measure PPL degradation (target: < 0.5 vs FP16)
 - [ ] Benchmark on M-series Mac (proxy for A19 Pro ANE)
-- [ ] Export CoreML FP16 baseline via `micro_export.py`
 
 ### Day 3 — CoreML INT4 + Swarm Sharding
-- [ ] Apply CoreML INT4 palettization → `MoswalkLLM.mlpackage` (~700 MB)
+- [x] `swarm_coordinator.py` — pipeline + speculative decoding orchestrator
+- [x] `swarm_worker.py` — layer-shard worker with LocalTransport / TcpTransport
+- [x] `swarm_config.py` — topology factories (single, speculative, pipeline, hybrid)
+- [x] `swarm_inference.py` — unified entry point (from_checkpoint, from_random, CLI)
+- [ ] CoreML INT4 palettization (blocked on Day 1 weights)
 - [ ] Profile on-device: latency, peak RAM, thermal (Instruments)
-- [ ] Partition model into swarm shards: `python swarm_inference.py --build-shards --n-agents 4`
-- [ ] Export per-shard `.mlpackage` files for pipeline-parallel deployment
+- [ ] Per-shard .mlpackage export (micro_export.py has full-model export; shard export pending)
 
 ### Day 4 — iOS App + Swarm Integration
-- [ ] Integrate `MoswalkLLM.mlpackage` into Xcode project
-- [ ] Wire Swift `MicroInference` wrapper (streaming `AsyncStream<String>`)
-- [ ] Implement `SwarmSession` (Multipeer Connectivity coordinator + workers)
+- [ ] SwiftUI app scaffold — BBL input, project type picker, ConsultResult display
+- [ ] Swift `MicroInference` wrapper for `MoswalkLLM.mlpackage` (streaming `AsyncStream<String>`)
+- [ ] `SwarmSession` — MultipeerConnectivity coordinator + workers
+  NOTE: TcpTransport (Python) is NOT App Store compatible — must use MultipeerConnectivity
+- [ ] Wire pantocraft // `FieldAPI` → SwiftUI via Python ↔ Swift bridge or port
 - [ ] Test single-device generation: target > 80 tok/s
 - [ ] Test 4-device swarm: target > 200 tok/s combined throughput
 
 ### Day 5 — Production Hardening + Ship
-- [ ] Stress test: 1 000 generations, measure p95 latency
+- [ ] Stress test: 1,000 generations, measure p95 latency
 - [ ] Thermal throttle detection + graceful degradation (drop to single-device)
+- [ ] moswalk-kernel publish to GitHub (Apache 2.0 — separate public repo)
 - [ ] TestFlight build + internal QA
 - [ ] App Store submission
 

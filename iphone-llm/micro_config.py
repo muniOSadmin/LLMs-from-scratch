@@ -54,6 +54,26 @@ LLAMA32_1B_COMPACT_CONFIG = {
     "tie_embeddings":   False,
 }
 
+# Speculative decoding draft model — fast, 4-layer, used by SwarmCoordinator.
+# Proposes k=5 tokens per step; verifier (LLAMA32_1B_COMPACT_CONFIG) validates
+# all k in one parallel pass. Expected 3–4× decode speedup at same quality.
+# ffn_hidden_dim: ceil(8/3 * 1024) = 2731 rounded up to nearest 64 = 2752.
+MICRO_DRAFT_CONFIG = {
+    "vocab_size":       32_000,
+    "context_length":   4_096,
+    "emb_dim":          1_024,
+    "n_heads":          8,
+    "n_kv_heads":       2,         # GQA: 2 KV heads shared across 8 Q heads
+    "n_layers":         4,
+    "ffn_hidden_dim":   2_752,
+    "sliding_window":   512,
+    "rope_theta":       500_000.0,
+    "rms_norm_eps":     1e-5,
+    "drop_rate":        0.0,
+    "qkv_bias":         False,
+    "tie_embeddings":   True,
+}
+
 # Smoke-test config (fits on a laptop CPU for development)
 MICRO_TINY_CONFIG = {
     "vocab_size":       4_096,

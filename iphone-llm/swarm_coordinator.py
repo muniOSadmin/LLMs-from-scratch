@@ -234,8 +234,8 @@ class SwarmCoordinator:
                 # Rejection: sample correction token and stop
                 correction_probs = (p - q).clamp(min=0)
                 correction_probs = correction_probs / correction_probs.sum()
-                correction = torch.multinomial(correction_probs, num_samples=1)
-                accepted.append(correction.unsqueeze(0))
+                correction = torch.multinomial(correction_probs, num_samples=1)  # (1, 1)
+                accepted.append(correction)
                 self.stats.draft_tokens += k
                 self.stats.accepted_tokens += len(accepted) - 1  # last is correction
                 return accepted, len(accepted)

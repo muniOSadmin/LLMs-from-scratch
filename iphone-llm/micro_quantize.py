@@ -215,7 +215,10 @@ def quantized_size_bytes(model: nn.Module) -> int:
 
 if __name__ == "__main__":
     import sys
-    sys.path.insert(0, ".")
+    from pathlib import Path as _Path
+    _dir = str(_Path(__file__).parent)
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
     from micro_model import MoswalkLLM, count_params
     from micro_config import MICRO_TINY_CONFIG
 

@@ -5,6 +5,7 @@ reports/
 pantocraft/clients/
 pantocraft/reports/
 pantocraft/agentic/sessions/
+pantocraft/agentic/escalations/
 pantocraft/agentic/*.log
 **/*.enc
 **/.pantocraft_keystore

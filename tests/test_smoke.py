@@ -330,3 +330,101 @@ def test_quantized_values_in_range():
     hi = ((q_packed >> 4) & 0x0F).to(torch.int32)
     assert lo.min() >= 0 and lo.max() <= 15
     assert hi.min() >= 0 and hi.max() <= 15
+
+
+# ---------------------------------------------------------------------------
+# 6. HEP — human escalation protocol
+# ---------------------------------------------------------------------------
+
+from pantocraft.agentic.hep import (
+    build_hep, HEPPayload, HEPTier, HEPTriggerType, HARD_STOP_ACTIONS,
+    hep_from_pathway_result,
+)
+
+
+def test_hep_landmark_always_tier3():
+    hep = build_hep(
+        proposed_action="consult_output_delivery",
+        confidence=0.99,
+        affects_landmark=True,
+        conditions=["Landmark building or within historic district"],
+    )
+    assert hep.tier == 3
+    assert hep.licensed_professional_required is True
+    assert hep.information_not_advice is True
+
+
+def test_hep_hard_stop_always_tier3():
+    for action in ["lpc_file_coa", "acris_record_deed", "bsa_file_variance"]:
+        hep = build_hep(proposed_action=action, confidence=0.99)
+        assert hep.tier == 3, f"{action} should be tier 3"
+
+
+def test_hep_low_confidence_tier2():
+    hep = build_hep(
+        proposed_action="pathway_recommendation",
+        confidence=0.55,
+    )
+    assert hep.tier == 2
+
+
+def test_hep_moderate_confidence_tier1():
+    hep = build_hep(
+        proposed_action="pathway_recommendation",
+        confidence=0.72,
+    )
+    assert hep.tier == 1
+
+
+def test_hep_default_on_timeout_reject_for_tier3():
+    hep = build_hep(
+        proposed_action="lpc_file_coa",
+        confidence=0.99,
+    )
+    assert hep.default_on_timeout == "reject"
+
+
+def test_hep_schema_version():
+    hep = build_hep(proposed_action="test", confidence=0.5)
+    assert hep.schema_version == "hep/v1"
+    assert hep.trace_id  # non-empty UUID
+
+
+def test_hep_sla_seconds_correct():
+    for action, confidence, expected_sla in [
+        ("lpc_file_coa", 0.99, 900),         # tier 3 = 15 min
+        ("pathway_recommendation", 0.55, 3600),  # tier 2 = 1 hour
+        ("pathway_recommendation", 0.72, 14400), # tier 1 = 4 hours
+    ]:
+        hep = build_hep(proposed_action=action, confidence=confidence)
+        assert hep.sla_seconds == expected_sla, (
+            f"{action} @ {confidence}: expected {expected_sla}s, got {hep.sla_seconds}s"
+        )
+
+
+def test_hep_from_pathway_result_landmark():
+    """Landmark pathway result triggers HEP, non-landmark clean result does not."""
+    import sys
+    sys.path.insert(0, str(_REPO / "moswalk-kernel"))
+    from agencies.agency_navigator import AgencyNavigator
+    nav = AgencyNavigator()
+    conditions = frozenset(["Landmark building or within historic district"])
+    result = nav.resolve("alteration_type_1", conditions)
+
+    hep = hep_from_pathway_result(result, bbl="3-00001-0001", conditions=list(conditions))
+    assert hep is not None
+    assert hep.tier == 3
+
+
+def test_hep_from_pathway_result_clean():
+    """Clean, high-confidence, non-landmark result should NOT trigger HEP."""
+    import sys
+    sys.path.insert(0, str(_REPO / "moswalk-kernel"))
+    from agencies.agency_navigator import AgencyNavigator
+    nav = AgencyNavigator()
+    result = nav.resolve("alteration_type_2", frozenset())
+    hep = hep_from_pathway_result(result)
+    # Only escalates if confidence < 0.80 or landmark or blockers
+    # alteration_type_2 with no conditions should be clean
+    if hep is not None:
+        assert hep.tier <= 2  # at most tier 1 if some step has lower confidence

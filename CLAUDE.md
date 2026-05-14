@@ -59,15 +59,34 @@ Keep the harness thin.**
 
 ---
 
-## Current phase: Day 3 complete / Day 4 pending
+## Current phase: Day 3 complete / Day 4 + Vault OS shipped
 
 | Day | Focus | Status |
 |---|---|---|
-| 1 | Llama 3.2 1B weight transplant → MicroLLM | `convert_llama.py` written ✓ — run blocked on HF token + local storage |
+| 1 | Llama 3.2 1B weight transplant → MicroLLM | `convert_llama.py` written ✓ — run blocked on HF token |
 | 2 | INT4 quantization + perplexity validation | `micro_quantize.py` done ✓ — run blocked on Day 1 weights |
-| 3 | CoreML export + swarm sharding | all code done ✓ — 31/31 smoke tests passing |
+| 3 | CoreML export + swarm sharding | all code done ✓ — 40/40 smoke tests passing |
+| 3+ | Vault OS (queue/pulse/constitution) | `queue_processor.py` + `pulse.py` + `MOSWALK.md` ✓ |
 | 4 | iOS app + swarm integration | pending |
 | 5 | Production hardening + TestFlight | pending |
+
+## Vault OS — how to use it
+
+Drop a file in `pantocraft/queue/` → run `python pantocraft/queue_processor.py` → output in `pantocraft/generated/`
+
+```
+CONSULT-3-00783-0001-A2.md    → full field consultation (bbl/address/flags in body)
+RESEARCH-adu-flood-zone.md    → regulatory research brief
+PREMORTEM-brooklyn-a1.md      → premortem analysis (project/scope/concerns in body)
+INTAKE-cyril-vault-os.md      → intelligence intake Q1–Q4 filter
+```
+
+Daily pulse (run on Inference node or manually):
+```
+python pantocraft/pulse.py    → reads session_log + HEP escalations → generated/briefings/
+```
+
+Update `pantocraft/vault/MOSWALK.md` → Active Engagements + Weekly Focus each session.
 
 ---
 
@@ -100,7 +119,13 @@ moswalk-kernel/
 
 pantocraft/
 ├── agentic/session_log.py    ← private append-only JSONL log, chmod 600 ✓
-├── field/mobile_api.py       ← FieldAPI, kernel wired (_KERNEL_AVAILABLE=True) ✓
+├── agentic/hep.py            ← HEP v1: tier 1/2/3, hard-stop list, SLA, write_hep ✓
+├── field/mobile_api.py       ← FieldAPI, kernel wired, TOON output ✓
+├── vault/MOSWALK.md          ← business constitution (read by every workflow) ✓
+├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE ✓
+├── pulse.py                  ← daily engagement pulse (session_log + HEP scan) ✓
+├── queue/                    ← drop request files here (gitignored contents)
+├── generated/                ← outputs land here (gitignored contents)
 ├── inference/pathway_optimizer.py
 └── intake/client_intake.py   ← encrypted client PII, NY SHIELD Act compliant ✓
 

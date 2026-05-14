@@ -7,6 +7,7 @@ pantocraft/reports/
 pantocraft/agentic/sessions/
 pantocraft/agentic/escalations/
 pantocraft/agentic/*.log
+pantocraft/archive/jobs.db
 
 # Vault OS: queue contents + generated outputs (may contain BBL/client context)
 # Directories tracked via .keep; contents gitignored

@@ -47,6 +47,8 @@ agencies:
   reports_to_dm: "Deputy Mayor for Operations"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "FDNY Business"
+  portal_url: "https://www.nyc.gov/site/fdny/business/permits-and-applications/permits-and-applications.page"
   principal_officer_title: "Commissioner"
   alt_names: ['Fire Department']
 
@@ -117,6 +119,8 @@ agencies:
   reports_to_dm: "Deputy Mayor for Operations"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "NYC Streets"
+  portal_url: "https://nycdot.intelligrants.com/"
   principal_officer_title: "Commissioner"
   alt_acronyms: ['DOT']
   alt_names: ['Department of Transportation']
@@ -143,6 +147,8 @@ agencies:
   reports_to_dm: "Deputy Mayor for Housing and Planning"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "LPC Portico"
+  portal_url: "https://lpcportico.nyc.gov/"
   principal_officer_title: "Executive Director"
 
 - code: "OATH"
@@ -242,6 +248,8 @@ agencies:
   reports_to_dm: "Deputy Mayor for Housing and Planning"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "ZoLa / PLUTO"
+  portal_url: "https://zola.planning.nyc.gov/"
   principal_officer_title: "Director"
 
 - code: "DVS"
@@ -356,6 +364,8 @@ agencies:
   type: "Advisory or Regulatory Organization"
   in_org_chart: false
   has_public_portal: true
+  portal_name: "BSA Online"
+  portal_url: "https://www1.nyc.gov/site/bsa/index.page"
   principal_officer_title: "Executive Director"
 
 - code: "NYCEM"
@@ -487,6 +497,8 @@ agencies:
   reports_to_dm: "Deputy Mayor for Housing and Planning"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "HPD Online"
+  portal_url: "https://hpdonline.nyc.gov/"
   principal_officer_title: "Commissioner"
   alt_names: ['Housing Preservation and Development']
 
@@ -561,6 +573,10 @@ agencies:
   reports_to_dm: "Deputy Mayor for Housing and Planning"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "DOB NOW"
+  portal_url: "https://dobnowasbuild.nyc.gov/"
+  portal_name_secondary: "BIS"
+  portal_url_secondary: "https://a810-bisweb.nyc.gov/bisweb/"
   principal_officer_title: "Commissioner"
 
 - code: "CB"
@@ -950,6 +966,8 @@ agencies:
   reports_to_dm: "First Deputy Mayor"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "ACRIS"
+  portal_url: "https://a836-acris.nyc.gov/"
   principal_officer_title: "Commissioner"
 
 - code: "Audit Committee"
@@ -1014,6 +1032,9 @@ agencies:
   reports_to_dm: "Deputy Mayor for Operations"
   in_org_chart: true
   has_public_portal: true
+  portal_name: "DEP eFiling / ARTS"
+  portal_url: "https://asbestosportal.cityofnewyork.us/"
+  portal_notes: "Asbestos clearance (ACP5/ACP21) filed here. Separate portal for sewer/water tap-in applications."
   principal_officer_title: "Commissioner"
 
 - code: "SCA"

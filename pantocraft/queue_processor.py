@@ -45,11 +45,17 @@ except ImportError:
     _FIELD_AVAILABLE = False
 
 try:
-    from agentic.hep import hep_from_pathway_result, write_hep
+    from agentic.hep import hep_from_pathway_result, write_hep, classify_filing_mode
     from agentic.session_log import AgenticLog
     _AGENTIC_AVAILABLE = True
 except ImportError:
     _AGENTIC_AVAILABLE = False
+
+try:
+    from archive.flywheel import JobRecord, write_job, archive_summary_toon, ArchiveQuery
+    _ARCHIVE_AVAILABLE = True
+except ImportError:
+    _ARCHIVE_AVAILABLE = False
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +140,13 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
 
     moswalk_ctx = _read_vault()
 
+    # --- Archive query (flywheel intelligence) ---
+    archive_signal = ""
+    if _ARCHIVE_AVAILABLE:
+        borough = _bbl_borough(bbl)
+        q = ArchiveQuery(bbl=bbl, borough=borough, filing_type=filing_type)
+        archive_signal = archive_summary_toon(q)
+
     # --- Kernel resolve ---
     out_lines: list[str] = [
         f"# Consultation — {bbl}",
@@ -141,6 +154,9 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
         f"Project: {project}  |  Filing: {filing_type}",
         "",
     ]
+
+    if archive_signal:
+        out_lines += ["## Archive Signal", "```", archive_signal, "```", ""]
 
     if _FIELD_AVAILABLE:
         try:
@@ -189,6 +205,34 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
     out_path = _GENERATED / "consultations" / f"{date_str}-{_slug(bbl)}-{filing_type.lower()}.md"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(out_lines), encoding="utf-8")
+
+    # --- Seed flywheel archive (stub record — operator updates outcome/lessons) ---
+    if _ARCHIVE_AVAILABLE:
+        try:
+            # Parse borough from bbl
+            borough = _bbl_borough(bbl)
+            # Derive block/lot from BBL if formatted as B-BBBBB-LLLL
+            parts_bbl = bbl.replace(" ", "-").split("-")
+            block = parts_bbl[1] if len(parts_bbl) > 1 else ""
+            lot   = parts_bbl[2] if len(parts_bbl) > 2 else ""
+
+            rec = JobRecord(
+                engagement_id=engagement_id,
+                bbl=bbl,
+                borough=borough,
+                block=block,
+                lot=lot,
+                filing_type=filing_type.upper(),
+                work_types=[project] if project else [],
+                outcome="pending",
+                confidence_score=0.0,  # updated by operator once result is known
+                pathway_type=filing_type.lower(),
+                enforcement_context="current-administration",
+            )
+            write_job(rec)
+        except Exception:
+            pass  # archive write is non-blocking; never fail the consultation
+
     return out_path
 
 

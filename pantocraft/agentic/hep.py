@@ -26,6 +26,25 @@ from typing import Optional
 # Tier definitions
 # ---------------------------------------------------------------------------
 
+class FilingMode(Enum):
+    """
+    Blueprint Layer 4 / Step 4 — Mode A/B/C classification.
+    Applied before HEP tier assignment: Mode C always triggers HEP.
+    """
+    MODE_A = "A"   # confidence ≥ 0.80 — full automation, human review before submission
+    MODE_B = "B"   # 0.40 ≤ confidence < 0.80 — specialist review required
+    MODE_C = "C"   # confidence < 0.40 — immediate escalation, no filing proceeds
+
+
+def classify_filing_mode(confidence: float) -> FilingMode:
+    if confidence >= 0.80:
+        return FilingMode.MODE_A
+    elif confidence >= 0.40:
+        return FilingMode.MODE_B
+    else:
+        return FilingMode.MODE_C
+
+
 class HEPTier(Enum):
     TIER_1 = 1   # 0.60–0.80 confidence, moderate risk → team, 4h SLA
     TIER_2 = 2   # <0.60 or high blast radius → lead, 1h SLA
@@ -97,6 +116,7 @@ class HEPPayload:
     pathway_type: Optional[str] = None
     agency_steps: list[str] = field(default_factory=list)  # ["DOB", "LPC", ...]
     confidence: float = 0.0
+    filing_mode: str = ""           # A | B | C (Blueprint Layer 4)
     conditions: list[str] = field(default_factory=list)    # trigger conditions
 
     # Options presented to reviewer
@@ -127,8 +147,9 @@ class HEPPayload:
         return json.dumps(self.to_dict(), indent=indent)
 
     def summary(self) -> str:
+        mode_str = f"Mode:{self.filing_mode}" if self.filing_mode else ""
         return (
-            f"HEP TIER-{self.tier} | {self.trigger_type} | {self.trigger_detail}\n"
+            f"HEP TIER-{self.tier} {mode_str} | {self.trigger_type} | {self.trigger_detail}\n"
             f"  BBL: {self.bbl or '—'}  |  Action: {self.proposed_action}\n"
             f"  Landmark: {self.affects_landmark}  |  Reversible: {self.proposed_action_reversible}\n"
             f"  Confidence: {self.confidence:.0%}  |  SLA: {self.sla_label}\n"
@@ -188,6 +209,8 @@ def build_hep(
     if trigger_detail == "" and trigger_type:
         trigger_detail = _default_detail(trigger_type, proposed_action, confidence, conditions)
 
+    filing_mode = classify_filing_mode(confidence).value
+
     return HEPPayload(
         tier=tier,
         trigger_type=trigger_type.value,
@@ -201,6 +224,7 @@ def build_hep(
         pathway_type=pathway_type,
         agency_steps=agency_steps,
         confidence=confidence,
+        filing_mode=filing_mode,
         conditions=conditions,
         options=_default_options(tier, proposed_action),
         default_on_timeout="reject" if tier >= 2 else "defer",
@@ -283,8 +307,26 @@ def hep_from_pathway_result(
     confidence = getattr(result, "confidence", 1.0)
     has_blockers = getattr(result, "has_hard_blockers", False)
 
-    # No escalation needed for clean, high-confidence, non-landmark pathways
-    if confidence >= 0.80 and not affects_landmark and not has_blockers:
+    filing_mode = classify_filing_mode(confidence)
+
+    # Mode C — confidence < 0.40: immediate escalation regardless of other signals
+    if filing_mode == FilingMode.MODE_C:
+        return build_hep(
+            proposed_action=proposed_action,
+            confidence=confidence,
+            bbl=bbl,
+            address=address,
+            engagement_id=engagement_id,
+            pathway_type=getattr(result, "pathway_type", None),
+            agency_steps=[s.code for s in getattr(result, "steps", [])],
+            conditions=conditions,
+            affects_landmark=affects_landmark,
+            trigger_type=HEPTriggerType.CONFIDENCE,
+            trigger_detail=f"Mode C: confidence {confidence:.0%} < 0.40 threshold. Filing must not proceed. Immediate operator escalation required.",
+        )
+
+    # No escalation needed for clean Mode A, non-landmark pathways
+    if filing_mode == FilingMode.MODE_A and not affects_landmark and not has_blockers:
         return None
 
     result_conditions = [str(c) for c in conditions]

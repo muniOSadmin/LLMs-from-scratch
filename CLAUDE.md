@@ -104,14 +104,15 @@ pantocraft/
 ├── inference/pathway_optimizer.py
 └── intake/client_intake.py   ← encrypted client PII, NY SHIELD Act compliant ✓
 
-.claude/skills/               ← 4/4 complete ✓
+.claude/skills/               ← 5/5 complete ✓
 ├── agency_pattern_navigator.md
 ├── property_trigger_scanner.md
 ├── t3_discovery.md
-└── premortem.md
+├── premortem.md
+└── intelligence_intake.md    ← repeatable process for article/PDF influxes
 
 tests/
-└── test_smoke.py             ← 31/31 passing ✓
+└── test_smoke.py             ← 40/40 passing ✓
 ```
 
 ---
@@ -135,6 +136,10 @@ tests/
 - Do not assume agencies are parallel by default — check `sequential_after`
 - Do not train MicroLLM from scratch — transplant Llama 3.2 1B weights (Day 1)
 - Do not push sensitive data (property owner PII, client BBLs) to remote
+- Do not load all skills simultaneously — trigger-specific lazy loading only (5 skills max active)
+- Do not ignore session quality degradation mid-session: if Claude stops following
+  rules without explanation, start a fresh session (token inflation is a known issue
+  in Claude Code; long sessions dilute CLAUDE.md instructions silently)
 
 ---
 

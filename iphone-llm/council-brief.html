@@ -507,7 +507,7 @@ UNBLOAT_TEST: [does adding this require removing something to stay lean?]</pre>
   <h3>The intelligence_intake skill (wired into Claude Code)</h3>
   <p>The skill at <code>.claude/skills/intelligence_intake.md</code> encodes this process. Trigger it with: <em>"process this article for moswalk"</em> or <em>"intake this PDF."</em> It will apply the filter, extract signals in the format above, and propose the disposition — without changing any code until you approve.</p>
 
-  <h3>Applied to today's four sources</h3>
+  <h3>Applied to six sources (Batch 1 + Batch 2)</h3>
   <table>
     <tr><th>Source</th><th>Signal</th><th>Verdict</th><th>Action</th></tr>
     <tr>
@@ -545,6 +545,39 @@ UNBLOAT_TEST: [does adding this require removing something to stay lean?]</pre>
       <td>Graceful degradation when shared brain unavailable</td>
       <td class="ok">Validated</td>
       <td>_KERNEL_AVAILABLE fallback already implements this</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--border)">
+      <td colspan="4" style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; padding-top:12px">Batch 2 — May 2026</td>
+    </tr>
+    <tr>
+      <td>Google engineer automation (Noisy/@noisyb0y1)</td>
+      <td>Karpathy CLAUDE.md: 40% → 3% convention violations. Lazy-load skills — all at once burns context fast.</td>
+      <td class="ok">Validated</td>
+      <td>Already implemented. Added lazy-load note to CLAUDE.md "What NOT to do."</td>
+    </tr>
+    <tr>
+      <td>Token inflation — Claude Code v2.1.100</td>
+      <td>20k hidden server-side tokens dilute CLAUDE.md instructions mid-session silently</td>
+      <td class="accent">Partial</td>
+      <td>Operational note added to CLAUDE.md: start fresh session if rule-following degrades. Not architectural.</td>
+    </tr>
+    <tr>
+      <td>Google engineer — 15-min polling agentic loop</td>
+      <td>classify → execute → PR workflow on a cron. Autonomous operation pattern for future moswalk loop.</td>
+      <td class="dim">Monitor</td>
+      <td>Premature — no autonomous loop in moswalk yet. Revisit post-ship Day 5.</td>
+    </tr>
+    <tr>
+      <td>Edge AI / TinyML (Techstrong AI)</td>
+      <td>On-device inference: lower latency, bandwidth, security exposure. CoreML = Apple's TinyML.</td>
+      <td class="ok">Validated</td>
+      <td>iPhone-as-inference-node architecture confirmed correct. No change.</td>
+    </tr>
+    <tr>
+      <td>Edge AI — sensitive data stays local</td>
+      <td>Local processing required for healthcare/finance-grade privacy. No cloud roundtrip.</td>
+      <td class="ok">Validated</td>
+      <td>local-first, no public endpoints, Tailscale mesh — already in spec. NY SHIELD Act compliance confirmed.</td>
     </tr>
   </table>
 </div>

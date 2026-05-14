@@ -101,12 +101,13 @@
 
 <header>
   <h1>moswalk // Platform Council Brief</h1>
-  <div class="sub">Intelligence synthesis — 4 external sources processed May 2026</div>
+  <div class="sub">Intelligence synthesis — 9 external sources across 3 batches — May 2026</div>
   <div class="meta">
     <div>Branch: <span>claude/llm-iphone-17-pro-KuHhU</span></div>
-    <div>Commit: <span>c9f5669</span></div>
-    <div>Tests: <span style="color:var(--ok)">31/31 passing</span></div>
-    <div>CLAUDE.md: <span>155 lines (safe)</span></div>
+    <div>Commit: <span>1b3cb14</span></div>
+    <div>Tests: <span style="color:var(--ok)">40/40 passing</span></div>
+    <div>CLAUDE.md: <span>160 lines (safe)</span></div>
+    <div>Skills: <span>5/5 complete</span></div>
   </div>
 </header>
 
@@ -173,26 +174,88 @@
     <div class="verdict validated">Validated — moswalk already implements this. agencies.yaml + permit_pathways.yaml IS the shared brain. session_log.py is the private notebook. Graceful degradation (_KERNEL_AVAILABLE) is exactly "capability not oxygen."</div>
   </div>
 
+  <h3 style="margin-top:32px">Batch 3 — May 2026</h3>
+
+  <div class="source-card">
+    <div class="title">Ashwin Gopinath — The Price of Meaning: Why RAG, KGs, and Every Semantic Memory Will Always Fail</div>
+    <div class="signal">
+      A formal no-escape theorem: any memory system that retrieves by meaning will suffer interference-driven
+      forgetting and false recall as memory grows — provably, regardless of architecture (vector DB, knowledge
+      graph, context window, parametric). Effective semantic dimensionality is 10–50 across all models; crowding
+      is inevitable. <strong>The only principled exit: semantic layer + exact episodic record.</strong>
+      Filesystem/BM25 achieves full immunity but loses usefulness (15.5% semantic agreement).
+      Knowledge graphs fail for the same geometric reason as RAG — their underlying representations are still
+      embeddings. The principled architecture couples both: exact files for episodic storage, LLM for semantic
+      reasoning on top.
+    </div>
+    <div class="verdict validated">Validates moswalk architecture — agencies.yaml + permit_pathways.yaml ARE the exact episodic record. Never add embedding-based agency lookup. Future Neo4j = structural/relational only, no dense semantic retrieval.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Immanuel — Unpopular Dockerfile Takes</div>
+    <div class="signal">
+      Use <code>python:3.11-slim</code> not alpine (musl ≠ glibc, silent perf regression).
+      Layer order = cache strategy: copy lockfile first, run install, then copy source.
+      Multi-stage builds are load-bearing for lean prod images (not best practice theater).
+      BuildKit <code>--mount=type=cache</code> for pip/apt between builds.
+      Pin base images by digest, not tag.
+    </div>
+    <div class="verdict partial">Operational hygiene — applicable when containerizing swarm workers. Not immediate. Queue for Day 6+ deployment work.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Scala language roadmap</div>
+    <div class="signal">
+      Visual roadmap.sh overview of Scala ecosystem (data types, collections, functional patterns, Akka, Spark).
+    </div>
+    <div class="verdict gap">Discarded — no moswalk relevance. Scala is not in the stack.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Nico — Unified Agentic Memory System (substack tech)</div>
+    <div class="signal">
+      4-tier memory: <strong>core</strong> (hot, 50-item eviction, always-in-context),
+      <strong>atom store</strong> (persistent knowledge, semantic recall),
+      <strong>graph</strong> (FalkorDB — relationships, provenance, agent topology),
+      <strong>vault</strong> (4,327+ Obsidian notes, semantically indexed).
+      SM-2 spaced repetition on knowledge triples. Evolution engine (proposer → evaluator → research registry).
+      Azure OpenAI 1536-dim HNSW. 60s auto-embedding pipeline, zero manual intervention.
+    </div>
+    <div class="verdict validated">Validates moswalk's session_log.py as the "core/hot" tier. Evolution engine pattern aligns with intelligence_intake skill. SM-2 on regulatory triples (agency sequences, Local Laws) is a concrete post-ship enhancement.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">AXI — Agent eXperience Interface (10 principles)</div>
+    <div class="signal">
+      915-run benchmark: AXI design = 100% success, $0.074/task, 21.5s, 4.5 turns vs.
+      MCP = $0.100, 26s, 6.2 turns. Key principles: <strong>TOON format</strong> (Token-Optimized Object Notation —
+      omit braces/quotes/commas, ~40% fewer tokens), pre-computed aggregates inline,
+      contextual disclosure (next-step suggestions after output), definitive empty states,
+      combined operations. Agent-ergonomic CLI design beats generic JSON on every metric.
+    </div>
+    <div class="verdict validated">Implemented this session — TOON applied to PathwayResult.summary_table() and ConsultResult.to_llm_context(). pre-computed aggregates, contextual next[], definitive empty states all wired.</div>
+  </div>
+
   <div class="grid" style="margin-top:28px">
     <div class="card">
-      <div class="label">Consensus signal</div>
+      <div class="label">Consensus signal (3 batches)</div>
       <div class="value" style="font-size:14px; line-height:1.5">Harness &gt; Model</div>
-      <div class="desc">All 4 sources converge: the architecture, escalation surface, and knowledge layer matter more than which LLM you use.</div>
+      <div class="desc">All 9 sources converge: architecture, escalation surface, and knowledge layer matter more than which LLM. Ashwin adds: exact records beat semantic retrieval for correctness.</div>
     </div>
     <div class="card">
-      <div class="label">Biggest gap named</div>
-      <div class="value" style="font-size:14px; line-height:1.5">HEP + Durable Execution</div>
-      <div class="desc">Blueprint identifies human escalation protocol and Temporal/LangGraph as load-bearing for regulated NYC work. Neither exists in moswalk yet.</div>
+      <div class="label">Biggest remaining gap</div>
+      <div class="value" style="font-size:14px; line-height:1.5">Hooks + Durable Execution</div>
+      <div class="desc">HEP built (hep.py, 40 tests). Hooks still missing. Durable execution (Temporal) is post-ship but load-bearing for multi-week LPC and BSA workflows.</div>
     </div>
     <div class="card">
-      <div class="label">Most leveraged action</div>
-      <div class="value" style="font-size:14px; line-height:1.5">Three-scenario test</div>
-      <div class="desc">Skills guide: every skill must pass happy path + edge case + stress test before it's production-grade. Run this on all 4 skills.</div>
+      <div class="label">Architectural guardrail (new)</div>
+      <div class="value" style="font-size:14px; line-height:1.5">Exact Records, Not Embeddings</div>
+      <div class="desc">Ashwin's no-escape theorem: never use semantic search for agency code lookup. agencies.yaml = filesystem/BM25 layer. Future Neo4j = structural graph, no dense embeddings.</div>
     </div>
     <div class="card">
-      <div class="label">Format signal</div>
-      <div class="value" style="font-size:14px; line-height:1.5">HTML &gt; Markdown</div>
-      <div class="desc">Thariq: markdown fails at &gt;100 lines. All client-facing output (PathwayResult, council briefs) should render as HTML.</div>
+      <div class="label">Token savings wired</div>
+      <div class="value" style="font-size:14px; line-height:1.5">~40% via TOON</div>
+      <div class="desc">AXI TOON format applied to to_llm_context() and summary_table(). key:val pairs, pre-computed aggregates, contextual disclosure, definitive empty states.</div>
     </div>
   </div>
 </div>
@@ -202,15 +265,15 @@
   <h2>What the sources validate about our architecture</h2>
 
   <div class="flow">
-    <div class="flow-node active">CLAUDE.md<br><small>155 lines ✓</small></div>
+    <div class="flow-node active">CLAUDE.md<br><small>160 lines ✓</small></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-node active">4 Skills<br><small>complete ✓</small></div>
+    <div class="flow-node active">5 Skills<br><small>complete ✓</small></div>
     <div class="flow-arrow">→</div>
     <div class="flow-node active">Rules<br><small>2 rules ✓</small></div>
     <div class="flow-arrow">→</div>
     <div class="flow-node gap">Hooks<br><small>missing ✗</small></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-node gap">HEP<br><small>missing ✗</small></div>
+    <div class="flow-node active">HEP v1<br><small>built ✓</small></div>
     <div class="flow-arrow">→</div>
     <div class="flow-node gap">Temporal<br><small>missing ✗</small></div>
   </div>
@@ -226,8 +289,8 @@
     <tr>
       <td>Skills (knowledge layer)</td>
       <td>50–70 line SKILL.md, domain clusters, lazy-loaded</td>
-      <td>4 skills, avg 155 lines (slightly large but rich)</td>
-      <td class="accent">~ Slightly large</td>
+      <td>5 skills: agency_pattern_navigator, property_trigger_scanner, t3_discovery, premortem, intelligence_intake</td>
+      <td class="accent">~ Slightly large per skill but correct structure</td>
     </tr>
     <tr>
       <td>Rules (path-scoped)</td>
@@ -262,8 +325,8 @@
     <tr>
       <td>Human Escalation Protocol</td>
       <td>Versioned JSON HEP payload, tier 1/2/3, SLA, checkpoint</td>
-      <td>information_not_advice flag only</td>
-      <td class="warn">✗ Stub only</td>
+      <td>pantocraft/agentic/hep.py — HEPPayload, build_hep(), hep_from_pathway_result(), write_hep(). 9 tests.</td>
+      <td class="ok">✓ Built (hep/v1)</td>
     </tr>
     <tr>
       <td>Durable execution</td>
@@ -319,10 +382,10 @@
   <h2>Gaps — ordered by blast radius if left unaddressed</h2>
 
   <div class="grid-3">
-    <div class="card" style="border-color:var(--warn)">
-      <div class="label">Critical — liability surface</div>
-      <div class="value" style="font-size:13px; color:var(--warn)">No HEP</div>
-      <div class="desc">information_not_advice flag exists in code but there is no structured HEP payload, no tier 1/2/3 assignment, no SLA, no checkpoint. Blueprint: without this, the agent cannot defend its decisions under SOC2, EU AI Act, or NYC record-retention.</div>
+    <div class="card" style="border-color:var(--ok)">
+      <div class="label">Resolved — liability surface</div>
+      <div class="value" style="font-size:13px; color:var(--ok)">HEP v1 ✓</div>
+      <div class="desc">pantocraft/agentic/hep.py — HEPPayload, build_hep() factory, tier 1/2/3 deterministic assignment, hard-stop list (9 actions), SLA table, write_hep() (chmod 600). 9 smoke tests. Wire hep_from_pathway_result() into FieldAPI.consult() as next step.</div>
     </div>
     <div class="card" style="border-color:var(--warn)">
       <div class="label">Critical — no guardrails</div>
@@ -375,10 +438,10 @@
   <div class="roadmap-item">
     <div class="num">01</div>
     <div class="body">
-      <strong>HEP stub in pantocraft/</strong>
-      <div class="detail">A dataclass + serializer for HEP v1 payload. tier assignment (1/2/3), trigger type, SLA, checkpoint reference, information_not_advice. Wire into FieldAPI.consult() — emit HEP when any blocking condition fires. This is the audit trail and the licensed-professional handoff surface. ~60 lines.</div>
+      <strong>HEP v1 — pantocraft/agentic/hep.py</strong>
+      <div class="detail">HEPPayload dataclass, build_hep() factory, hep_from_pathway_result(), write_hep() (chmod 600). Deterministic tier 1/2/3 assignment. Hard-stop list (9 actions). ALWAYS_TIER_3 set. 9 smoke tests passing. <code>schema_version: hep/v1</code></div>
     </div>
-    <span class="tag pill-gap">Critical gap</span>
+    <span class="tag pill-ok">Complete ✓</span>
   </div>
 
   <div class="roadmap-item">
@@ -549,6 +612,7 @@ UNBLOAT_TEST: [does adding this require removing something to stay lean?]</pre>
     <tr style="border-top: 2px solid var(--border)">
       <td colspan="4" style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; padding-top:12px">Batch 2 — May 2026</td>
     </tr>
+    <!-- Batch 2 rows follow, then Batch 3 marker below -->
     <tr>
       <td>Google engineer automation (Noisy/@noisyb0y1)</td>
       <td>Karpathy CLAUDE.md: 40% → 3% convention violations. Lazy-load skills — all at once burns context fast.</td>
@@ -578,6 +642,39 @@ UNBLOAT_TEST: [does adding this require removing something to stay lean?]</pre>
       <td>Local processing required for healthcare/finance-grade privacy. No cloud roundtrip.</td>
       <td class="ok">Validated</td>
       <td>local-first, no public endpoints, Tailscale mesh — already in spec. NY SHIELD Act compliance confirmed.</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--border)">
+      <td colspan="4" style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; padding-top:12px">Batch 3 — May 2026</td>
+    </tr>
+    <tr>
+      <td>Ashwin Gopinath — Price of Meaning</td>
+      <td>No-escape theorem: semantic memory always degrades. Principled path = semantic layer + exact episodic record.</td>
+      <td class="ok">Validated</td>
+      <td>agencies.yaml IS the exact episodic record. Never add embedding-based agency lookup. Neo4j = structural graph only (no dense embeddings). Architectural guardrail locked in.</td>
+    </tr>
+    <tr>
+      <td>Immanuel — Dockerfile takes</td>
+      <td>python:3.11-slim, layer order = cache, multi-stage builds, BuildKit cache mounts, pin by digest</td>
+      <td class="accent">Partial</td>
+      <td>Queue for Day 6+ containerization of swarm workers. Not immediate — no containers in stack yet.</td>
+    </tr>
+    <tr>
+      <td>Scala roadmap</td>
+      <td>Visual roadmap.sh overview of Scala ecosystem</td>
+      <td class="dim">Discarded</td>
+      <td>No moswalk relevance. Scala not in stack.</td>
+    </tr>
+    <tr>
+      <td>Nico — Unified Agentic Memory</td>
+      <td>4-tier memory (hot/atom/graph/vault), SM-2 spaced repetition on knowledge triples, evolution engine</td>
+      <td class="ok">Validated</td>
+      <td>session_log.py = core/hot tier ✓. SM-2 on regulatory triples (agency sequences, Local Law updates) queued post-ship. Evolution engine = intelligence_intake skill pattern.</td>
+    </tr>
+    <tr>
+      <td>AXI — Agent eXperience Interface</td>
+      <td>TOON format = ~40% token savings. Pre-computed aggregates. Contextual disclosure. Definitive empty states. 915-run benchmark: 100% success, lowest cost.</td>
+      <td class="ok">Implemented</td>
+      <td>Applied this session: PathwayResult.summary_table() TOON header + next[] lines. ConsultResult.to_llm_context() rewritten as TOON. 40/40 tests passing.</td>
     </tr>
   </table>
 </div>

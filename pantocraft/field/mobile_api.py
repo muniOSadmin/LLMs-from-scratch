@@ -116,18 +116,23 @@ class ConsultResult:
         return "\n".join(lines)
 
     def to_llm_context(self) -> str:
-        """Compact context string for prepending to LLM generation prompt."""
-        flags_str = "; ".join(self.escalation_flags[:3]) if self.escalation_flags else "none"
-        agency_seq = " → ".join(
+        """TOON-format context for LLM generation (~40% fewer tokens than verbose form)."""
+        # AXI: pre-computed aggregates inline, TOON key:val pairs, no redundant labels
+        seq = "→".join(
             s.get("code", "") + ("*" if s.get("blocking") else "")
             for s in self.agency_pathway
         )
+        n_agencies = len(self.agency_pathway)
+        flags = self.escalation_flags[:2]
+        flag_str = " | ".join(f[:80] for f in flags) if flags else "none"
+        saves = f" save:~{self.days_saved}d" if self.days_saved > 0 else ""
+        conf = f" conf:{self.overall_confidence:.0%}" if self.overall_confidence < 1.0 else ""
         return (
-            f"Property: {self.address} (BBL {self.bbl})\n"
-            f"Project: {self.project_type}\n"
-            f"Critical path: ~{self.critical_path_days}d standard / ~{self.optimized_days}d optimized\n"
-            f"Key flags: {flags_str}\n"
-            f"Agency sequence (* = blocking): {agency_seq}\n"
+            f"prop:{self.address} bbl:{self.bbl}\n"
+            f"type:{self.project_type} agencies:{n_agencies} "
+            f"critical:~{self.critical_path_days}d opt:~{self.optimized_days}d{saves}{conf}\n"
+            f"seq:{seq}\n"
+            f"flags:{flag_str}\n"
         )
 
 

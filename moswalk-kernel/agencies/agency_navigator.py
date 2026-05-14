@@ -118,22 +118,37 @@ class PathwayResult:
         return max(self.critical_days(), self.parallel_days())
 
     def summary_table(self) -> str:
-        lines = [
-            f"{'STATUS':<8} {'AGENCY':<14} {'ROLE':<14} {'DAYS':>5} {'BLOCKING':<10} {'SEQ AFTER'}",
-            "-" * 80,
-        ]
+        # AXI: aggregate header first, then TOON rows, then contextual next-steps
+        n = len(self.steps)
+        blockers = [s for s in self.steps if s.blocking]
+        n_cond = sum(1 for s in self.steps if s.is_conditional)
+        header = (
+            f"pathway:{self.pathway_type} agencies:{n} "
+            f"critical:~{self.critical_days()}d calendar:~{self.total_calendar_days()}d"
+            + (f" conditional:{n_cond}" if n_cond else "")
+            + (f" warnings:{len(self.warnings)}" if self.warnings else "")
+        )
+        lines = [header, "---"]
         for s in self.steps:
-            seq = ", ".join(s.sequential_after) if s.sequential_after else "—"
-            blocking_str = "BLOCKING" if s.blocking else "parallel"
+            seq = ",".join(s.sequential_after) if s.sequential_after else "—"
+            b = "Y" if s.blocking else "N"
+            cond = "*" if s.is_conditional else ""
             lines.append(
-                f"{'READY':<8} {s.code:<14} {s.role:<14} {s.estimated_days:>5} "
-                f"{blocking_str:<10} {seq}"
+                f"code:{s.code}{cond:<1} role:{s.role:<12} days:{s.estimated_days:<4} "
+                f"block:{b} seq:{seq}"
             )
-        lines += [
-            "-" * 80,
-            f"Critical path: ~{self.critical_days()} days  |  "
-            f"Total calendar: ~{self.total_calendar_days()} days",
-        ]
+        lines.append("---")
+        # Contextual next-steps (AXI: definitive guidance, not empty)
+        if blockers:
+            first = blockers[0]
+            if first.sequential_after:
+                lines.append(f"next[] resolve {' then '.join(first.sequential_after)} before {first.code} filing")
+            else:
+                lines.append(f"next[] begin with {first.code} ({first.estimated_days}d) — no prior dependencies")
+        if self.warnings:
+            for w in self.warnings[:2]:
+                lines.append(f"warn[] {w[:120]}")
+        lines.append(f"info[] information only — licensed professional required")
         return "\n".join(lines)
 
 

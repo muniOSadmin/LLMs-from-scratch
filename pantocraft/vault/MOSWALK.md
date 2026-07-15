@@ -92,4 +92,14 @@ Drop a file in pantocraft/queue/ to trigger async processing:
   RESEARCH-[topic].md            → regulatory research brief → generated/briefings/
   PREMORTEM-[project].md         → premortem analysis → generated/briefings/
   INTAKE-[source].md             → intelligence intake filter → generated/briefings/
+  OUTCOME-[engagement_id].md     → close flywheel loop: write real outcome to archive
+
+OUTCOME file format (closes the consultation → HEP → archive → flywheel cycle):
+  engagement_id: QUEUE-2026-07-15-3-00783-0001
+  outcome: approved | objected | revised | escalated | withdrawn
+  confidence_score: 0.88   # actual passage confidence in hindsight
+  examiner_id: SMITH-J
+  approval_date: 2026-07-15
+  lessons: one-sentence operator note on what drove the outcome
+
 Processed files move to pantocraft/queue/processed/ — never deleted.

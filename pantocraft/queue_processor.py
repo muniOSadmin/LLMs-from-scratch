@@ -45,14 +45,20 @@ except ImportError:
     _FIELD_AVAILABLE = False
 
 try:
-    from agentic.hep import hep_from_pathway_result, write_hep, classify_filing_mode
+    from agentic.hep import (
+        build_hep, write_hep, classify_filing_mode,
+        hep_from_pathway_result, HEPTriggerType,
+    )
     from agentic.session_log import AgenticLog
     _AGENTIC_AVAILABLE = True
 except ImportError:
     _AGENTIC_AVAILABLE = False
 
 try:
-    from archive.flywheel import JobRecord, write_job, archive_summary_toon, ArchiveQuery
+    from archive.flywheel import (
+        JobRecord, write_job, archive_summary_toon, ArchiveQuery,
+        update_job_outcome,
+    )
     _ARCHIVE_AVAILABLE = True
 except ImportError:
     _ARCHIVE_AVAILABLE = False
@@ -63,7 +69,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 _PROTOCOL_RE = re.compile(
-    r"^(CONSULT|RESEARCH|PREMORTEM|INTAKE)-(.+)\.md$",
+    r"^(CONSULT|RESEARCH|PREMORTEM|INTAKE|OUTCOME)-(.+)\.md$",
     re.IGNORECASE,
 )
 
@@ -87,6 +93,8 @@ def route(path: Path) -> str:
         out = _handle_premortem(subject, body, date_str)
     elif protocol == "INTAKE":
         out = _handle_intake(subject, body, date_str)
+    elif protocol == "OUTCOME":
+        out = _handle_outcome(subject, body, date_str)
     else:
         return _skip(path, f"unknown protocol: {protocol}")
 
@@ -177,16 +185,35 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
             out_lines.append(result.to_llm_context())
             out_lines.append("```")
 
-            # HEP check
-            if _AGENTIC_AVAILABLE and hasattr(result, 'agency_pathway'):
-                from agencies.agency_navigator import PathwayResult, AgencyStep
-                # Emit HEP if escalation flags present or confidence low
-                if result.escalation_flags or result.overall_confidence < 0.80:
-                    out_lines.append("")
-                    out_lines.append("## HEP Escalation")
-                    out_lines.append(f"Flags: {'; '.join(result.escalation_flags[:3])}")
-                    out_lines.append(f"Confidence: {result.overall_confidence:.0%}")
-                    out_lines.append("→ Review pantocraft/agentic/escalations/ for HEP payload.")
+            # HEP — emit structured payload for any escalation condition
+            if _AGENTIC_AVAILABLE and (result.escalation_flags or result.overall_confidence < 0.80):
+                affects_landmark = any(
+                    kw in f.lower()
+                    for f in result.escalation_flags
+                    for kw in ("landmark", "lpc")
+                )
+                trigger = HEPTriggerType.LANDMARK if affects_landmark else HEPTriggerType.CONFIDENCE
+                hep = build_hep(
+                    proposed_action="consult_output_delivery",
+                    confidence=result.overall_confidence,
+                    bbl=bbl,
+                    address=address,
+                    engagement_id=engagement_id,
+                    pathway_type=filing_type.lower(),
+                    agency_steps=[s.get("code", "") for s in result.agency_pathway],
+                    conditions=result.escalation_flags,
+                    affects_landmark=affects_landmark,
+                    trigger_type=trigger,
+                )
+                hep_path = write_hep(hep)
+                out_lines += [
+                    "",
+                    "## HEP Escalation",
+                    "```",
+                    hep.summary(),
+                    "```",
+                    f"Payload: {hep_path.name}  |  SLA: {hep.sla_label}",
+                ]
 
         except Exception as e:
             out_lines.append(f"FieldAPI error: {e}")
@@ -248,6 +275,100 @@ def _fallback_consult(bbl: str, filing_type: str, flags: dict) -> str:
         "⚑ Cannot resolve full agency pathway — moswalk-kernel not on path.",
     ]
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# OUTCOME handler — closes the flywheel loop
+# ---------------------------------------------------------------------------
+
+def _handle_outcome(subject: str, body: str, date_str: str) -> Path:
+    """
+    OUTCOME-[engagement_id].md
+
+    Close the flywheel loop: write real outcome back to the archive.
+    The voyage_confidence formula can only compound if outcomes are recorded.
+
+    File format (YAML-lite):
+      engagement_id: QUEUE-2026-07-15-3-00783-0001
+      outcome: approved | objected | revised | escalated | withdrawn
+      confidence_score: 0.88          # actual passage confidence in hindsight
+      examiner_id: SMITH-J            # DOB examiner code
+      approval_date: 2026-07-15       # YYYY-MM-DD
+      lessons: First objection on egress — resolved with revised plan. ACP5 same-day.
+    """
+    slug = _slug(subject)
+    out_path = _GENERATED / "briefings" / f"{date_str}-{slug}-outcome.md"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not _ARCHIVE_AVAILABLE:
+        out_path.write_text(
+            f"# Outcome Not Recorded — {subject}\nGenerated: {date_str}\n\n"
+            "archive module not available — install pantocraft/archive/flywheel.py\n",
+            encoding="utf-8",
+        )
+        return out_path
+
+    params = _parse_kv(body)
+    engagement_id = params.get("engagement_id") or subject
+    outcome       = str(params.get("outcome", "")).strip()
+    examiner_id   = str(params.get("examiner_id", "")).strip()
+    approval_date = str(params.get("approval_date", "")).strip() or None
+    lessons       = str(params.get("lessons", "")).strip()
+    try:
+        confidence_score = float(params.get("confidence_score") or 0.0)
+    except (ValueError, TypeError):
+        confidence_score = 0.0
+
+    valid_outcomes = {"approved", "objected", "revised", "escalated", "withdrawn"}
+    if not outcome:
+        out_path.write_text(
+            f"# Outcome Not Recorded — {engagement_id}\nGenerated: {date_str}\n\n"
+            f"outcome field is required. Valid values: {', '.join(sorted(valid_outcomes))}\n",
+            encoding="utf-8",
+        )
+        return out_path
+
+    job_id = update_job_outcome(
+        engagement_id=engagement_id,
+        outcome=outcome,
+        confidence_score=confidence_score,
+        lessons=lessons,
+        examiner_id=examiner_id,
+        approval_date=approval_date,
+    )
+
+    if job_id:
+        out_lines = [
+            f"# Outcome Recorded — {engagement_id}",
+            f"Generated: {date_str}",
+            "",
+            f"Job ID:       {job_id[:8]}…",
+            f"Outcome:      {outcome}",
+            f"Confidence:   {confidence_score:.0%}" if confidence_score else "Confidence:   (not set)",
+            f"Examiner:     {examiner_id or '(not set)'}",
+            f"Approval:     {approval_date or '(not set)'}",
+        ]
+        if lessons:
+            out_lines += ["", "## Lessons", lessons]
+        out_lines += [
+            "",
+            "Flywheel archive updated. This engagement now informs voyage_confidence "
+            "for future similar filings in this borough and filing type.",
+            "---",
+            "⚖  Information only. Licensed professional sign-off required. NY S7263.",
+        ]
+    else:
+        out_lines = [
+            f"# Outcome Not Recorded — {engagement_id}",
+            f"Generated: {date_str}",
+            "",
+            f"No job found for engagement_id: {engagement_id}",
+            "Verify engagement_id matches the CONSULT output header, "
+            "or check pantocraft/archive/jobs.db directly.",
+        ]
+
+    out_path.write_text("\n".join(out_lines), encoding="utf-8")
+    return out_path
 
 
 # ---------------------------------------------------------------------------

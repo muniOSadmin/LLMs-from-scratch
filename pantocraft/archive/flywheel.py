@@ -264,6 +264,49 @@ def get_job(job_id: str) -> Optional[JobRecord]:
     return JobRecord.from_dict(json.loads(row["payload"]))
 
 
+def get_jobs_by_engagement(engagement_id: str) -> list[JobRecord]:
+    """Return all jobs for an engagement_id, most recent first."""
+    init_db()
+    with _db(readonly=True) as conn:
+        rows = conn.execute(
+            "SELECT payload FROM jobs WHERE engagement_id=? ORDER BY created_at DESC",
+            (engagement_id,),
+        ).fetchall()
+    return [JobRecord.from_dict(json.loads(r["payload"])) for r in rows]
+
+
+def update_job_outcome(
+    engagement_id: str,
+    outcome: str,
+    confidence_score: float = 0.0,
+    lessons: str = "",
+    examiner_id: str = "",
+    approval_date: Optional[str] = None,
+    objections: Optional[list[dict]] = None,
+) -> Optional[str]:
+    """
+    Update the most recent pending job for an engagement with its real outcome.
+    Returns job_id if found and updated, None if no matching job exists.
+    Called by the OUTCOME queue protocol to close the flywheel loop.
+    """
+    jobs = get_jobs_by_engagement(engagement_id)
+    if not jobs:
+        return None
+    # Prefer the most recent pending record; fall back to most recent overall
+    rec = next((j for j in jobs if j.outcome == "pending"), jobs[0])
+    rec.outcome = outcome
+    rec.confidence_score = confidence_score
+    if lessons:
+        rec.lessons = lessons
+    if examiner_id:
+        rec.examiner_id = examiner_id
+    if approval_date:
+        rec.approval_date = approval_date
+    if objections is not None:
+        rec.objections = objections
+    return write_job(rec)
+
+
 # ---------------------------------------------------------------------------
 # Archive query — the flywheel intelligence engine
 # ---------------------------------------------------------------------------

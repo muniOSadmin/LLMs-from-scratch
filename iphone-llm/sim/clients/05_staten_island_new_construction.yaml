@@ -1,0 +1,109 @@
+# Client 05 — Staten Island New Single-Family Construction
+# Archetype: Developer, new building (NB) filing, straightforward but complete pathway
+# BBL: 5-00791-0012 (St. George / New Brighton, Staten Island — R3-1 zone)
+# Grounding: DOB New Building permit process, PLUTO vacant lot data
+
+client_id: "SIM-005"
+name: "Petrov Development"
+client_type: developer
+
+data_sources:
+  - "DOB NOW: Build — New Building permit filing requirements"
+  - "PLUTO v25v4 — R3-1 zoning, vacant lot (building class V0)"
+  - "NYC DEP sewer connection requirements (tap-in application)"
+  - "Con Edison service request process (not a city agency)"
+  - "FDNY new construction inspection requirements"
+  - "agencies.yaml — DOB, DEP, FDNY, NYC DOT codes"
+
+property:
+  bbl: "5-00791-0012"
+  address: "67 Richmond Terrace, Staten Island, NY 10301"
+  borough: Staten Island
+  zoning_district: "R3-1"
+  building_class: "V0"      # vacant land (pre-construction)
+  year_built: 0
+  stories: 0
+  residential_units: 0
+  gross_sq_ft: 0
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: null         # R3-1 in St. George, not in AE zone — verified
+    rent_stabilized: false
+    hpd_registered: false
+    within_subway_easement: false
+    active_violations: 0
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false        # near Kill Van Kull but lot is set back sufficiently
+    asbestos_survey_required: false
+
+project:
+  type: "New 2-story single-family detached house"
+  description: >
+    Construct a new 2-story, 2,100 sq ft single-family detached house on a
+    vacant 40×100 ft lot (4,000 sq ft). R3-1 zoning: max FAR 0.5 (2,000 sq ft
+    max buildable — design may need adjustment). Max height 35 ft.
+    Front yard required 15 ft, side yards 5 ft each, rear yard 30 ft.
+    New sewer connection tap-in required from DEP. New water service from
+    DEP. Separate Con Edison service request. Standard new building pathway —
+    least complex archetype in this simulation set.
+  estimated_cost_usd: 420000
+  scope: "NB"   # new building
+
+  agencies:
+    - code: "DOB"
+      role: "primary"
+      sequential_after: []
+      blocking: true
+      estimated_days: 90
+      confidence: 0.90
+      notes: >
+        NB filing with registered architect. Site plan, foundation plan,
+        framing plan, mechanical/electrical/plumbing drawings required.
+        Plan examination → permit → foundation inspection → framing →
+        mechanical rough-in → final → Certificate of Occupancy.
+        R3-1 FAR limit 0.5: 2,100 sq ft on 4,000 sq ft lot = FAR 0.525 —
+        design exceeds limit. Must reduce to ≤2,000 sq ft or seek variance.
+
+    - code: "DEP"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 30
+      confidence: 0.85
+      notes: >
+        New sewer connection (tap-in application) and new water service
+        application required. DEP issues connection permit. Tap-in inspection
+        required before backfill. Timeline: 2-4 weeks for sewer, concurrent
+        with DOB plan exam.
+
+    - code: "FDNY"
+      role: "inspection"
+      sequential_after: ["DOB"]
+      blocking: false
+      estimated_days: 14
+      confidence: 0.90
+      notes: >
+        Smoke detector / CO detector installation inspection.
+        New construction: hardwired interconnected detectors required.
+        FDNY inspection scheduled after DOB framing inspection passes.
+
+    - code: "NYC DOT"
+      role: "approval"
+      sequential_after: []
+      blocking: false
+      estimated_days: 14
+      confidence: 0.85
+      notes: >
+        Sidewalk and curb cut permit required (new driveway access).
+        Street opening permit for DEP sewer tap-in.
+        Concurrent with DOB plan exam — not on critical path.
+
+  escalation_risk: low
+  analyst_notes:
+    - "FAR ISSUE: 2,100 sq ft on 4,000 sq ft lot = 0.525 FAR. R3-1 max is 0.5. Reduce design to 2,000 sq ft or apply to BSA for minor variance."
+    - "Simplest regulatory pathway in the simulation set — good baseline test case."
+    - "Con Edison service is NOT a city agency — handle separately, not tracked here."
+    - "DEP sewer tap-in and DOB plan exam can run in parallel — do not serialize unnecessarily."
+    - "No LPC, no rent stabilization, no asbestos, no flood zone — clean file."

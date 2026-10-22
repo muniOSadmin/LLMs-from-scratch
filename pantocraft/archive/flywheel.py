@@ -76,6 +76,62 @@ def compute_confidence(
     return min(1.0, max(0.0, raw))
 
 
+_DATA_DIR = Path(__file__).parent.parent / "data"
+_WEIGHTS_PATH = _DATA_DIR / "filing_weights.yaml"
+
+
+def _load_filing_weight(filing_type: str) -> float:
+    """Load filing_type_weight from pantocraft/data/filing_weights.yaml."""
+    try:
+        import yaml
+        raw = yaml.safe_load(_WEIGHTS_PATH.read_text())
+        weights = raw.get("filing_type_weights", {})
+        return float(weights.get(filing_type.upper(), weights.get("default", 0.80)))
+    except Exception:
+        return 0.80
+
+
+def _load_complexity_config() -> tuple[float, float]:
+    """Returns (base, per_agency) complexity scalars from filing_weights.yaml."""
+    try:
+        import yaml
+        raw = yaml.safe_load(_WEIGHTS_PATH.read_text())
+        return float(raw.get("complexity_base", 1.0)), float(raw.get("complexity_per_agency", 0.15))
+    except Exception:
+        return 1.0, 0.15
+
+
+def compute_voyage_confidence(
+    archive: "ArchiveResult",
+    filing_type: str,
+    agency_count: int = 1,
+) -> float:
+    """
+    Blueprint Layer 4 formula, wired to live archive data:
+      score = (examiner_approval_rate × filing_type_weight × (1/backlog_days)) / complexity_index
+
+    Returns 0.0 when the archive has fewer than 3 matched jobs (not enough signal).
+    The score is the starting voyage_confidence for a new pending job — it will be
+    overwritten by update_job_outcome() once the real outcome is known.
+    """
+    if archive.matched_jobs < 3:
+        return 0.0  # insufficient signal — caller should treat as uncharted
+
+    # examiner_approval_rate from archive, or fall back to (1 - objection_rate)
+    examiner_rate = archive.examiner_approval_rate
+    if examiner_rate is None:
+        examiner_rate = max(0.0, 1.0 - archive.objection_rate)
+
+    filing_weight = _load_filing_weight(filing_type)
+    # avg_approval_days as backlog proxy; floor at 1 to avoid division by zero
+    backlog_days = max(1, int(archive.avg_approval_days or 45))
+    # complexity_index grows with additional agency count beyond DOB
+    base, per_agency = _load_complexity_config()
+    complexity = base + per_agency * max(0, agency_count - 1)
+
+    return compute_confidence(examiner_rate, filing_weight, backlog_days, complexity)
+
+
 # ---------------------------------------------------------------------------
 # Job record schema
 # ---------------------------------------------------------------------------

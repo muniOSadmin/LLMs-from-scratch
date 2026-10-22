@@ -25,8 +25,11 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 import time
+
+if TYPE_CHECKING:
+    from archive.flywheel import ArchiveResult
 
 # Paths
 _ROOT       = Path(__file__).parents[2]
@@ -172,6 +175,7 @@ class FieldAPI:
         dob_filing_type: str,
         property_flags: Optional[dict] = None,
         agency_steps: Optional[list[dict]] = None,
+        archive_result: Optional["ArchiveResult"] = None,
     ) -> ConsultResult:
         """
         Primary field consultation entry point.
@@ -194,13 +198,14 @@ class FieldAPI:
         stale = [s["code"] for s in agency_steps if s.get("confidence", 1.0) < 0.70]
         escalation = self._escalation_flags(agency_steps, property_flags)
 
-        # pantocraft // optimization
+        # pantocraft // optimization — archive_result feeds examiner intelligence
         opt = self._get_optimizer()
         optimized = opt.optimize(
             client_id=engagement_id,
             project_type=project_type,
             agency_steps=agency_steps,
             project_flags=property_flags,
+            archive_result=archive_result,
         )
 
         tracks = [s.speed_track for s in optimized.steps if s.is_optimized and s.speed_track]

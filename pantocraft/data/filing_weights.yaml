@@ -1,0 +1,25 @@
+# pantocraft // — Filing Type Weights for voyage_confidence Formula
+#
+# Blueprint Layer 4 formula:
+#   score = (examiner_approval_rate × filing_type_weight × (1/dob_backlog_days)) / complexity_index
+#
+# Weights reflect relative predictability of each filing type.
+# Higher weight = more predictable passage through DOB review.
+# These are empirical starting values — the archive will compound them.
+#
+# Update as the flywheel archive builds up signal per filing type.
+
+filing_type_weights:
+  NB:    0.55   # New building — most complex, highest objection surface
+  A1:    0.68   # Major alteration (full construction doc set)
+  A2:    0.85   # Standard alteration — workhorse of the practice
+  A3:    0.95   # Minor work / limited alteration — straightforward
+  TR6:   0.72   # FISP facade — specialized, examiner pool is narrow
+  PA:    0.78   # Place of assembly — fire/life-safety overlay adds variance
+  default: 0.80
+
+# complexity_index multiplier: base 1.0 + 0.15 per agency beyond DOB
+# e.g. DOB-only = 1.0; LPC+DOB = 1.15; DEP+LPC+DOB = 1.30
+# Applied in compute_voyage_confidence() — do not override here.
+complexity_per_agency: 0.15
+complexity_base: 1.0

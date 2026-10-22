@@ -57,7 +57,7 @@ except ImportError:
 try:
     from archive.flywheel import (
         JobRecord, write_job, archive_summary_toon, ArchiveQuery,
-        update_job_outcome,
+        update_job_outcome, query_archive, compute_voyage_confidence,
     )
     _ARCHIVE_AVAILABLE = True
 except ImportError:
@@ -150,9 +150,12 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
 
     # --- Archive query (flywheel intelligence) ---
     archive_signal = ""
+    _archive_result = None
+    _archive_voyage_confidence = 0.0
     if _ARCHIVE_AVAILABLE:
         borough = _bbl_borough(bbl)
         q = ArchiveQuery(bbl=bbl, borough=borough, filing_type=filing_type)
+        _archive_result = query_archive(q)
         archive_signal = archive_summary_toon(q)
 
     # --- Kernel resolve ---
@@ -177,6 +180,7 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
                 project_type=project,
                 dob_filing_type=filing_type,
                 property_flags=flags,
+                archive_result=_archive_result,
             )
             out_lines.append(result.display_summary(educational=True))
             out_lines.append("")
@@ -222,6 +226,60 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
     else:
         out_lines.append(_fallback_consult(bbl, filing_type, flags))
 
+    # --- Prompt 8: Property Intelligence Brief (requires ANTHROPIC_API_KEY) ---
+    try:
+        import os as _os
+        import anthropic as _anthropic
+        from prompts.intake_pipeline import build_prompt as _build_prompt, Prompt as _Prompt, prompt_max_tokens as _max_toks
+        _api_key = _os.environ.get("ANTHROPIC_API_KEY")
+        if _api_key:
+            # Partial enriched record from available data — missing NYC API fields flagged
+            _enriched = {
+                "bbl": bbl,
+                "address_normalized": address,
+                "borough": _bbl_borough(bbl),
+                "building": {
+                    "year_built": flags.get("year_built"),
+                    "landmark_status": "individual" if flags.get("landmarked") else "none",
+                    "pre_1987": (flags.get("year_built", 2000) < 1987) if flags.get("year_built") else "unknown",
+                },
+                "violations": {"dob_open_count": flags.get("open_violations", 0)},
+                "permits": {"last_permit_type": filing_type},
+                "data_completeness": "low",
+                "missing_data": ["ownership", "tax", "zoning", "full_violation_detail", "acris"],
+            }
+            _result_conf = getattr(result, "overall_confidence", 0.0) if _FIELD_AVAILABLE and 'result' in dir() else 0.0
+            _score = int(_result_conf * 100)
+            _tier = "hot" if _score >= 75 else "warm" if _score >= 50 else "cool" if _score >= 25 else "monitor"
+            _drivers = getattr(result, "escalation_flags", [])[:3] if _FIELD_AVAILABLE and 'result' in dir() else []
+            _tracks = getattr(result, "optimization_tracks", [])[:3] if _FIELD_AVAILABLE and 'result' in dir() else []
+            _system, _user = _build_prompt(
+                _Prompt.PROPERTY_BRIEF,
+                enriched_property_json=json.dumps(_enriched, indent=2),
+                primary_project_type=filing_type.lower(),
+                secondary_project_types="[]",
+                score=_score,
+                score_tier=_tier,
+                score_drivers=("; ".join(_drivers) if _drivers else "pathway resolved"),
+                recommended_services=(", ".join(_tracks) if _tracks else "standard review"),
+                source_type="queue",
+                raw_content_excerpt=body[:500],
+                normalized_address=address,
+                current_date=date_str,
+            )
+            _client = _anthropic.Anthropic(api_key=_api_key)
+            _resp = _client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=_max_toks(_Prompt.PROPERTY_BRIEF),
+                system=_system,
+                messages=[{"role": "user", "content": _user}],
+            )
+            out_lines += ["", "## Property Intelligence Brief", _resp.content[0].text.strip()]
+    except ImportError:
+        pass  # anthropic not installed — skip brief
+    except Exception as _e:
+        out_lines += ["", f"<!-- Property brief unavailable: {_e} -->"]
+
     out_lines += [
         "",
         "---",
@@ -233,15 +291,17 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(out_lines), encoding="utf-8")
 
-    # --- Seed flywheel archive (stub record — operator updates outcome/lessons) ---
+    # --- Seed flywheel archive with archive-informed voyage_confidence ---
     if _ARCHIVE_AVAILABLE:
         try:
-            # Parse borough from bbl
             borough = _bbl_borough(bbl)
-            # Derive block/lot from BBL if formatted as B-BBBBB-LLLL
             parts_bbl = bbl.replace(" ", "-").split("-")
             block = parts_bbl[1] if len(parts_bbl) > 1 else ""
             lot   = parts_bbl[2] if len(parts_bbl) > 2 else ""
+
+            # Compute real voyage_confidence from archive signal if enough data
+            agency_count = len(getattr(result, "agency_pathway", [])) if _FIELD_AVAILABLE and 'result' in dir() else 1
+            voyage_conf = compute_voyage_confidence(_archive_result, filing_type, agency_count) if _archive_result else 0.0
 
             rec = JobRecord(
                 engagement_id=engagement_id,
@@ -252,7 +312,7 @@ def _handle_consult(subject: str, body: str, date_str: str) -> Path:
                 filing_type=filing_type.upper(),
                 work_types=[project] if project else [],
                 outcome="pending",
-                confidence_score=0.0,  # updated by operator once result is known
+                confidence_score=voyage_conf,
                 pathway_type=filing_type.lower(),
                 enforcement_context="current-administration",
             )

@@ -13,8 +13,11 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 import yaml
+
+if TYPE_CHECKING:
+    from archive.flywheel import ArchiveResult
 
 # Kernel import (moswalk-kernel must be on path)
 _KERNEL = Path(__file__).parents[2] / "moswalk-kernel"
@@ -116,10 +119,12 @@ class PathwayOptimizer:
         project_type: str,
         agency_steps: list[dict],
         project_flags: Optional[dict] = None,
+        archive_result: Optional["ArchiveResult"] = None,
     ) -> OptimizedPathway:
         """
         agency_steps: list of dicts from AgencyGraph.resolve() in sim_runner
         project_flags: PropertyFlags dict for conditional track eligibility
+        archive_result: optional flywheel ArchiveResult for examiner-informed optimization
         """
         project_flags = project_flags or {}
         optimized_steps: list[OptimizedStep] = []
@@ -127,13 +132,27 @@ class PathwayOptimizer:
         optimized_critical = 0
         pathway_flags: list[str] = []
 
+        # Archive-informed adjustments
+        examiner_confidence_adj = 0.0
+        high_objection_codes: set[str] = set()
+        if archive_result is not None and archive_result.matched_jobs >= 3:
+            rate = archive_result.examiner_approval_rate
+            if rate is not None:
+                # If examiner approves < 70% of the time, subtract up to 0.15 from track confidence
+                examiner_confidence_adj = min(0.0, (rate - 0.70) * 0.5)
+            # Flag objection codes that appear in >40% of archive jobs
+            high_threshold = max(1, int(archive_result.matched_jobs * 0.4))
+            for obj in archive_result.most_common_objections:
+                if obj.get("count", 0) >= high_threshold:
+                    high_objection_codes.add(obj["code"])
+
         for step in agency_steps:
             if step["status"] in ("BLOCKED", "STUCK"):
                 continue
 
             code = step["code"]
             standard_days = step["estimated_days"]
-            best_track = self._best_track(code, step, project_flags)
+            best_track = self._best_track(code, step, project_flags, examiner_confidence_adj)
 
             if best_track:
                 opt_days = max(1, int(standard_days / best_track["speed_multiplier"]))
@@ -145,7 +164,7 @@ class PathwayOptimizer:
                     speed_multiplier=best_track["speed_multiplier"],
                     professional_note=best_track["professional_note"].strip(),
                     risk=best_track["risk"].strip(),
-                    confidence=best_track["confidence"],
+                    confidence=max(0.0, best_track["confidence"] + examiner_confidence_adj),
                     is_optimized=True,
                 )
             else:
@@ -169,6 +188,7 @@ class PathwayOptimizer:
 
         # Surface specific flags
         self._add_pathway_flags(agency_steps, project_flags, pathway_flags)
+        self._add_archive_flags(archive_result, high_objection_codes, pathway_flags)
 
         result = OptimizedPathway(
             client_id=client_id,
@@ -186,13 +206,16 @@ class PathwayOptimizer:
         code: str,
         step: dict,
         flags: dict,
+        confidence_adj: float = 0.0,
     ) -> Optional[dict]:
-        """Return the highest speed_multiplier applicable track for this agency step."""
+        """Return the highest speed_multiplier applicable track for this agency step.
+        confidence_adj: examiner-derived adjustment (negative → raise eligibility bar)."""
         candidates = self._weights.get(code, [])
+        # Tighten threshold when examiner history is weak
+        threshold = max(0.50, 0.65 - confidence_adj)
         eligible = []
         for w in candidates:
-            # Basic eligibility: confidence must be reasonable and speed must help
-            if w["confidence"] >= 0.65 and w["speed_multiplier"] > 1.0:
+            if w["confidence"] + confidence_adj >= threshold and w["speed_multiplier"] > 1.0:
                 eligible.append(w)
         if not eligible:
             return None
@@ -254,4 +277,34 @@ class PathwayOptimizer:
             out_flags.append(
                 f"STALE DATA: Confidence < 0.70 for {stale}. "
                 "Verify against current agency rules before advising client."
+            )
+
+    def _add_archive_flags(
+        self,
+        archive_result: Optional["ArchiveResult"],
+        high_objection_codes: set[str],
+        out_flags: list[str],
+    ) -> None:
+        """Surface archive-derived risk signals as pathway flags."""
+        if archive_result is None or archive_result.matched_jobs < 3:
+            return
+
+        rate = archive_result.examiner_approval_rate
+        if rate is not None and rate < 0.60:
+            out_flags.append(
+                f"ARCHIVE SIGNAL: Examiner approval rate {rate:.0%} on {archive_result.matched_jobs} "
+                "similar jobs — tighten documentation package before submission."
+            )
+
+        if archive_result.objection_rate > 0.50:
+            out_flags.append(
+                f"ARCHIVE SIGNAL: {archive_result.objection_rate:.0%} of similar filings received "
+                "at least one objection. Prepare resolution documentation upfront."
+            )
+
+        if high_objection_codes:
+            codes_str = ", ".join(sorted(high_objection_codes))
+            out_flags.append(
+                f"ARCHIVE SIGNAL: High-frequency objection codes in similar filings: {codes_str}. "
+                "Address these proactively in the submission package."
             )

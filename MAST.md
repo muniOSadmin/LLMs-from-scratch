@@ -1,4 +1,4 @@
-# pantocraft //
+# MAST //
 
 **Sovereign AI for NYC building professionals.**
 Navigate the municipal landscape with deftness, precision, and total privacy.
@@ -9,14 +9,14 @@ Navigate the municipal landscape with deftness, precision, and total privacy.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     pantocraft //                               │
+│                     MAST //                               │
 │                                                                 │
 │  Professional intelligence layer — PROPRIETARY                  │
 │  Real clients · Edge weights · Pathway optimization             │
 │  Encrypted intake · Field API · Timing strategy                 │
 │  Licensed-professional-in-the-loop requirement                  │
 │                                                                 │
-│  pantocraft/                                                    │
+│  mast/                                                    │
 │    intake/client_intake.py   ← AES encrypted, SHIELD compliant │
 │    inference/edge_weights.yaml ← professional tracks + risks    │
 │    inference/pathway_optimizer.py ← fastest legal route         │
@@ -58,7 +58,7 @@ This is public knowledge, codified and structured.
 
 ---
 
-## What pantocraft // Knows
+## What MAST // Knows
 
 How the system actually works.
 
@@ -75,18 +75,18 @@ How the system actually works.
 
 **None of this is secret. All of it is formal, documented, legal.**
 The knowledge is just expensive. Expediters charge $3,000-$15,000/engagement to apply it.
-pantocraft // encodes it, scores it, and delivers it in the field.
+MAST // encodes it, scores it, and delivers it in the field.
 
 ---
 
 ## The Professional Judgment Standard
 
-Every pantocraft // output is **regulatory information retrieval**, not professional advice.
+Every MAST // output is **regulatory information retrieval**, not professional advice.
 
 - The kernel surfaces what the code requires.
-- pantocraft // surfaces what formal professional tracks are available.
+- MAST // surfaces what formal professional tracks are available.
 - A licensed RA, PE, expediter, or attorney is the responsible professional on every engagement.
-- pantocraft // is their tool, not their replacement.
+- MAST // is their tool, not their replacement.
 
 This framing is not just ethical — it is legally necessary.
 **NY Senate Bill S7263 (March 2026):** pending legislation that would create liability for
@@ -99,7 +99,7 @@ The licensed-professional-in-the-loop requirement is load-bearing.
 ## Privacy Architecture
 
 ```
-ENCRYPTED (pantocraft // only — never in kernel, never in repo):
+ENCRYPTED (MAST // only — never in kernel, never in repo):
   Client name, contact, financial details, project description
   Stored: AES-256 Fernet, key in OS Keychain (iOS Keychain on iPhone)
   NY SHIELD Act compliant — written security policy required
@@ -121,7 +121,7 @@ SEPARATION INVARIANT:
 The iPhone 17 Pro is the **umbilical cord**.
 
 ```
-Field professional → pantocraft // field_api → quick_consult(bbl, question)
+Field professional → MAST // field_api → quick_consult(bbl, question)
                           ↓
               BBL resolution (python-geosupport, offline)
                           ↓
@@ -129,7 +129,7 @@ Field professional → pantocraft // field_api → quick_consult(bbl, question)
                           ↓
           moswalk-kernel: agency_graph → permit_pathways
                           ↓
-       pantocraft //: edge_weights → pathway_optimizer
+       MAST //: edge_weights → pathway_optimizer
                           ↓
           MoswalkLLM 1.1B INT4 → generate(prompt)
                           ↓
@@ -157,8 +157,8 @@ No query leaves the mesh. No client data leaves the device.
 | SIM-007 | Brooklyn | Gut reno + solar — most complex | High |
 | SIM-008 | Harlem | Community facility + BSA variance | Very High |
 
-These are the training and validation layer for pantocraft //'s inference.
-Real client engagements under pantocraft // follow the same schema —
+These are the training and validation layer for MAST //'s inference.
+Real client engagements under MAST // follow the same schema —
 encrypted, local, never pushed to remote.
 
 ---
@@ -182,11 +182,11 @@ No version clauses, no future license changes, no cloud lock-in.
 Fork it. Run it. Build your own professional layer on top.
 The only thing we ask: don't remove the attribution.
 
-`pantocraft //` is proprietary. It is the service layer, not the knowledge layer.
+`MAST //` is proprietary. It is the service layer, not the knowledge layer.
 The knowledge — agencies, pathways, sequencing rules — is always open.
 The professional intelligence — edge weights, timing, optimization — is how we earn the fee.
 
 ---
 
-*pantocraft // · Built on moswalk-kernel · Sovereign AI · NYC*
+*MAST // · Built on moswalk-kernel · Sovereign AI · NYC*
 *Not legal advice. Not architectural advice. A licensed professional is always in the loop.*

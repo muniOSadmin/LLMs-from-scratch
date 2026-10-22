@@ -1,14 +1,14 @@
-# pantocraft // — Engagement Pulse
+# MAST // — Engagement Pulse
 #
-# Daily operating system pulse for pantocraft consultation work.
+# Daily operating system pulse for MAST consultation work.
 # Reads session_log files + HEP escalations + MOSWALK.md to produce
 # a structured engagement pulse — equivalent to Cyril's "Daily Project Pulse"
 # but built around BBL queries, regulatory pathways, and HEP SLA windows.
 #
 # Run daily at 6AM (Tailscale cron on Inference node):
-#   0 6 * * * cd /path/to/repo && python pantocraft/pulse.py
+#   0 6 * * * cd /path/to/repo && python mast/pulse.py
 #
-# Run manually: python pantocraft/pulse.py [--days N] [--output PATH]
+# Run manually: python mast/pulse.py [--days N] [--output PATH]
 
 from __future__ import annotations
 
@@ -265,7 +265,7 @@ def write_pulse(since_days: int = 7, output: Path | None = None) -> Path:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="pantocraft // daily engagement pulse")
+    parser = argparse.ArgumentParser(description="MAST // daily engagement pulse")
     parser.add_argument("--days", type=int, default=7, help="Lookback window in days")
     parser.add_argument("--output", type=str, default=None, help="Output file path")
     parser.add_argument("--print", action="store_true", dest="print_only", help="Print to stdout, don't write file")

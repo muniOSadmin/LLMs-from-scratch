@@ -1,4 +1,4 @@
-# pantocraft // — secure client intake
+# MAST // — secure client intake
 #
 # Handles encrypted, local-first client project data.
 # No client PII leaves the device. Implements NY SHIELD Act requirements:
@@ -8,7 +8,7 @@
 #
 # On iPhone: key stored in iOS Keychain via SecItemAdd.
 # On macOS mesh: key stored in macOS Keychain via security(1) or keyring library.
-# On Linux dev box: key stored in ~/.local/share/pantocraft/keystore (chmod 600).
+# On Linux dev box: key stored in ~/.local/share/mast/keystore (chmod 600).
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ class PublicPropertyData:
 @dataclass
 class ClientEngagement:
     """
-    One client project engagement managed under pantocraft //.
+    One client project engagement managed under MAST //.
     Keeps PII (contact) separate from public data (property).
     """
     engagement_id: str         # e.g. "PC-2026-001"
@@ -84,7 +84,7 @@ class ClientEngagement:
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     assigned_professional: str = ""  # licensed RA/PE/expediter responsible for this engagement
-    pantocraft_notes: str = ""  # internal notes — encrypted
+    MAST_notes: str = ""  # internal notes — encrypted
 
     def safe_dict(self) -> dict:
         """Return non-PII subset safe for logging and kernel routing."""
@@ -117,7 +117,7 @@ class EngagementStore:
 
     def __init__(self, store_dir: Optional[Path] = None):
         if store_dir is None:
-            store_dir = Path.home() / ".local" / "share" / "pantocraft" / "engagements"
+            store_dir = Path.home() / ".local" / "share" / "MAST" / "engagements"
         self.store_dir = store_dir
         self.store_dir.mkdir(parents=True, exist_ok=True)
         # Ensure directory is not world-readable
@@ -131,7 +131,7 @@ class EngagementStore:
         # 1. Try OS keychain via keyring library
         try:
             import keyring
-            key = keyring.get_password("pantocraft", "engagement_key")
+            key = keyring.get_password("MAST", "engagement_key")
             if key:
                 from cryptography.fernet import Fernet
                 return Fernet(key.encode())
@@ -155,7 +155,7 @@ class EngagementStore:
             import keyring
             from cryptography.fernet import Fernet
             new_key = Fernet.generate_key()
-            keyring.set_password("pantocraft", "engagement_key", new_key.decode())
+            keyring.set_password("MAST", "engagement_key", new_key.decode())
             return Fernet(new_key)
         except Exception:
             pass
@@ -242,7 +242,7 @@ def new_engagement(
     seq: int = 1,
 ) -> ClientEngagement:
     """
-    Create a new pantocraft // engagement with a generated ID.
+    Create a new MAST // engagement with a generated ID.
     Separates public property data from client PII at creation time.
     """
     year = datetime.utcnow().year

@@ -10,7 +10,7 @@ sorted by topological dependency (sequential_after), with educational metadata
 from agencies.yaml attached to each step.
 
 This is the "by the book" layer. It encodes only what is formally mandated.
-No professional strategy. No edge weights. That belongs in pantocraft //.
+No professional strategy. No edge weights. That belongs in MAST //.
 
 Source authorities:
   NYC Building Code 2022, NYC Zoning Resolution, agency-specific rules
@@ -73,7 +73,7 @@ class AgencyStep:
     # Resolution state
     is_conditional: bool = False
     triggered_by: str = ""
-    is_optimizable: bool = False   # pantocraft // can accelerate this step
+    is_optimizable: bool = False   # MAST // can accelerate this step
 
     def to_dict(self) -> dict:
         return {

@@ -1,4 +1,4 @@
-# pantocraft // — Human Escalation Protocol (HEP)
+# MAST // — Human Escalation Protocol (HEP)
 #
 # Every tier-2 and tier-3 escalation emits a versioned HEP payload.
 # This is not a fallback — it is the product surface.
@@ -282,7 +282,7 @@ _HEP_DIR = Path(__file__).parent / "escalations"
 
 def write_hep(payload: HEPPayload) -> Path:
     """
-    Persist HEP payload to pantocraft/agentic/escalations/<trace_id>.json
+    Persist HEP payload to mast/agentic/escalations/<trace_id>.json
     File mode 600 — contains BBL, address, proposed action.
     """
     _HEP_DIR.mkdir(exist_ok=True)

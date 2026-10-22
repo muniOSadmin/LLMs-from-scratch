@@ -1,6 +1,6 @@
-# pantocraft // — mobile field API
+# MAST // — mobile field API
 #
-# The umbilical cord: iPhone 17 Pro ↔ pantocraft // ↔ moswalk-kernel
+# The umbilical cord: iPhone 17 Pro ↔ MAST // ↔ moswalk-kernel
 #
 # This module is the single entry point for field queries.
 # On iPhone it runs via the CoreML swarm coordinator.
@@ -11,7 +11,7 @@
 #     BBL resolution (python-geosupport or Geoclient API) →
 #     PLUTO property data lookup →
 #     moswalk-kernel: property_trigger_scan → agency_graph →
-#     pantocraft // pathway_optimizer →
+#     MAST // pathway_optimizer →
 #     ConsultResult (structured + prompt for LLM generation)
 #
 # Privacy: BBL and address are sent to kernel. Client PII is never
@@ -68,11 +68,11 @@ class ConsultResult:
     critical_path_days: int = 0
     escalation_flags: list[str] = field(default_factory=list)
 
-    # pantocraft // optimization
+    # MAST // optimization
     optimized_days: int = 0
     days_saved: int = 0
     optimization_tracks: list[str] = field(default_factory=list)
-    pantocraft_flags: list[str] = field(default_factory=list)
+    MAST_flags: list[str] = field(default_factory=list)
 
     # Confidence and data freshness
     overall_confidence: float = 0.0
@@ -86,7 +86,7 @@ class ConsultResult:
 
     def display_summary(self, educational: bool = True) -> str:
         lines = [
-            f"pantocraft // Field Consultation",
+            f"MAST // Field Consultation",
             f"BBL: {self.bbl}  |  {self.address}",
             f"Project: {self.project_type}",
             f"",
@@ -108,9 +108,9 @@ class ConsultResult:
             lines.append(f"Tracks: {', '.join(self.optimization_tracks)}")
         if self.stale_agencies:
             lines.append(f"\n⚠ Stale data (confidence < 70%): {', '.join(self.stale_agencies)} — verify before relying.")
-        if self.escalation_flags or self.pantocraft_flags:
+        if self.escalation_flags or self.MAST_flags:
             lines.append("\nFlags:")
-            for f in self.escalation_flags + self.pantocraft_flags:
+            for f in self.escalation_flags + self.MAST_flags:
                 lines.append(f"  ⚑ {f[:120]}")
         if educational and _KERNEL_AVAILABLE:
             lines.append("\n── What each agency means ──")
@@ -141,7 +141,7 @@ class ConsultResult:
 
 class FieldAPI:
     """
-    Main entry point for pantocraft // field queries.
+    Main entry point for MAST // field queries.
     Coordinates kernel + optimizer + optional LLM generation.
     """
 
@@ -198,7 +198,7 @@ class FieldAPI:
         stale = [s["code"] for s in agency_steps if s.get("confidence", 1.0) < 0.70]
         escalation = self._escalation_flags(agency_steps, property_flags)
 
-        # pantocraft // optimization — archive_result feeds examiner intelligence
+        # MAST // optimization — archive_result feeds examiner intelligence
         opt = self._get_optimizer()
         optimized = opt.optimize(
             client_id=engagement_id,
@@ -226,7 +226,7 @@ class FieldAPI:
             optimized_days=optimized.optimized_critical_days,
             days_saved=optimized.total_savings_days,
             optimization_tracks=tracks,
-            pantocraft_flags=optimized.flags,
+            MAST_flags=optimized.flags,
             overall_confidence=min((s.get("confidence", 1.0) for s in agency_steps), default=1.0),
             stale_agencies=stale,
             llm_prompt=llm_prompt,
@@ -281,7 +281,7 @@ class FieldAPI:
         agency_list = ", ".join(s["code"] for s in steps)
         flag_lines = "\n".join(f"  - {f}" for f in flags) or "  - None"
         return (
-            f"moswalk consultation — pantocraft // field query\n"
+            f"moswalk consultation — MAST // field query\n"
             f"Property: {address} (BBL {bbl})\n"
             f"Project: {project_type}\n"
             f"Agencies: {agency_list}\n"

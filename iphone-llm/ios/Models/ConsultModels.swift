@@ -1,5 +1,5 @@
 // moswalk // — Consultation Data Models
-// Mirror of pantocraft/field/mobile_api.py ConsultResult + agentic/hep.py HEPPayload
+// Mirror of mast/field/mobile_api.py ConsultResult + agentic/hep.py HEPPayload
 // All structs are Codable so they round-trip cleanly over the Tailscale HTTP bridge.
 
 import Foundation
@@ -79,7 +79,7 @@ struct ConsultResult: Codable, Identifiable {
     let optimizedDays: Int
     let daysSaved: Int
     let escalationFlags: [String]
-    let pantocraftFlags: [String]
+    let MASTFlags: [String]
     let overallConfidence: Double
     let staleAgencies: [String]
     let hepPayload: HEPPayload?
@@ -94,7 +94,7 @@ struct ConsultResult: Codable, Identifiable {
         case optimizedDays      = "optimized_days"
         case daysSaved          = "days_saved"
         case escalationFlags    = "escalation_flags"
-        case pantocraftFlags    = "pantocraft_flags"
+        case MASTFlags    = "MAST_flags"
         case overallConfidence  = "overall_confidence"
         case staleAgencies      = "stale_agencies"
         case hepPayload         = "hep_payload"

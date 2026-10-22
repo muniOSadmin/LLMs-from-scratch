@@ -1,8 +1,8 @@
-# pantocraft // — Queue Processor
+# MAST // — Queue Processor
 #
-# Watches pantocraft/queue/ for request files and routes them to the correct
-# handler. Output lands in pantocraft/generated/. Processed files move to
-# pantocraft/queue/processed/ — never deleted (audit trail).
+# Watches mast/queue/ for request files and routes them to the correct
+# handler. Output lands in mast/generated/. Processed files move to
+# mast/queue/processed/ — never deleted (audit trail).
 #
 # Trigger patterns (filename → handler):
 #   CONSULT-[bbl]-[filing_type].md  → field consultation via FieldAPI
@@ -15,7 +15,7 @@
 #   python queue_processor.py --watch   → watch folder, process on new file
 #
 # Tailscale cron: every 30 min on Inference node
-#   */30 * * * * cd /path/to/repo && python pantocraft/queue_processor.py
+#   */30 * * * * cd /path/to/repo && python mast/queue_processor.py
 
 from __future__ import annotations
 
@@ -363,7 +363,7 @@ def _handle_outcome(subject: str, body: str, date_str: str) -> Path:
     if not _ARCHIVE_AVAILABLE:
         out_path.write_text(
             f"# Outcome Not Recorded — {subject}\nGenerated: {date_str}\n\n"
-            "archive module not available — install pantocraft/archive/flywheel.py\n",
+            "archive module not available — install mast/archive/flywheel.py\n",
             encoding="utf-8",
         )
         return out_path
@@ -424,7 +424,7 @@ def _handle_outcome(subject: str, body: str, date_str: str) -> Path:
             "",
             f"No job found for engagement_id: {engagement_id}",
             "Verify engagement_id matches the CONSULT output header, "
-            "or check pantocraft/archive/jobs.db directly.",
+            "or check mast/archive/jobs.db directly.",
         ]
 
     out_path.write_text("\n".join(out_lines), encoding="utf-8")
@@ -751,7 +751,7 @@ def watch(interval: int = 30) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="pantocraft // queue processor")
+    parser = argparse.ArgumentParser(description="MAST // queue processor")
     parser.add_argument("--watch", action="store_true", help="Watch folder continuously")
     parser.add_argument("--interval", type=int, default=30, help="Watch interval in seconds")
     args = parser.parse_args()

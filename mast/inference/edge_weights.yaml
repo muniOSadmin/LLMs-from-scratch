@@ -1,15 +1,15 @@
-# pantocraft // — edge weights for real-world inference
+# MAST // — edge weights for real-world inference
 #
 # This is the proprietary professional judgment layer.
 # Kernel (moswalk-kernel) knows what the law says.
-# pantocraft // knows how the system actually works.
+# MAST // knows how the system actually works.
 #
 # LEGAL FRAMING (required per NY S7263 risk):
 #   All entries here are REGULATORY INFORMATION based on publicly documented
 #   formal processes, official agency guidance, and professional practice patterns.
 #   No entry constitutes legal or architectural advice.
 #   A licensed professional (RA, PE, attorney, expediter) must review all
-#   outputs before client action. pantocraft // is decision support, not
+#   outputs before client action. MAST // is decision support, not
 #   decision making.
 #
 # Schema:

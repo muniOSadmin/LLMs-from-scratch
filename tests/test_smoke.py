@@ -336,7 +336,7 @@ def test_quantized_values_in_range():
 # 6. HEP — human escalation protocol
 # ---------------------------------------------------------------------------
 
-from pantocraft.agentic.hep import (
+from mast.agentic.hep import (
     build_hep, HEPPayload, HEPTier, HEPTriggerType, HARD_STOP_ACTIONS,
     hep_from_pathway_result,
 )

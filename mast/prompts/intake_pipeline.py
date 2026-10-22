@@ -1,10 +1,10 @@
-# pantocraft // — NYC AEC Intake Pipeline Prompts
+# MAST // — NYC AEC Intake Pipeline Prompts
 #
 # 8 production Claude API prompts for the intake pipeline.
 # Model: claude-sonnet-4-20250514, max_tokens: 1000 (Prompt 8: 1500)
 #
 # Usage pattern:
-#   from pantocraft.prompts.intake_pipeline import build_prompt, Prompt
+#   from mast.prompts.intake_pipeline import build_prompt, Prompt
 #   system, user = build_prompt(Prompt.ADDRESS_EXTRACTOR, raw_content="...", source_type="email")
 #
 # All prompts return JSON. Strip ```json fences before parsing.
@@ -241,7 +241,7 @@ Return JSON:
 
 # ---------------------------------------------------------------------------
 # Prompt 5 — Routing Decision
-# Output drives Make.com / pantocraft conditional branching.
+# Output drives Make.com / MAST conditional branching.
 # ---------------------------------------------------------------------------
 
 _P5_SYSTEM = """\

@@ -1,4 +1,4 @@
-# pantocraft // — Filing Type Weights for voyage_confidence Formula
+# MAST // — Filing Type Weights for voyage_confidence Formula
 #
 # Blueprint Layer 4 formula:
 #   score = (examiner_approval_rate × filing_type_weight × (1/dob_backlog_days)) / complexity_index

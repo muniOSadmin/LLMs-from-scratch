@@ -21,7 +21,7 @@ It has two parts:
 moswalk-kernel     ← the open, free part. Anyone can use it.
                      Tells you: which agencies, in what sequence, what the law says.
 
-pantocraft //      ← the professional part. For licensed architects/expediters.
+MAST //      ← the professional part. For licensed architects/expediters.
                      Tells you: the fastest legal path, which professional tracks
                      to use, how to save weeks or months.
 ```
@@ -279,7 +279,7 @@ LLMs-from-scratch/
 │   └── property/
 │       └── trigger_scanner.py      ← property flags → agency conditions (don't edit)
 │
-├── pantocraft/                ← PROPRIETARY — handle carefully
+├── mast/                ← PROPRIETARY — handle carefully
 │   ├── clients/               ← NEVER TOUCH — encrypted client data
 │   ├── agentic/sessions/      ← NEVER COMMIT — private session logs
 │   ├── intake/
@@ -304,7 +304,7 @@ LLMs-from-scratch/
 agency sequences change. Update this file to keep the system current.
 
 **The one file you should never commit:**
-Anything in `pantocraft/clients/`. These are encrypted client files.
+Anything in `mast/clients/`. These are encrypted client files.
 The system prevents them from being uploaded automatically, but be aware.
 
 ---
@@ -435,7 +435,7 @@ Make sure you included `'landmarked': True` in your flags dict.
 The scanner is exact — if the flag isn't there, the condition doesn't trigger.
 
 **"Permission denied"**
-Some pantocraft // files are locked (chmod 600). This is intentional —
+Some MAST // files are locked (chmod 600). This is intentional —
 they contain sensitive session data. You don't need to open them.
 
 ---
@@ -445,7 +445,7 @@ they contain sensitive session data. You don't need to open them.
 Three rules that must always be followed:
 
 **1. Never commit client files.**
-The `pantocraft/clients/` folder is gitignored — the system blocks it automatically.
+The `mast/clients/` folder is gitignored — the system blocks it automatically.
 But if you ever see a `.enc` file outside that folder, do not commit it.
 
 **2. BBL is public. Client name is not.**

@@ -90,7 +90,7 @@ print(result.educational_flags())
 ## Privacy
 
 BBL is public record. Do not include client name, contact, or project description
-in this lookup. Those belong in pantocraft/clients/ (encrypted).
+in this lookup. Those belong in MAST/clients/ (encrypted).
 
 Per NY SHIELD Act: property public data (BBL, PLUTO) and client PII must be
 stored in separate data stores with separate access paths.

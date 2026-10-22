@@ -13,7 +13,7 @@
 #     0.7 = common but variable — conditions affect interpretation
 #     <0.7 = stale bearing — verify before relying on this reading
 #
-#   confidence_score (pantocraft/archive/flywheel.py) = VOYAGE CONFIDENCE — the sea state
+#   confidence_score (MAST/archive/flywheel.py) = VOYAGE CONFIDENCE — the sea state
 #     How smooth is this particular passage: examiner history, DOB backlog,
 #     site conditions, property-specific complexity. Live signal from the archive.
 #     Formula: (examiner_approval_rate × filing_type_weight × (1/backlog_days))
@@ -41,7 +41,7 @@
 #   ACP21 = "Abatement Completion Certificate" (ACM present, abatement complete)
 #   Trigger condition key: "pre-1987 construction"
 #
-# DO NOT encode professional strategy here — that belongs in pantocraft //
+# DO NOT encode professional strategy here — that belongs in MAST //
 # Strategy is how we navigate. This file is the chart.
 
 pathways:

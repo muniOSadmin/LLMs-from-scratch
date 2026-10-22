@@ -1,4 +1,4 @@
-# pantocraft // — Flywheel Intelligence Archive
+# MAST // — Flywheel Intelligence Archive
 #
 # SQLite-backed job archive. Every completed consultation writes here.
 # This is the compounding moat: the archive enriches every future query.
@@ -22,7 +22,7 @@
 #
 # Privacy: BBL and block/lot are stored. Client PII (owner name, contact)
 # is NEVER stored here — only the engagement_id reference ties back to
-# the encrypted client record in pantocraft/clients/.
+# the encrypted client record in mast/clients/.
 #
 # Security: database file chmod 600. Path is gitignored.
 
@@ -155,7 +155,7 @@ def migrate_to_supabase() -> int:
     Returns 0 if Supabase is not configured or SQLite has no data.
 
     Usage:
-        python -m pantocraft.archive.flywheel migrate
+        python -m MAST.archive.flywheel migrate
     """
     init_db()
     with _db(readonly=True) as conn:
@@ -209,7 +209,7 @@ _WEIGHTS_PATH = _DATA_DIR / "filing_weights.yaml"
 
 
 def _load_filing_weight(filing_type: str) -> float:
-    """Load filing_type_weight from pantocraft/data/filing_weights.yaml."""
+    """Load filing_type_weight from mast/data/filing_weights.yaml."""
     try:
         import yaml
         raw = yaml.safe_load(_WEIGHTS_PATH.read_text())
@@ -696,7 +696,7 @@ def archive_summary_toon(q: ArchiveQuery) -> str:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="pantocraft // flywheel archive")
+    parser = argparse.ArgumentParser(description="MAST // flywheel archive")
     sub = parser.add_subparsers(dest="cmd")
 
     sub.add_parser("init", help="Initialize database")

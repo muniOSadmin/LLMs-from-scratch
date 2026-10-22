@@ -1,13 +1,17 @@
-# moswalk — Claude Code Session Brief
+# moswalk / MAST — Claude Code Session Brief
 
 ## What this project is
 
-**moswalk** is a sovereign, local-first AI consultation platform for NYC building and
-regulatory work. It runs on an Apple hardware mesh with the iPhone 17 Pro as the
-mobile command center. No cloud dependencies. All data stays local.
+**mos** (moswalk) is the sovereign AI brain and base engine — local-first, no cloud,
+runs on an Apple hardware mesh. It is used by client-facing companies as their
+intelligence foundation.
+
+**MAST** is the current client-facing platform built on mos. It replaces pantocraft,
+which is dissolving. MAST handles NYC building and regulatory consultation — field API,
+client intake, flywheel archive, HEP escalation surface.
 
 This repo (`LLMs-from-scratch`) is being extended with `iphone-llm/` — the MicroLLM
-and multi-agent swarm inference engine that powers the moswalk mobile node.
+and multi-agent swarm inference engine that powers the mos mobile node (iPhone 17 Pro).
 
 ---
 
@@ -73,7 +77,7 @@ Keep the harness thin.**
 
 ## Vault OS — how to use it
 
-Drop a file in `pantocraft/queue/` → run `python pantocraft/queue_processor.py` → output in `pantocraft/generated/`
+Drop a file in `mast/queue/` → run `python mast/queue_processor.py` → output in `mast/generated/`
 
 ```
 CONSULT-3-00783-0001-A2.md    → full field consultation (bbl/address/flags in body)
@@ -84,10 +88,10 @@ INTAKE-cyril-vault-os.md      → intelligence intake Q1–Q4 filter
 
 Daily pulse (run on Inference node or manually):
 ```
-python pantocraft/pulse.py    → reads session_log + HEP escalations → generated/briefings/
+python mast/pulse.py    → reads session_log + HEP escalations → generated/briefings/
 ```
 
-Update `pantocraft/vault/MOSWALK.md` → Active Engagements + Weekly Focus each session.
+Update `mast/vault/MOSWALK.md` → Active Engagements + Weekly Focus each session.
 
 ---
 
@@ -126,7 +130,7 @@ moswalk-kernel/
 └── property/
     └── trigger_scanner.py    ← PLUTO v25v4 → TriggerResult (LandmkFlag fixed) ✓
 
-pantocraft/
+mast/
 ├── agentic/session_log.py    ← private append-only JSONL log, chmod 600 ✓
 ├── agentic/hep.py            ← HEP v1: Mode A/B/C, tier 1/2/3, hard-stop list, SLA ✓
 ├── archive/flywheel.py       ← SQLite job archive: voyage_confidence + Blueprint formula ✓
@@ -195,9 +199,9 @@ tests/
 Production hardening:
 1. `iphone-llm/ios/Views/SettingsView.swift` — Tailscale IP config UI (currently hardcoded default)
 2. `iphone-llm/ios/Views/EngagementListView.swift` — list active engagements, browse past consultations
-3. `pantocraft/field/server.py` — add shared-secret token auth (`X-Moswalk-Token` header, key in SwarmConfig.json)
+3. `mast/field/server.py` — add shared-secret token auth (`X-Moswalk-Token` header, key in SwarmConfig.json)
 4. `MicroInference.swift` — replace byte-level stub tokenizer with BPE once `.mlpackage` arrives
-5. `pantocraft/intake/client_intake.py` — wire key-rotation reminder into `pulse.py`
+5. `mast/intake/client_intake.py` — wire key-rotation reminder into `pulse.py`
 
 Xcode setup (on your Mac with Xcode 16):
 ```

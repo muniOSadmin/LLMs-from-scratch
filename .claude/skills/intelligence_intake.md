@@ -71,7 +71,7 @@ SIGNAL: [one sentence — the core claim]
 RELEVANT_TO: [which moswalk component(s)]
   - iphone-llm/  (inference engine, swarm, quantization)
   - moswalk-kernel/  (agencies, pathways, triggers)
-  - pantocraft/  (field API, session log, intake, HEP)
+  - MAST/  (field API, session log, intake, HEP)
   - .claude/  (CLAUDE.md, skills, rules, hooks)
   - architecture  (overall design principles)
 VERDICT: validated | gap | partial | invalidated | discard

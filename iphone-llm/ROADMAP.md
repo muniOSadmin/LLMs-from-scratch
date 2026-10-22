@@ -63,7 +63,7 @@ Connectivity for near-zero latency at scale.
 - [ ] Swift `MicroInference` wrapper for `MoswalkLLM.mlpackage` (streaming `AsyncStream<String>`)
 - [ ] `SwarmSession` — MultipeerConnectivity coordinator + workers
   NOTE: TcpTransport (Python) is NOT App Store compatible — must use MultipeerConnectivity
-- [ ] Wire pantocraft // `FieldAPI` → SwiftUI via Python ↔ Swift bridge or port
+- [ ] Wire MAST // `FieldAPI` → SwiftUI via Python ↔ Swift bridge or port
 - [ ] Test single-device generation: target > 80 tok/s
 - [ ] Test 4-device swarm: target > 200 tok/s combined throughput
 

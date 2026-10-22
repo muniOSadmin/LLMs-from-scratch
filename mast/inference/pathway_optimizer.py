@@ -1,4 +1,4 @@
-# pantocraft // — pathway optimizer
+# MAST // — pathway optimizer
 #
 # Takes a moswalk-kernel agency pathway and applies edge weights to produce
 # an optimized consultation: fastest legal route, risks surfaced, professional
@@ -65,12 +65,12 @@ class OptimizedPathway:
     legal_disclaimer: str = (
         "INFORMATION ONLY — not legal, architectural, or professional advice. "
         "A licensed professional must review before any action. "
-        "pantocraft // is decision support, not decision making."
+        "MAST // is decision support, not decision making."
     )
 
     def summary(self) -> str:
         lines = [
-            f"pantocraft // Optimized Pathway — {self.client_id}",
+            f"MAST // Optimized Pathway — {self.client_id}",
             f"Project: {self.project_type}",
             f"Standard timeline: ~{self.standard_critical_days} days",
             f"Optimized timeline: ~{self.optimized_critical_days} days",
@@ -100,7 +100,7 @@ class OptimizedPathway:
 
 class PathwayOptimizer:
     """
-    Applies pantocraft // edge weights to a kernel agency pathway.
+    Applies MAST // edge weights to a kernel agency pathway.
     Produces an optimized consultation with professional tracks surfaced.
     """
 

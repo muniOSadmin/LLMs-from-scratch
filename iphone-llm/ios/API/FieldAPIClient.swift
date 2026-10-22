@@ -1,6 +1,6 @@
 // moswalk // — FieldAPI HTTP Client
 //
-// Calls the Python FieldAPI server (pantocraft/field/server.py) running on the
+// Calls the Python FieldAPI server (mast/field/server.py) running on the
 // Mac Inference node over Tailscale. Falls back to a deterministic stub when
 // the node is unreachable (field offline mode).
 //
@@ -139,7 +139,7 @@ final class FieldAPIClient: ObservableObject {
             optimizedDays: critDays,
             daysSaved: 0,
             escalationFlags: flags.filter { $0.contains("HEP") || $0.contains("Landmark") },
-            pantocraftFlags: flags,
+            MASTFlags: flags,
             overallConfidence: confidence,
             staleAgencies: [],
             hepPayload: nil,

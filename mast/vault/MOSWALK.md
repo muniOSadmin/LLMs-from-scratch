@@ -1,4 +1,4 @@
-# pantocraft // — Business Constitution
+# MAST // — Business Constitution
 # MOSWALK.md — read by every automated workflow before generating output.
 # Precision here → business-specific output. Vagueness here → generic noise.
 # Update: Active Engagements weekly. Weekly Focus every session.
@@ -17,7 +17,8 @@ Clients trust the crew. The system earns that trust by being honest about sea co
 not by pretending the ocean is calm when it isn't.
 
 ## Platform Identity
-Platform: moswalk — sovereign, local-first AI consultation for NYC building and regulatory work
+Engine: mos (moswalk) — sovereign AI brain, local-first, no cloud. Apache 2.0 open-source core.
+Platform: MAST — client-facing consultation platform built on mos. Replaces pantocraft (dissolving).
 What we produce: structured regulatory consultation with HEP escalation surface
 Who we serve: property owners, developers, architects navigating NYC regulatory complexity
 How we operate: iPhone 17 Pro field node + Mac mesh (Sifting/Inference/Archival) over Tailscale
@@ -34,7 +35,7 @@ rule_confidence (permit_pathways.yaml):
   How certain is this legal requirement. The chart. Does not change with voyage conditions.
   1.0 = codified law. 0.9 = established practice. 0.7 = variable. <0.7 = stale bearing.
 
-voyage_confidence (pantocraft/archive/flywheel.py):
+voyage_confidence (MAST/archive/flywheel.py):
   How smooth is this particular passage: examiner history, backlog, site conditions.
   Empirically derived from the archive. Live sea state. Changes with every job that completes.
   Mode A ≥ 0.80 | Mode B 0.40–0.79 | Mode C < 0.40 (all hands)
@@ -53,7 +54,7 @@ rule_confidence < 0.70 on any step → verify current agency posture before fili
 - Never delete files. Archive with YYYY-MM-DD timestamp prefix instead.
 - Never send communication without human review. Draft only.
 - Date-stamp all generated files: YYYY-MM-DD-[type]-[subject].md
-- Log every write operation to pantocraft/agentic/sessions/
+- Log every write operation to MAST/agentic/sessions/
 - When uncertain about sequencing: deposit in generated/briefings/ and flag for review.
 - Escalate to HEP: anything involving landmark properties, HARD_STOP_ACTIONS, voyage_confidence < 0.60, or open violations
 - HARD_STOP_ACTIONS: lpc_file_coa, lpc_file_cne, acris_record_deed, acris_record_mortgage,
@@ -78,16 +79,16 @@ Shared brain (exact episodic record — never semantic search):
   permit_pathways.yaml  → 8 pathway types, rule_confidence + inject_before sequencing
   flywheel.py           → job archive, voyage_confidence signal, examiner history
 Private notebook (per-engagement, append-only, chmod 600):
-  pantocraft/agentic/sessions/[engagement_id].jsonl
+  MAST/agentic/sessions/[engagement_id].jsonl
 Escalation artifacts (HEP payloads, chmod 600):
-  pantocraft/agentic/escalations/[trace_id].json
+  MAST/agentic/escalations/[trace_id].json
 Generated outputs (consultation reports, briefings, research):
-  pantocraft/generated/consultations/
-  pantocraft/generated/briefings/
-  pantocraft/generated/reports/
+  MAST/generated/consultations/
+  MAST/generated/briefings/
+  MAST/generated/reports/
 
 ## Queue Protocols
-Drop a file in pantocraft/queue/ to trigger async processing:
+Drop a file in MAST/queue/ to trigger async processing:
   CONSULT-[bbl]-[filing_type].md → field consultation → generated/consultations/
   RESEARCH-[topic].md            → regulatory research brief → generated/briefings/
   PREMORTEM-[project].md         → premortem analysis → generated/briefings/
@@ -102,4 +103,4 @@ OUTCOME file format (closes the consultation → HEP → archive → flywheel cy
   approval_date: 2026-07-15
   lessons: one-sentence operator note on what drove the outcome
 
-Processed files move to pantocraft/queue/processed/ — never deleted.
+Processed files move to MAST/queue/processed/ — never deleted.

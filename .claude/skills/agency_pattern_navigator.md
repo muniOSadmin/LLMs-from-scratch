@@ -10,7 +10,7 @@ Use this skill when:
 - A user describes a project and wants to know the full regulatory pathway
 - You have a TriggerResult from property_trigger_scanner and need the agency sequence
 - A SimClient agent needs to run its project through the kernel
-- pantocraft // is assembling a ConsultResult to optimize and present
+- MAST // is assembling a ConsultResult to optimize and present
 
 ## Two-engine composition
 
@@ -132,21 +132,21 @@ invoke the `t3_discovery` skill:
 | 0.70–0.89 | Common but variable | Note "typical" not "required" |
 | < 0.70 | Stale or provisional | Flag prominently, do not proceed |
 
-## What pantocraft // does NEXT
+## What MAST // does NEXT
 
-AgencyNavigator output feeds directly into pantocraft // PathwayOptimizer:
+AgencyNavigator output feeds directly into MAST // PathwayOptimizer:
 - Each AgencyStep with is_optimizable=True can be accelerated by a professional track
 - edge_weights.yaml provides speed_multiplier per track per agency
 - PathwayOptimizer.optimize() returns OptimizedPathway with days_saved
 
 The kernel never applies optimization. It only tells you what the law requires.
-pantocraft // tells you how to do it faster within the law.
+MAST // tells you how to do it faster within the law.
 
 ## Invariants (never violate)
 
 - NEVER reorder steps that violate sequential_after dependencies
 - NEVER mark a blocking=True step as optional
-- NEVER apply professional strategy (edge weights) in this skill — that is pantocraft //
+- NEVER apply professional strategy (edge weights) in this skill — that is MAST //
 - NEVER present confidence < 0.70 steps without a stale flag
 - ALWAYS include law citations for blocking conditions
 - ALWAYS check escalation_chain() for cross-DM risk

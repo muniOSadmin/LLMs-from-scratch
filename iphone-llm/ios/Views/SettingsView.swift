@@ -33,7 +33,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Inference Node")
                 } footer: {
-                    Text("Start the server on your Mac: python pantocraft/field/server.py --host <ip> --port 7430")
+                    Text("Start the server on your Mac: python mast/field/server.py --host <ip> --port 7430")
                         .font(.caption)
                 }
 

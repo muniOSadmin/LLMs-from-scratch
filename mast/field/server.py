@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# pantocraft // — FieldAPI HTTP Server
+# MAST // — FieldAPI HTTP Server
 #
 # Runs on the Mac Inference node. iPhone calls this over Tailscale.
 # Thin HTTP wrapper around FieldAPI.consult() — no business logic here.
 #
 # Start:
-#   python pantocraft/field/server.py
-#   python pantocraft/field/server.py --host 0.0.0.0 --port 7430
+#   python mast/field/server.py
+#   python mast/field/server.py --host 0.0.0.0 --port 7430
 #
 # Tailscale cron (keep alive):
-#   @reboot cd /path/to/repo && python pantocraft/field/server.py >> /var/log/moswalk-server.log 2>&1
+#   @reboot cd /path/to/repo && python mast/field/server.py >> /var/log/moswalk-server.log 2>&1
 #
 # Security: listens on Tailscale interface only (100.x.x.x).
 # NEVER expose on 0.0.0.0 without explicit firewall rules.
@@ -92,7 +92,7 @@ def _consult_result_to_dict(result) -> dict:
         "optimized_days":   result.optimized_days,
         "days_saved":       result.days_saved,
         "escalation_flags": result.escalation_flags,
-        "pantocraft_flags": result.pantocraft_flags,
+        "MAST_flags": result.MAST_flags,
         "overall_confidence": result.overall_confidence,
         "stale_agencies":   result.stale_agencies,
         "hep_payload":      None,  # populated below if HEP fired

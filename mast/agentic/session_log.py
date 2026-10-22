@@ -1,8 +1,8 @@
 """
-pantocraft // — agentic session logger
+MAST // — agentic session logger
 
 Private, structured log of every skill invocation, field query, and
-agentic decision made through pantocraft //.
+agentic decision made through MAST //.
 
 Why private: agentic logs may reference engagement IDs, property flags
 (which combined with timing can be re-identifying), optimization tracks
@@ -10,12 +10,12 @@ applied, and confidence decisions made on behalf of a licensed professional.
 None of this belongs in a public repo or a cloud log.
 
 Storage:
-  pantocraft/agentic/sessions/YYYY-MM-DD_HHMMSS_<engagement_id>.jsonl
+  mast/agentic/sessions/YYYY-MM-DD_HHMMSS_<engagement_id>.jsonl
   One JSON line per event. Append-only. Never overwrite.
 
 gitignore:
-  pantocraft/agentic/sessions/  ← all sessions excluded from repo
-  pantocraft/agentic/*.log      ← any raw log files excluded
+  mast/agentic/sessions/  ← all sessions excluded from repo
+  mast/agentic/*.log      ← any raw log files excluded
 
 Security:
   - No client PII in session logs — use engagement_id reference only
@@ -73,7 +73,7 @@ def _now() -> str:
 
 class AgenticLog:
     """
-    Append-only event log for one pantocraft // engagement session.
+    Append-only event log for one MAST // engagement session.
 
     One log file per engagement. Multiple skill invocations per file.
     Safe to instantiate multiple times for same engagement_id — appends.

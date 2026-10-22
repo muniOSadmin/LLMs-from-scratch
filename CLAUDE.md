@@ -59,7 +59,7 @@ Keep the harness thin.**
 
 ---
 
-## Current phase: Day 3 complete / Day 4 + Vault OS shipped
+## Current phase: Day 4 complete / Day 5 in progress
 
 | Day | Focus | Status |
 |---|---|---|
@@ -67,8 +67,9 @@ Keep the harness thin.**
 | 2 | INT4 quantization + perplexity validation | `micro_quantize.py` done ✓ — run blocked on Day 1 weights |
 | 3 | CoreML export + swarm sharding | all code done ✓ — 40/40 smoke tests passing |
 | 3+ | Vault OS (queue/pulse/constitution) | `queue_processor.py` + `pulse.py` + `MOSWALK.md` ✓ |
-| 4 | iOS app + swarm integration | pending |
-| 5 | Production hardening + TestFlight | pending |
+| 3+ | Gap closure: voyage_confidence / Prompt 8 / archive→optimizer | `flywheel.py` + `queue_processor.py` + `pathway_optimizer.py` ✓ |
+| 4 | iOS app + swarm integration | 7 Swift files + `server.py` ✓ — live round-trip verified |
+| 5 | Production hardening + TestFlight | in progress |
 
 ## Vault OS — how to use it
 
@@ -105,7 +106,15 @@ iphone-llm/
 ├── swarm_worker.py      ← SwarmWorker, LocalTransport, TcpTransport
 ├── swarm_coordinator.py ← pipeline + speculative decoding orchestrator ✓
 ├── swarm_inference.py   ← unified entry point: from_checkpoint, from_random, CLI ✓
-└── sim/                 ← 8 NYC client simulation scenarios
+├── sim/                 ← 8 NYC client simulation scenarios
+└── ios/                 ← SwiftUI iOS app (Day 4) ✓
+    ├── MoswalkApp.swift               ← @main entry, injects FieldAPIClient + SwarmSession + MicroInference
+    ├── Models/ConsultModels.swift     ← Codable data layer (ConsultRequest/Result, AgencyStep, HEPPayload)
+    ├── Views/ConsultView.swift        ← BBL input, filing type picker, property flags, swarm health dot
+    ├── Views/ResultView.swift         ← pathway cards, HEPCard, MicroLLM section, S7263 disclaimer
+    ├── Inference/MicroInference.swift ← CoreML AsyncStream<String> wrapper (stub tokenizer until weights arrive)
+    ├── Swarm/SwarmSession.swift       ← MultipeerConnectivity + Tailscale health checks
+    └── API/FieldAPIClient.swift       ← HTTP client + deterministic offline stub
 
 moswalk-kernel/
 ├── agencies/
@@ -120,15 +129,17 @@ moswalk-kernel/
 pantocraft/
 ├── agentic/session_log.py    ← private append-only JSONL log, chmod 600 ✓
 ├── agentic/hep.py            ← HEP v1: Mode A/B/C, tier 1/2/3, hard-stop list, SLA ✓
-├── archive/flywheel.py       ← SQLite job archive: voyage_confidence, objection history ✓
-├── prompts/intake_pipeline.py ← 8 Claude API prompt templates (address→brief) ✓
-├── field/mobile_api.py       ← FieldAPI, kernel wired, TOON output ✓
+├── archive/flywheel.py       ← SQLite job archive: voyage_confidence + Blueprint formula ✓
+├── data/filing_weights.yaml  ← filing type weights for voyage_confidence (NB/A1/A2/A3/TR6) ✓
+├── prompts/intake_pipeline.py ← 8 Claude API prompt templates (Prompt 8 wired) ✓
+├── field/mobile_api.py       ← FieldAPI: consult + archive_result → optimizer ✓
+├── field/server.py           ← stdlib HTTPServer: POST /consult, GET /health, GET /archive/signal ✓
 ├── vault/MOSWALK.md          ← business constitution (read by every workflow) ✓
-├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE ✓
+├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE/OUTCOME ✓
 ├── pulse.py                  ← daily engagement pulse (session_log + HEP scan) ✓
 ├── queue/                    ← drop request files here (gitignored contents)
 ├── generated/                ← outputs land here (gitignored contents)
-├── inference/pathway_optimizer.py
+├── inference/pathway_optimizer.py ← archive-informed optimization: examiner rate adj + ARCHIVE SIGNAL flags ✓
 └── intake/client_intake.py   ← encrypted client PII, NY SHIELD Act compliant ✓
 
 .claude/skills/               ← 5/5 complete ✓
@@ -179,10 +190,25 @@ tests/
 - **Mac with Xcode 16**: needed for CoreML `.mlpackage` export and on-device profiling.
 - **iPhone 17 Pro hardware**: needed for on-device latency / thermal tests.
 
-## Next session — Day 4
+## Next session — Day 5
 
-SwiftUI iOS app scaffold:
-1. `iphone-llm/ios/MoswalkApp.swift` — BBL input, project type picker
-2. `iphone-llm/ios/MicroInference.swift` — CoreML wrapper (`AsyncStream<String>`)
-3. `iphone-llm/ios/SwarmSession.swift` — MultipeerConnectivity coordinator
-4. Wire `FieldAPI` → SwiftUI (Python ↔ Swift bridge or full Swift port)
+Production hardening:
+1. `iphone-llm/ios/Views/SettingsView.swift` — Tailscale IP config UI (currently hardcoded default)
+2. `iphone-llm/ios/Views/EngagementListView.swift` — list active engagements, browse past consultations
+3. `pantocraft/field/server.py` — add shared-secret token auth (`X-Moswalk-Token` header, key in SwarmConfig.json)
+4. `MicroInference.swift` — replace byte-level stub tokenizer with BPE once `.mlpackage` arrives
+5. `pantocraft/intake/client_intake.py` — wire key-rotation reminder into `pulse.py`
+
+Xcode setup (on your Mac with Xcode 16):
+```
+1. New project: SwiftUI, iOS 17+, bundle ID dev.munios.moswalk
+2. Add iphone-llm/ios/ files; link MultipeerConnectivity.framework
+3. Add SwarmConfig.json to bundle (NOT committed):
+   { "nodes": [
+     { "name": "inference", "ip": "<your tailscale ip>", "port": 7430 },
+     { "name": "sifting",   "ip": "<your tailscale ip>", "port": 7431 },
+     { "name": "archival",  "ip": "<your tailscale ip>", "port": 7432 }
+   ]}
+4. Info.plist: NSLocalNetworkUsageDescription + NSBonjourServices (_moswalk-swarm._tcp)
+5. MoswalkLLM.mlpackage: NOT in bundle yet — blocked on HF token + micro_export.py
+```

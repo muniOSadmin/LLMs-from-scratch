@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -32,6 +33,29 @@ _PANTOCRAFT = Path(__file__).parent.parent
 for p in [str(_ROOT / "moswalk-kernel"), str(_PANTOCRAFT)]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+# ---------------------------------------------------------------------------
+# Token auth — read shared secret from SwarmConfig.json or env var
+# Set MOSWALK_SERVER_TOKEN env var on the Mac, and put the same value in the
+# iOS app's SwarmConfig.json as "server_token". Leave unset to skip auth
+# (acceptable on a trusted Tailscale network, required for TestFlight builds).
+# ---------------------------------------------------------------------------
+
+def _load_server_token() -> str | None:
+    """Return the expected bearer token, or None if auth is disabled."""
+    env_val = os.environ.get("MOSWALK_SERVER_TOKEN", "").strip()
+    if env_val:
+        return env_val
+    cfg_path = _PANTOCRAFT / "field" / "SwarmConfig.json"
+    if cfg_path.exists():
+        try:
+            cfg = json.loads(cfg_path.read_text())
+            return cfg.get("server_token") or None
+        except Exception:
+            pass
+    return None
+
+_SERVER_TOKEN: str | None = None  # populated at startup
 
 try:
     from field.mobile_api import FieldAPI, ConsultResult
@@ -192,7 +216,17 @@ class MoswalkHandler(BaseHTTPRequestHandler):
         ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
         print(f"[{ts}] {fmt % args}")
 
+    def _check_auth(self) -> bool:
+        """Return True if request is authorized (or auth is disabled)."""
+        if not _SERVER_TOKEN:
+            return True
+        auth = self.headers.get("X-Moswalk-Token", "").strip()
+        return auth == _SERVER_TOKEN
+
     def do_GET(self):
+        if not self._check_auth():
+            self._json(401, {"error": "unauthorized"})
+            return
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
 
@@ -210,6 +244,9 @@ class MoswalkHandler(BaseHTTPRequestHandler):
             self._json(404, {"error": f"unknown path: {path}"})
 
     def do_POST(self):
+        if not self._check_auth():
+            self._json(401, {"error": "unauthorized"})
+            return
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
         length = int(self.headers.get("Content-Length", 0))
@@ -249,9 +286,12 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=7430)
     args = parser.parse_args()
 
+    _SERVER_TOKEN = _load_server_token()
+
     print(f"moswalk // server starting on {args.host}:{args.port}")
     print(f"  kernel:  {'available' if _FIELD_AVAILABLE else 'NOT AVAILABLE'}")
     print(f"  archive: {'available' if _ARCHIVE_AVAILABLE else 'NOT AVAILABLE'}")
+    print(f"  auth:    {'X-Moswalk-Token required' if _SERVER_TOKEN else 'DISABLED (Tailscale-only network assumed)'}")
     print(f"  endpoints: GET /health  POST /consult  GET /archive/signal")
     print()
 

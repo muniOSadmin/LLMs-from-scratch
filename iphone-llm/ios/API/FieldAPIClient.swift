@@ -18,6 +18,10 @@ final class FieldAPIClient: ObservableObject {
 
     var baseURL: URL = URL(string: "http://100.64.0.2:7430")!  // Inference node Tailscale IP
 
+    // Shared secret — matches MOSWALK_SERVER_TOKEN / SwarmConfig.json "server_token"
+    // on the Mac. Nil = auth disabled (acceptable on Tailscale; required for TestFlight).
+    var serverToken: String?
+
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest  = 15
@@ -47,10 +51,16 @@ final class FieldAPIClient: ObservableObject {
         return stubConsult(request)
     }
 
+    private func authHeaders() -> [String: String] {
+        guard let token = serverToken else { return [:] }
+        return ["X-Moswalk-Token": token]
+    }
+
     private func remoteConsult(_ request: ConsultRequest) async throws -> ConsultResult {
         var req = URLRequest(url: baseURL.appendingPathComponent("consult"))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        authHeaders().forEach { req.setValue($1, forHTTPHeaderField: $0) }
         req.httpBody = try encoder.encode(request)
         let (data, resp) = try await session.data(for: req)
         guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
@@ -68,8 +78,10 @@ final class FieldAPIClient: ObservableObject {
             URLQueryItem(name: "bbl", value: bbl),
             URLQueryItem(name: "filing_type", value: filingType),
         ]
-        guard let url = components?.url,
-              let (data, _) = try? await session.data(from: url),
+        guard let url = components?.url else { return nil }
+        var req = URLRequest(url: url)
+        authHeaders().forEach { req.setValue($1, forHTTPHeaderField: $0) }
+        guard let (data, _) = try? await session.data(for: req),
               let text = String(data: data, encoding: .utf8)
         else { return nil }
         return text.trimmingCharacters(in: .whitespacesAndNewlines)

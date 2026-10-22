@@ -14,12 +14,27 @@ struct MoswalkApp: App {
     @StateObject private var fieldClient   = FieldAPIClient()
     @StateObject private var microInference = MicroInference()
 
+    init() {
+        // Restore saved Tailscale IP and auth token from previous session
+        if let ip   = UserDefaults.standard.string(forKey: "inference_ip"), !ip.isEmpty {
+            let port = Int(UserDefaults.standard.string(forKey: "inference_port") ?? "7430") ?? 7430
+            fieldClient.setInferenceNode(ip: ip, port: port)
+        }
+        // Token is read from keychain inside SettingsView.onAppear — no access here
+    }
+
     var body: some Scene {
         WindowGroup {
-            ConsultView()
-                .environmentObject(swarmSession)
-                .environmentObject(fieldClient)
-                .environmentObject(microInference)
+            TabView {
+                ConsultView()
+                    .tabItem { Label("Consult", systemImage: "building.2") }
+
+                SettingsView()
+                    .tabItem { Label("Settings", systemImage: "gear") }
+            }
+            .environmentObject(swarmSession)
+            .environmentObject(fieldClient)
+            .environmentObject(microInference)
         }
     }
 }

@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>moswalk — Architecture Spec</title>
+<style>
+  :root {
+    --blue:    #007AFF;
+    --purple:  #5856D6;
+    --green:   #30D158;
+    --gray:    #8E8E93;
+    --orange:  #FF9F0A;
+    --red:     #FF3B30;
+    --pink:    #FF375F;
+    --teal:    #32ADE6;
+    --bg:      #0A0A0F;
+    --surface: #141420;
+    --card:    #1C1C2E;
+    --border:  #2C2C3E;
+    --text:    #E5E5EA;
+    --muted:   #636380;
+    --accent:  #BF5AF2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 0 0 80px 0;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, #0A0A1F 0%, #141430 50%, #0A1A0A 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 80% 40%, rgba(88,86,214,0.12), transparent),
+                radial-gradient(ellipse 40% 60% at 20% 70%, rgba(0,122,255,0.08), transparent);
+  }
+  .hero-inner { position: relative; max-width: 1200px; margin: 0 auto; }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(88,86,214,0.2);
+    border: 1px solid rgba(88,86,214,0.4);
+    color: #A8A4FF;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 640px;
+    margin-bottom: 28px;
+  }
+  .hero-meta {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted);
+  }
+  .hero-meta strong { color: var(--text); }
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .pill-green  { background: rgba(48,209,88,0.15);  color: var(--green);  border: 1px solid rgba(48,209,88,0.3);  }
+  .pill-orange { background: rgba(255,159,10,0.15); color: var(--orange); border: 1px solid rgba(255,159,10,0.3); }
+  .pill-red    { background: rgba(255,59,48,0.15);  color: var(--red);    border: 1px solid rgba(255,59,48,0.3);  }
+  .pill-blue   { background: rgba(0,122,255,0.15);  color: var(--blue);   border: 1px solid rgba(0,122,255,0.3);  }
+  .pill-purple { background: rgba(88,86,214,0.15);  color: #A8A4FF;       border: 1px solid rgba(88,86,214,0.3);  }
+  .pill-gray   { background: rgba(142,142,147,0.15);color: var(--gray);   border: 1px solid rgba(142,142,147,0.3);}
+
+  /* ── Layout ──────────────────────────────────────────────── */
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+  .section { margin-top: 52px; }
+  .section-header {
+    display: flex; align-items: baseline; gap: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px; margin-bottom: 24px;
+  }
+  .section-header h2 {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .section-header .section-label {
+    font-size: 11px; color: var(--muted); opacity: 0.6;
+  }
+
+  /* ── Explainer callout ───────────────────────────────────── */
+  .explainer {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .explainer .level {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 5px;
+  }
+  .explainer p { color: #C8C8D8; line-height: 1.6; }
+  .explainer + .explainer { margin-top: -8px; border-left-color: var(--teal); }
+  .explainer + .explainer + .explainer { border-left-color: var(--orange); }
+  .explainer + .explainer .level { color: var(--teal); }
+  .explainer + .explainer + .explainer .level { color: var(--orange); }
+
+  /* ── Hardware mesh ───────────────────────────────────────── */
+  .mesh-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .node {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+    position: relative;
+  }
+  .node-icon { font-size: 28px; margin-bottom: 10px; }
+  .node-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .node-spec { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+  .node-role { font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+  .node-model {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--green);
+  }
+  .node-star {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--blue); color: #fff;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .node-crit {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,59,48,0.2); color: var(--red);
+    border: 1px solid rgba(255,59,48,0.3);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .tailscale-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .tailscale-bar span { font-weight: 600; color: var(--teal); }
+
+  /* ── Arch layers ─────────────────────────────────────────── */
+  .layer-stack { display: flex; flex-direction: column; gap: 3px; }
+  .layer {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    align-items: stretch;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .layer-label {
+    padding: 14px 16px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex; align-items: center;
+  }
+  .layer-content {
+    background: var(--card);
+    padding: 12px 16px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .layer-ios    .layer-label { background: rgba(0,122,255,0.15);   color: var(--blue);   }
+  .layer-swarm  .layer-label { background: rgba(88,86,214,0.15);   color: #A8A4FF;       }
+  .layer-model  .layer-label { background: rgba(48,209,88,0.12);   color: var(--green);  }
+  .layer-quant  .layer-label { background: rgba(255,159,10,0.12);  color: var(--orange); }
+  .layer-data   .layer-label { background: rgba(50,173,230,0.12);  color: var(--teal);   }
+  .layer-skill  .layer-label { background: rgba(191,90,242,0.12);  color: var(--accent); }
+
+  .chip {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .chip-done  { border-color: rgba(48,209,88,0.3);  color: var(--green);  background: rgba(48,209,88,0.07);  }
+  .chip-pend  { border-color: rgba(255,159,10,0.3); color: var(--orange); background: rgba(255,159,10,0.07); }
+  .chip-miss  { border-color: rgba(255,59,48,0.3);  color: var(--red);    background: rgba(255,59,48,0.07);  }
+  .chip-note  { font-family: inherit; font-size: 11px; color: var(--muted); }
+
+  /* ── Data flow diagram ───────────────────────────────────── */
+  .flow-row {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 6px;
+  }
+  .flow-box {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .flow-box .flow-title { font-weight: 700; color: #fff; font-size: 12px; margin-bottom: 3px; }
+  .flow-box .flow-sub   { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .flow-arrow {
+    width: 36px; text-align: center;
+    font-size: 16px; color: var(--muted);
+    flex-shrink: 0;
+  }
+  .flow-note {
+    width: 180px; flex-shrink: 0;
+    font-size: 10px; color: var(--muted);
+    padding: 0 12px;
+    line-height: 1.4;
+  }
+
+  /* ── Sprint timeline ─────────────────────────────────────── */
+  .sprint-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 180px;
+    gap: 12px; align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .sprint-row.done   { background: rgba(48,209,88,0.04); }
+  .sprint-row.active { background: rgba(0,122,255,0.06); border-color: rgba(0,122,255,0.3); }
+  .sprint-row.pend   { background: var(--surface); }
+  .sprint-day { font-size: 20px; font-weight: 800; color: var(--muted); }
+  .sprint-focus { font-size: 13px; font-weight: 600; color: var(--text); }
+  .sprint-files { font-size: 10px; color: var(--muted); font-family: monospace; line-height: 1.6; }
+  .sprint-note { font-size: 11px; color: var(--muted); }
+
+  /* ── Critical review ─────────────────────────────────────── */
+  .crit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .crit-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .crit-card.dev   { border-top: 3px solid var(--orange); }
+  .crit-card.prune { border-top: 3px solid var(--red);    }
+  .crit-card.pivot { border-top: 3px solid var(--accent); }
+  .crit-card.synth { border-top: 3px solid var(--teal);   }
+  .crit-type {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .crit-card.dev   .crit-type { color: var(--orange); }
+  .crit-card.prune .crit-type { color: var(--red);    }
+  .crit-card.pivot .crit-type { color: var(--accent); }
+  .crit-card.synth .crit-type { color: var(--teal);   }
+  .crit-item {
+    display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start;
+  }
+  .crit-item:last-child { margin-bottom: 0; }
+  .crit-num {
+    font-size: 10px; font-weight: 700; min-width: 20px;
+    opacity: 0.5; padding-top: 1px;
+  }
+  .crit-body .crit-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .crit-body .crit-detail { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Speculative decode diagram ──────────────────────────── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr 60px 1fr;
+    gap: 0; align-items: center;
+  }
+  .spec-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 12px;
+  }
+  .spec-box .spec-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .spec-box .spec-sub { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .spec-box.draft { border-color: rgba(88,86,214,0.4); }
+  .spec-box.verify { border-color: rgba(0,122,255,0.4); }
+  .spec-box.accept { border-color: rgba(48,209,88,0.4); }
+  .spec-arrow { text-align: center; font-size: 20px; color: var(--muted); }
+
+  /* ── Agency graph ────────────────────────────────────────── */
+  .agency-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .agency-group {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .agency-group-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .agency-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .agency-item:last-child { border-bottom: none; }
+  .a-code {
+    font-family: monospace; font-weight: 700;
+    font-size: 11px; min-width: 80px;
+    color: var(--teal);
+  }
+  .a-name { color: var(--muted); font-size: 10px; }
+  .a-flag {
+    margin-left: auto;
+    font-size: 9px; font-weight: 700; padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .a-seq  { background: rgba(255,159,10,0.15); color: var(--orange); }
+  .a-blk  { background: rgba(255,59,48,0.15);  color: var(--red);   }
+  .a-ok   { background: rgba(48,209,88,0.15);  color: var(--green); }
+  .a-warn { background: rgba(191,90,242,0.15); color: var(--accent);}
+
+  /* ── Business context ────────────────────────────────────── */
+  .biz-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .biz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .biz-card-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .biz-stat { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .biz-stat span { font-size: 14px; color: var(--muted); font-weight: 400; }
+  .biz-detail { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .biz-risk {
+    margin-top: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .risk-hi  { color: var(--red);    }
+  .risk-med { color: var(--orange); }
+  .risk-lo  { color: var(--green);  }
+
+  /* ── Legend ──────────────────────────────────────────────── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-top: 16px;
+    font-size: 11px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .footer {
+    margin-top: 60px;
+    border-top: 1px solid var(--border);
+    padding: 24px 48px;
+    max-width: 1200px;
+    margin-left: auto; margin-right: auto;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--muted);
+  }
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px; border-radius: 3px;
+    font-size: 0.95em;
+  }
+  .warn-box {
+    background: rgba(255,59,48,0.07);
+    border: 1px solid rgba(255,59,48,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #FF9A9A;
+    margin-bottom: 16px;
+  }
+  .warn-box strong { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Architecture Spec · Day 3 of 5 · moswalk v0.3</div>
+    <h1><span>moswalk</span> — Local AI for NYC Buildings</h1>
+    <p class="hero-sub">
+      A sovereign, offline-first AI platform that helps navigate New York City's building
+      permits, zoning rules, and regulatory agencies — running entirely on Apple hardware
+      with no cloud dependencies.
+    </p>
+    <div class="hero-meta">
+      <div><strong>Branch</strong> claude/llm-iphone-17-pro-KuHhU → PR #1</div>
+      <div><strong>Date</strong> May 12, 2026</div>
+      <div><strong>Hardware mesh</strong> 4 nodes · Tailscale VPN</div>
+      <div><strong>Model target</strong> MoswalkLLM 1.1B INT4 · iPhone 17 Pro ANE</div>
+      <div><strong>Data</strong> 139 active NYC agencies · Neo4j property graph</div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════════ WHAT IS THIS -->
+<div class="section">
+  <div class="section-header">
+    <h2>What is this?</h2>
+    <span class="section-label">Three levels of explanation</span>
+  </div>
+
+  <div class="explainer">
+    <div class="level">🎒 High School Level — The Simple Version</div>
+    <p>
+      Imagine you want to renovate a building in NYC. You need permits from the Department of Buildings,
+      but also possibly from Landmarks (if it's historic), the EPA (if there's asbestos), and a dozen
+      other city agencies — each with their own forms, timelines, and rules.
+      <strong style="color:#fff"> moswalk is an AI assistant that runs entirely on your iPhone</strong>
+      and knows all of these rules. It's like having a very smart consultant in your pocket —
+      except it never connects to the internet and never shares your client data.
+      It uses a small but powerful AI model (~1 billion parameters, compressed to fit on-device)
+      and can talk to other computers on your home Wi-Fi to do harder thinking tasks.
+    </p>
+  </div>
+  <div class="explainer">
+    <div class="level">🎓 College Level — The Technical Version</div>
+    <p>
+      moswalk is a multi-agent inference system built around a custom 1.1B-parameter LLM
+      (<em>MoswalkLLM</em>) with Grouped-Query Attention (GQA), Sliding Window Attention (SWA),
+      SwiGLU FFN, and RoPE positional embeddings. The model is quantized to INT4 (group-wise PTQ)
+      and exported to CoreML for the Apple Neural Engine. A Tailscale mesh connects four Apple devices;
+      the inference coordinator on the iPhone orchestrates a layer-sharded pipeline across workers,
+      with speculative decoding (draft k tokens → verify → accept/reject) for throughput gains.
+      Deterministic grounding comes from a YAML agency registry (139 orgs), a Neo4j property graph
+      keyed on NYC BBL, and live API feeds from DOB BIS, DOB NOW, PLUTO, and ACRIS.
+    </p>
+  </div>
+  <div class="explainer">
+    <div class="level">💼 Founder Level — The Business Version</div>
+    <p>
+      NYC has 1.1 million buildings, ~$150B in annual construction permits, and a regulatory
+      maze spanning 139 active city agencies. Every project needs multiple agency sign-offs —
+      the sequencing is non-trivial, costs are opaque, and mistakes are expensive.
+      Existing tools (StreetEasy, DOB NOW, eCB portal) are siloed. moswalk's wedge is
+      <strong style="color:#fff">sovereign AI for field professionals</strong> — architects,
+      expediters, developers — who can't risk client data in cloud tools and need answers
+      in the field without Wi-Fi. The iPhone-first, mesh-compute model is a structural moat:
+      no GPU cloud bills, no data liability, no downtime. The near-term risk is that the
+      Llama 3.2 weight transplant (Day 1 of the sprint) is still unfinished — without real
+      pretrained weights, the model is random noise.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ HARDWARE MESH -->
+<div class="section">
+  <div class="section-header">
+    <h2>Hardware Mesh</h2>
+    <span class="section-label">4 nodes · Tailscale VPN on-demand · no public endpoints</span>
+  </div>
+
+  <div class="mesh-grid">
+    <div class="node" style="border-top: 3px solid var(--blue);">
+      <div class="node-star">COMMAND CENTER</div>
+      <div class="node-icon">📱</div>
+      <div class="node-name">iPhone 17 Pro</div>
+      <div class="node-spec">8 GB RAM · 2 TB storage<br>Apple Neural Engine (ANE)<br>VPN on Demand</div>
+      <div class="node-role" style="color:var(--blue)">UI · Field Retrieval · Coordinator</div>
+      <div class="node-model">MicroLLM 1.1B INT4<br>CoreML .mlpackage</div>
+    </div>
+    <div class="node" style="border-top: 3px solid var(--purple);">
+      <div class="node-icon">🖥️</div>
+      <div class="node-name">Mac Desktop 2021</div>
+      <div class="node-spec">Apple M1 · 16 GB RAM<br>Headless server<br>Tailscale node</div>
+      <div class="node-role" style="color:var(--purple)">Planner Agent · Zoning Reasoning</div>
+      <div class="node-model">Qwen2.5-Coder-14B Q4<br>llama.cpp / ollama</div>
+    </div>
+    <div class="node" style="border-top: 3px solid var(--green);">
+      <div class="node-icon">💻</div>
+      <div class="node-name">MacBook Air 2020</div>
+      <div class="node-spec">Apple M1 · 8 GB RAM<br>Headless · Docker<br>Tailscale node</div>
+      <div class="node-role" style="color:var(--green)">Crawl / Sifting Agent</div>
+      <div class="node-model">Phi-4 Mini 3.8B<br>Firecrawl Docker</div>
+    </div>
+    <div class="node" style="border-top: 3px solid var(--gray);">
+      <div class="node-crit">PASSIVE ONLY</div>
+      <div class="node-icon">🗄️</div>
+      <div class="node-name">MacBook Air 2014</div>
+      <div class="node-spec">Intel i7 · 8 GB RAM<br>2 TB LaCie backup<br>Tailscale node</div>
+      <div class="node-role" style="color:var(--gray)">BIS Mirror · Archival</div>
+      <div class="node-model" style="color:var(--gray)">No model — storage only</div>
+    </div>
+  </div>
+
+  <div class="tailscale-bar">
+    <span>Tailscale Mesh VPN</span>
+    · All traffic encrypted · No public endpoints · iOS: VPN on Demand (auto-connects on Wi-Fi)
+    · Workers on ports 7860–7863 · Result channel on port 7860+n_agents
+  </div>
+
+  <div class="warn-box" style="margin-top:12px">
+    <strong>⚠ Critical gap:</strong>
+    The current <code>TcpTransport</code> in <code>swarm_worker.py</code> uses raw TCP sockets.
+    On iOS, Apple's App Store rules <strong>require MultipeerConnectivity</strong> (or Network.framework)
+    for local P2P — raw TCP sockets won't survive the review process.
+    The <code>send/recv</code> interface is designed to be swappable, but the iOS shim doesn't exist yet.
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> iPhone (coordinator + UI)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Mac Desktop (14B planner)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Mac Air M1 (crawl + sift)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div> Mac Air 2014 (archival)</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SOFTWARE LAYERS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Software Architecture — Layer Stack</h2>
+    <span class="section-label">iphone-llm/ · fat skills / thin harness principle</span>
+  </div>
+
+  <div class="layer-stack">
+
+    <div class="layer layer-skill">
+      <div class="layer-label">Skills Layer<br><small style="opacity:0.6;font-size:9px">.claude/skills/</small></div>
+      <div class="layer-content">
+        <span class="chip chip-pend">agency_pattern_navigator</span>
+        <span class="chip chip-pend">property_trigger_scanner</span>
+        <span class="chip chip-pend">t3_discovery</span>
+        <span class="chip chip-pend">premortem</span>
+        <span class="chip-note">← 90% of domain value · none implemented yet</span>
+      </div>
+    </div>
+
+    <div class="layer layer-ios">
+      <div class="layer-label">iOS App<br><small style="opacity:0.6;font-size:9px">Swift / SwiftUI</small></div>
+      <div class="layer-content">
+        <span class="chip chip-miss">SwiftUI field UI</span>
+        <span class="chip chip-miss">MLModel inference</span>
+        <span class="chip chip-miss">MultipeerConnectivity shim</span>
+        <span class="chip chip-miss">Tailscale SDK</span>
+        <span class="chip chip-miss">BBL lookup view</span>
+        <span class="chip-note">← Day 4 · nothing built</span>
+      </div>
+    </div>
+
+    <div class="layer layer-swarm">
+      <div class="layer-label">Swarm Inference<br><small style="opacity:0.6;font-size:9px">iphone-llm/swarm_*.py</small></div>
+      <div class="layer-content">
+        <span class="chip chip-done">swarm_config.py</span>
+        <span class="chip chip-done">swarm_worker.py</span>
+        <span class="chip chip-done">swarm_coordinator.py</span>
+        <span class="chip chip-miss">swarm_inference.py</span>
+        <span class="chip-note">← entry point missing</span>
+      </div>
+    </div>
+
+    <div class="layer layer-model">
+      <div class="layer-label">MoswalkLLM<br><small style="opacity:0.6;font-size:9px">iphone-llm/micro_*.py</small></div>
+      <div class="layer-content">
+        <span class="chip chip-done">micro_config.py</span>
+        <span class="chip chip-done">micro_model.py</span>
+        <span class="chip chip-done">micro_quantize.py</span>
+        <span class="chip chip-done">micro_export.py</span>
+        <span class="chip chip-miss">convert_llama.py</span>
+        <span class="chip-note">← no real weights yet (Day 1 debt)</span>
+      </div>
+    </div>
+
+    <div class="layer layer-data">
+      <div class="layer-label">Data Layer<br><small style="opacity:0.6;font-size:9px">Deterministic foundation</small></div>
+      <div class="layer-content">
+        <span class="chip chip-done">agencies.yaml (139)</span>
+        <span class="chip chip-pend">Neo4j BBL graph</span>
+        <span class="chip chip-pend">DOB BIS API</span>
+        <span class="chip chip-pend">DOB NOW API</span>
+        <span class="chip chip-pend">PLUTO</span>
+        <span class="chip chip-pend">ACRIS</span>
+        <span class="chip-note">← APIs defined, connectors unbuilt</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend" style="margin-top:10px">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Done &amp; committed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Defined, not built</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Not started / missing</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ MODEL INTERNALS -->
+<div class="section">
+  <div class="section-header">
+    <h2>MoswalkLLM Internals</h2>
+    <span class="section-label">1.1B params · GQA + SWA + SwiGLU + RMSNorm + RoPE · micro_model.py:268 lines</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:16px;">
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Model Architecture</div>
+      <table style="width:100%; font-size:12px; border-collapse:collapse;">
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Vocab size</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">32,000</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Context length</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">4,096 tokens</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Embedding dim</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">2,048</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Q heads / KV heads</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">16 / 4 (GQA ×4)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Transformer layers</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">24</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">FFN hidden dim</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">5,504 (SwiGLU)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Sliding window</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">512 tokens</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; color:var(--muted);">Tied embeddings</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--green);">Yes (saves ~65M params)</td>
+        </tr>
+      </table>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Size &amp; Quantization</div>
+      <table style="width:100%; font-size:12px; border-collapse:collapse;">
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Parameters</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">~1.1 B</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">FP32 size</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--red);">~4.4 GB</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">FP16 size</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--orange);">~2.2 GB</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">INT4 size (target)</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--green);">~0.55 GB ✓</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Quant method</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">group-wise PTQ, g=128</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:6px 0; color:var(--muted);">Export format</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">CoreML .mlpackage</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0; color:var(--muted);">KV cache (CoreML)</td>
+          <td style="padding:6px 0; text-align:right; font-family:monospace; color:var(--text);">512-slot static</td>
+        </tr>
+      </table>
+      <div class="warn-box" style="margin-top:12px; padding:8px 10px; font-size:11px;">
+        <strong>⚠ No perplexity baseline yet.</strong>
+        Quantization error is measured per-layer but there's no end-to-end perplexity
+        eval on a held-out corpus. This is required before TestFlight.
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px; color:var(--muted); text-align:center; padding: 10px 0; border:1px solid var(--border); border-radius:8px; background:var(--surface);">
+    <code>token_ids</code>
+    → <strong style="color:var(--text)">tok_emb</strong>
+    → <strong style="color:var(--purple)">[MicroBlock × 24]</strong>
+    &nbsp; each block: <code>RMSNorm → MicroAttention (GQA+SWA+RoPE+KVcache) → RMSNorm → SwiGLU</code>
+    → <strong style="color:var(--text)">RMSNorm</strong>
+    → <strong style="color:var(--blue)">lm_head</strong>
+    → <code>logits (vocab=32k)</code>
+    → <strong style="color:var(--green)">sample</strong>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SWARM TOPOLOGY -->
+<div class="section">
+  <div class="section-header">
+    <h2>Swarm Inference Topology</h2>
+    <span class="section-label">swarm_config.py · swarm_worker.py · swarm_coordinator.py</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--purple);margin-bottom:14px;">Mode A — Pipeline (2-4 devices)</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        The 24 transformer layers are split across N devices. Each device processes a
+        contiguous slice and hands the hidden-state tensor to the next device.
+        Good for: <em>multi-device throughput</em>.
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px; font-size:11px; font-family:monospace;">
+        <div style="background:rgba(0,122,255,0.1); border:1px solid rgba(0,122,255,0.3); border-radius:6px; padding:8px 12px;">
+          📱 <strong style="color:var(--blue)">Coordinator (iPhone)</strong><br>
+          <span style="color:var(--muted)">embed + layers 0–5 + lm_head + sample</span>
+        </div>
+        <div style="text-align:center; color:var(--muted)">↓ float16 activation (4 KB/token)</div>
+        <div style="background:rgba(88,86,214,0.1); border:1px solid rgba(88,86,214,0.3); border-radius:6px; padding:8px 12px;">
+          🖥️ <strong style="color:#A8A4FF)">Worker 1 (Mac Desktop)</strong><br>
+          <span style="color:var(--muted)">layers 6–11</span>
+        </div>
+        <div style="text-align:center; color:var(--muted)">↓ float16 activation</div>
+        <div style="background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.3); border-radius:6px; padding:8px 12px;">
+          💻 <strong style="color:var(--green)">Worker 2 (Mac Air M1)</strong><br>
+          <span style="color:var(--muted)">layers 12–23 → returns to coordinator</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;">Mode B — Speculative Decoding (1-2 devices)</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        A small <em>draft model</em> proposes k=5 tokens quickly. A full <em>verifier</em>
+        checks them all in one pass. Accepted tokens are free speedup; rejected ones fall
+        back gracefully. Good for: <em>single-device latency reduction</em>.
+      </div>
+      <div class="spec-grid" style="font-size:11px;">
+        <div class="spec-box draft" style="padding:10px 12px;">
+          <div class="spec-title" style="color:#A8A4FF; font-size:12px;">📝 Draft</div>
+          <div class="spec-sub">Coord runs layers 0–3 autoregressively × k=5<br>Produces: 5 candidate tokens + logits</div>
+        </div>
+        <div class="spec-arrow">→</div>
+        <div class="spec-box verify" style="padding:10px 12px;">
+          <div class="spec-title" style="color:var(--blue); font-size:12px;">✅ Verify</div>
+          <div class="spec-sub">Full 24-layer model runs once on draft sequence<br>Produces: verify logits for each position</div>
+        </div>
+        <div class="spec-arrow">→</div>
+        <div class="spec-box accept" style="padding:10px 12px;">
+          <div class="spec-title" style="color:var(--green); font-size:12px;">✓/✗ Accept</div>
+          <div class="spec-sub">Ratio test p/q per token<br>Accept run + 1 bonus token</div>
+        </div>
+      </div>
+      <div class="warn-box" style="margin-top:12px; padding:8px 10px; font-size:11px;">
+        <strong>⚠ Sim only:</strong> The verify path calls <code>self._all_blocks</code> in-process.
+        Real distributed verify (worker via TCP) is not wired up yet. This works for
+        single-device testing but won't scale to the mesh without <code>swarm_inference.py</code>.
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; font-size:12px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Mode C — Hybrid (4 devices) — defined, untested</div>
+    <div style="color:var(--muted);">
+      Coordinator drafts speculatively (layers 0–3) while three pipeline workers act as the
+      joint verifier. This combines both speedup strategies. Defined in
+      <code>swarm_config.py:hybrid_4_device()</code> but no end-to-end test exists.
+      The coordinator's <code>_verify_draft()</code> currently does not route through workers.
+      <span class="pill pill-red" style="margin-left:8px;">NEEDS WIRING</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ DATA FLOW -->
+<div class="section">
+  <div class="section-header">
+    <h2>Query Data Flow</h2>
+    <span class="section-label">From field question to regulatory answer</span>
+  </div>
+
+  <div class="flow-row">
+    <div class="flow-box" style="border-color:var(--blue); max-width:180px; flex:0 0 180px;">
+      <div class="flow-title" style="color:var(--blue)">📱 User Query</div>
+      <div class="flow-sub">"Can I add a rooftop deck to 123 Main St, Brooklyn?"</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">BBL Resolution</div>
+      <div class="flow-sub">Address → Borough-Block-Lot (BBL)<br>DOB NOW or PLUTO API lookup</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">Property Flag Scan</div>
+      <div class="flow-sub">BBL → PLUTO flags<br>LPC landmark? DEP wetland? HPD rent-stab?</div>
+    </div>
+    <div class="flow-note" style="color:var(--orange)">⚠ BBL resolution not yet implemented</div>
+  </div>
+
+  <div style="text-align:center; font-size:20px; color:var(--muted); margin:4px 0;">↓</div>
+
+  <div class="flow-row">
+    <div class="flow-box" style="border-color:var(--accent); max-width:180px; flex:0 0 180px;">
+      <div class="flow-title" style="color:var(--accent)">🧠 Skill Dispatch</div>
+      <div class="flow-sub">property_trigger_scanner<br>→ agency set</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">Agency Pattern Navigation</div>
+      <div class="flow-sub">agencies.yaml + sequential_after graph<br>Resolve: DOB → LPC? → DEP? → BSA?</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">Swarm Inference</div>
+      <div class="flow-sub">MoswalkLLM generates regulatory guidance<br>Grounded in deterministic agency data</div>
+    </div>
+    <div class="flow-note" style="color:var(--red)">⚠ All four skills are stubs — not implemented</div>
+  </div>
+
+  <div style="text-align:center; font-size:20px; color:var(--muted); margin:4px 0;">↓</div>
+
+  <div class="flow-row">
+    <div class="flow-box" style="border-color:var(--green); max-width:180px; flex:0 0 180px;">
+      <div class="flow-title" style="color:var(--green)">📋 Answer</div>
+      <div class="flow-sub">Permit checklist, timeline, agency contacts, confidence score</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">Confidence Gate</div>
+      <div class="flow-sub">confidence &lt; 0.70 → surface stale flag<br>Don't proceed silently (agency-sequencing rule)</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">
+      <div class="flow-title">Premortem Check</div>
+      <div class="flow-sub">Stress-test plan before surfacing to user<br>Flag escalation_risk: high (DOB vs DOT DMs)</div>
+    </div>
+    <div class="flow-note" style="color:var(--red)">⚠ Confidence scoring not yet implemented</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ AGENCY REGISTRY -->
+<div class="section">
+  <div class="section-header">
+    <h2>Agency Registry Snapshot</h2>
+    <span class="section-label">agencies.yaml · 139 active orgs · OTI April 2026 · deterministic foundation</span>
+  </div>
+
+  <div class="explainer" style="margin-bottom:14px;">
+    <div class="level">Why this matters (founder level)</div>
+    <p>The agency registry is the single most valuable deterministic asset in the system.
+    It never hallucinates. It knows which agencies report to which Deputy Mayors, which require
+    sequential sign-off, and which are quasi-judicial (BSA has no <code>reports_to</code>).
+    All Python code must import from this YAML — never hardcode agency codes.
+    The agency-codes.md and agency-sequencing.md rules enforce this at the session level.</p>
+  </div>
+
+  <div class="agency-cols">
+    <div class="agency-group">
+      <div class="agency-group-title">Deputy Mayor · Housing &amp; Planning</div>
+      <div class="agency-item"><span class="a-code">DOB</span><span class="a-name">Dept of Buildings</span><span class="a-flag a-ok">PRIMARY</span></div>
+      <div class="agency-item"><span class="a-code">LPC</span><span class="a-name">Landmarks Preservation</span><span class="a-flag a-seq">SEQ AFTER DOB</span></div>
+      <div class="agency-item"><span class="a-code">HPD</span><span class="a-name">Housing Preservation &amp; Dev</span><span class="a-flag a-ok">parallel</span></div>
+      <div class="agency-item"><span class="a-code">DCP</span><span class="a-name">City Planning</span><span class="a-flag a-seq">SEQ: zoning review</span></div>
+      <div class="agency-item"><span class="a-code">NYCEDC</span><span class="a-name">Economic Dev Corp</span><span class="a-flag a-ok">parallel</span></div>
+    </div>
+    <div class="agency-group">
+      <div class="agency-group-title">Deputy Mayor · Operations</div>
+      <div class="agency-item"><span class="a-code">DEP</span><span class="a-name">Env Protection</span><span class="a-flag a-blk">BLOCKING</span></div>
+      <div class="agency-item"><span class="a-code">NYC_DOT</span><span class="a-name">Transportation</span><span class="a-flag a-seq">SEQ AFTER DEP</span></div>
+      <div class="agency-item"><span class="a-code">FDNY</span><span class="a-name">Fire Dept</span><span class="a-flag a-blk">BLOCKING</span></div>
+      <div class="agency-item"><span class="a-code">DSNY</span><span class="a-name">Sanitation</span><span class="a-flag a-ok">parallel</span></div>
+      <div class="agency-item"><span class="a-code">DDC</span><span class="a-name">Design &amp; Construction</span><span class="a-flag a-ok">parallel</span></div>
+    </div>
+    <div class="agency-group">
+      <div class="agency-group-title">Special / Quasi-judicial / NYS</div>
+      <div class="agency-item"><span class="a-code">BSA</span><span class="a-name">Board of Standards &amp; Appeals</span><span class="a-flag a-warn">NO reports_to</span></div>
+      <div class="agency-item"><span class="a-code">OATH</span><span class="a-name">Office Admin Trials &amp; Hrgs</span><span class="a-flag a-warn">hears ECB viol.</span></div>
+      <div class="agency-item"><span class="a-code">SBS</span><span class="a-name">Small Business Services</span><span class="a-flag a-ok">parallel</span></div>
+      <div class="agency-item"><span class="a-code">NYS HCR</span><span class="a-name">Homes &amp; Community Renewal</span><span class="a-flag a-warn">NYS — T3 surface</span></div>
+      <div class="agency-item"><span class="a-code">+129 more</span><span class="a-name">in agencies.yaml</span><span class="a-flag a-ok">loaded</span></div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-top:12px; font-size:11px; color:var(--muted);">
+    <strong style="color:var(--text)">Sequencing rules enforced by .claude/rules/agency-sequencing.md:</strong>
+    &nbsp;
+    If <code>blocking: true</code> and agency unresolved → halt all downstream.
+    &nbsp;·&nbsp;
+    <code>sequential_after: [LPC, DEP]</code> → do not launch DOB until both complete.
+    &nbsp;·&nbsp;
+    DOB (Housing DM) vs DOT (Operations DM) conflicts → <code>escalation_risk: high</code>.
+    &nbsp;·&nbsp;
+    ECB violations → resolution path is OATH, not ECB.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SPRINT -->
+<div class="section">
+  <div class="section-header">
+    <h2>5-Day Sprint Status</h2>
+    <span class="section-label">Today: Day 3 · May 12, 2026</span>
+  </div>
+
+  <div class="sprint-row pend" style="border-color:rgba(255,59,48,0.3); background:rgba(255,59,48,0.04);">
+    <div class="sprint-day" style="color:var(--red)">1</div>
+    <div>
+      <div class="sprint-focus">Llama 3.2 1B weight transplant → MoswalkLLM</div>
+      <div class="sprint-files">convert_llama.py</div>
+    </div>
+    <div><span class="pill pill-red">MISSING</span></div>
+    <div class="sprint-note">Architecture done, no weights loaded. Model currently outputs random noise. This is the biggest gap — everything downstream depends on real weights.</div>
+  </div>
+
+  <div class="sprint-row done">
+    <div class="sprint-day" style="color:var(--green)">2</div>
+    <div>
+      <div class="sprint-focus">INT4 quantization + perplexity validation</div>
+      <div class="sprint-files">micro_quantize.py</div>
+    </div>
+    <div><span class="pill pill-green">DONE</span></div>
+    <div class="sprint-note">Group-wise PTQ (g=128, symmetric=False), QuantizedLinear, quantize_model(). Perplexity eval not yet run — needs real weights first.</div>
+  </div>
+
+  <div class="sprint-row done">
+    <div class="sprint-day" style="color:var(--green)">3</div>
+    <div>
+      <div class="sprint-focus">CoreML export + swarm sharding</div>
+      <div class="sprint-files">micro_export.py · swarm_config.py · swarm_worker.py · swarm_coordinator.py</div>
+    </div>
+    <div><span class="pill pill-green">DONE</span></div>
+    <div class="sprint-note">CoreML export with static 512-slot KV cache. Full swarm: pipeline, speculative, hybrid topologies. Swift inference template included. Syntax verified; no torch runtime to smoke-test here.</div>
+  </div>
+
+  <div class="sprint-row pend">
+    <div class="sprint-day" style="color:var(--orange)">4</div>
+    <div>
+      <div class="sprint-focus">iOS app + swarm integration</div>
+      <div class="sprint-files">swarm_inference.py · SwiftUI app · MultipeerConnectivity shim</div>
+    </div>
+    <div><span class="pill pill-orange">PENDING</span></div>
+    <div class="sprint-note">Entry point, iOS UI, and network shim all missing. Largest single-day scope in the sprint.</div>
+  </div>
+
+  <div class="sprint-row pend">
+    <div class="sprint-day" style="color:var(--orange)">5</div>
+    <div>
+      <div class="sprint-focus">Production hardening + TestFlight</div>
+      <div class="sprint-files">eval harness · perplexity baseline · CI pipeline · TestFlight upload</div>
+    </div>
+    <div><span class="pill pill-orange">PENDING</span></div>
+    <div class="sprint-note">Zero tests currently. No CI. App Store compliance (MultipeerConnectivity, entitlements) needs review.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ CRITICAL REVIEW -->
+<div class="section">
+  <div class="section-header">
+    <h2>Critical Review</h2>
+    <span class="section-label">Honest assessment — what needs development / pruning / pivoting / synthesizing</span>
+  </div>
+
+  <div class="crit-grid">
+
+    <div class="crit-card dev">
+      <div class="crit-type">🔨 Needs Development</div>
+
+      <div class="crit-item">
+        <div class="crit-num">01</div>
+        <div class="crit-body">
+          <div class="crit-title">convert_llama.py — Day 1 debt, never done</div>
+          <div class="crit-detail">Without real pretrained weights (Llama 3.2 1B),
+          MoswalkLLM is an architecture sketch, not a model. Every downstream
+          demo, perplexity eval, and CoreML export produces garbage.
+          This is the highest-priority unblocked task in the entire project.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">02</div>
+        <div class="crit-body">
+          <div class="crit-title">swarm_inference.py — missing entry point</div>
+          <div class="crit-detail">There's no unified script that loads the model,
+          picks a topology based on what devices are reachable on Tailscale,
+          starts workers, and exposes a <code>generate(prompt)</code> API.
+          Without it, the swarm components can't be used end-to-end.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">03</div>
+        <div class="crit-body">
+          <div class="crit-title">Four skills — none implemented</div>
+          <div class="crit-detail"><code>agency_pattern_navigator</code>,
+          <code>property_trigger_scanner</code>, <code>t3_discovery</code>,
+          <code>premortem</code> are named in the architecture but have zero code.
+          These are described as "90% of the value." Build them before more model work.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">04</div>
+        <div class="crit-body">
+          <div class="crit-title">BBL resolution + API connectors</div>
+          <div class="crit-detail">DOB BIS, DOB NOW, PLUTO, ACRIS connectors are all
+          undefined. Without BBL resolution, the property trigger scanner can't work,
+          and the agency pattern navigator has no starting node.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crit-card prune">
+      <div class="crit-type">✂️ Needs Pruning</div>
+
+      <div class="crit-item">
+        <div class="crit-num">01</div>
+        <div class="crit-body">
+          <div class="crit-title">MacBook Air 2014 — dead weight</div>
+          <div class="crit-detail">The 2014 Intel machine runs no model and serves only as
+          a BIS mirror. At 8 GB RAM and a 12-year-old CPU, it adds Tailscale maintenance overhead
+          with zero inference value. A $5/month Backblaze backup replaces it entirely.
+          Free up the mental load.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">02</div>
+        <div class="crit-body">
+          <div class="crit-title">Hybrid mode — premature</div>
+          <div class="crit-detail"><code>hybrid_4_device()</code> is defined and
+          partially wired but has no test, no real verify routing through workers, and
+          requires 4 simultaneous healthy devices. For a solo founder, this is a
+          3rd-order optimization. Ship pipeline + speculative first.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">03</div>
+        <div class="crit-body">
+          <div class="crit-title">KV cache in SwarmWorker</div>
+          <div class="crit-detail"><code>SwarmWorker._kv_caches</code> is allocated but never
+          used — the <code>_run_one_token</code> call passes <code>use_cache=True</code> to
+          the block, which has its own internal cache. The worker-level cache list is dead code.
+          Remove it.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">04</div>
+        <div class="crit-body">
+          <div class="crit-title">Phi-4 Mini on the sifting node</div>
+          <div class="crit-detail">Firecrawl + Phi-4 Mini for web crawling is a reasonable
+          future feature, but Day 4/5 depend entirely on iPhone + swarm working first.
+          The sifting node adds no value until the core inference pipeline is stable.
+          Defer to post-TestFlight.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crit-card pivot">
+      <div class="crit-type">↩️ Needs Pivoting</div>
+
+      <div class="crit-item">
+        <div class="crit-num">01</div>
+        <div class="crit-body">
+          <div class="crit-title">TcpTransport → MultipeerConnectivity (iOS blocker)</div>
+          <div class="crit-detail">Raw TCP sockets are not App Store compatible on iOS.
+          The <code>Transport</code> protocol is correctly abstracted for swapping, but the
+          iOS shim must be written in Swift using <code>MCSession</code>.
+          This should be the first thing built on Day 4 — before any SwiftUI.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">02</div>
+        <div class="crit-body">
+          <div class="crit-title">Speculative verify path: in-process → distributed</div>
+          <div class="crit-detail"><code>_verify_draft()</code> currently runs
+          <code>self._all_blocks</code> locally. For single-device use this is fine,
+          but it means the coordinator holds two copies of the model (draft + full) in RAM.
+          On an 8 GB iPhone with a 550 MB INT4 model, this is manageable — but the
+          architecture needs to acknowledge this explicitly and design the distributed
+          verify path for the mesh case.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">03</div>
+        <div class="crit-body">
+          <div class="crit-title">Solo founder GTM: field professionals before developers</div>
+          <div class="crit-detail">The deepest technical moat (mesh swarm, ANE inference)
+          is not what will drive the first 10 paying users. An expediter using moswalk in
+          the field cares about: fast permit lookup, correct agency sequencing, and offline
+          reliability. Prioritize the skill layer + UI over swarm sophistication.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crit-card synth">
+      <div class="crit-type">⚡ Needs Synthesizing</div>
+
+      <div class="crit-item">
+        <div class="crit-num">01</div>
+        <div class="crit-body">
+          <div class="crit-title">agencies.yaml + Neo4j → single property graph query</div>
+          <div class="crit-detail">The YAML registry and the Neo4j BBL graph are currently
+          separate assets with no connector. They should be synthesized into a single
+          query interface: <code>bbl_to_agency_path(bbl) → [AgencyNode]</code> with
+          sequential_after edges already embedded. This would let skills query one thing
+          instead of two.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">02</div>
+        <div class="crit-body">
+          <div class="crit-title">Quantize → Export → Validate as one pipeline</div>
+          <div class="crit-detail">Currently <code>micro_quantize.py</code> and
+          <code>micro_export.py</code> are separate scripts. They should be a single
+          <code>build_model.py</code>: load weights → quantize → measure perplexity →
+          export CoreML → print Swift template. This removes manual steps and makes
+          Day 5 hardening tractable.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">03</div>
+        <div class="crit-body">
+          <div class="crit-title">SwarmCoordinator.generate() ↔ Skill dispatch</div>
+          <div class="crit-detail">Right now <code>generate(prompt_ids)</code> takes raw
+          token IDs. The skills layer needs a higher-level interface:
+          <code>consult(query: str, bbl: str) → ConsultResult</code> that handles
+          tokenization, skill routing, agency graph lookup, and confidence gating
+          in one call. This is what <code>swarm_inference.py</code> should be.</div>
+        </div>
+      </div>
+
+      <div class="crit-item">
+        <div class="crit-num">04</div>
+        <div class="crit-body">
+          <div class="crit-title">Confidence scoring across model + deterministic layers</div>
+          <div class="crit-detail">The agency-sequencing rule says
+          <code>confidence &lt; 0.70 → surface stale flag</code>.
+          But confidence is never computed anywhere. It needs to synthesize:
+          (a) model output probability, (b) date of last agency registry update,
+          (c) known Local Law changes since last crawl. None of these are connected yet.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ BUSINESS CONTEXT -->
+<div class="section">
+  <div class="section-header">
+    <h2>Business Context — Solo Founder, NYC</h2>
+    <span class="section-label">Market opportunity · risks · capital efficiency</span>
+  </div>
+
+  <div class="biz-grid">
+    <div class="biz-card">
+      <div class="biz-card-title">Market Size</div>
+      <div class="biz-stat">1.1M <span>buildings</span></div>
+      <div class="biz-detail">
+        NYC has 1.1 million registered buildings. ~$150B in construction permits annually.
+        ~40,000 licensed architects, engineers, and expediters work in the NYC building industry.
+        Average expediter files 200–400 permits/year. Regulatory errors cost $5,000–$50,000 per incident.
+      </div>
+      <div class="biz-risk risk-lo">MARKET RISK: Low — demand is structural</div>
+    </div>
+    <div class="biz-card">
+      <div class="biz-card-title">Structural Moat</div>
+      <div class="biz-stat">0 <span>cloud bills</span></div>
+      <div class="biz-detail">
+        No GPU cloud = no marginal cost per query. No data leaves the device = zero liability
+        for client PII. Tailscale mesh is $48/year for 5 nodes.
+        Competitors using OpenAI APIs pay ~$0.01–0.05 per query and hold client data.
+        moswalk's cost structure is fundamentally different — and so is its trust proposition.
+      </div>
+      <div class="biz-risk risk-lo">STRUCTURAL RISK: Low — once model works</div>
+    </div>
+    <div class="biz-card">
+      <div class="biz-card-title">Current Risk</div>
+      <div class="biz-stat" style="color:var(--red)">Day 1 <span style="color:var(--red)">debt</span></div>
+      <div class="biz-detail">
+        The model has no real weights. All agency knowledge, all swarm inference, all CoreML
+        export is plumbing around an empty pipe. <code>convert_llama.py</code> must be written
+        before any demo to a potential customer or investor is meaningful.
+        The sprint has 2 days left; Day 1's work is the most critical unblocked task.
+      </div>
+      <div class="biz-risk risk-hi">EXECUTION RISK: High — Day 1 debt + 2 days left</div>
+    </div>
+  </div>
+
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px; margin-top:14px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Priority order for next 48 hours (Days 4–5)</div>
+    <div style="display:grid; grid-template-columns: 32px 1fr; gap:8px 12px; font-size:12px;">
+      <div style="color:var(--red); font-weight:800; text-align:center; padding-top:2px;">1</div>
+      <div><strong style="color:#fff">Write convert_llama.py</strong> — transplant Llama 3.2 1B weights into MoswalkLLM. Without this, nothing else is real.</div>
+      <div style="color:var(--orange); font-weight:800; text-align:center; padding-top:2px;">2</div>
+      <div><strong style="color:#fff">Write swarm_inference.py</strong> — unified entry point: load → quantize → pick topology → generate API.</div>
+      <div style="color:var(--orange); font-weight:800; text-align:center; padding-top:2px;">3</div>
+      <div><strong style="color:#fff">MultipeerConnectivity Swift shim</strong> — replace TcpTransport on iOS. Unblocks App Store submission.</div>
+      <div style="color:var(--orange); font-weight:800; text-align:center; padding-top:2px;">4</div>
+      <div><strong style="color:#fff">SwiftUI field UI</strong> — minimal: text input, BBL field, response view. No design polish needed for TestFlight.</div>
+      <div style="color:var(--muted); font-weight:800; text-align:center; padding-top:2px;">5</div>
+      <div><strong style="color:#fff">Implement agency_pattern_navigator skill</strong> — this is the actual product. Start here after the model runs.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ FILE TREE -->
+<div class="section">
+  <div class="section-header">
+    <h2>File Tree — Annotated</h2>
+    <span class="section-label">Current state of iphone-llm/ on branch claude/llm-iphone-17-pro-KuHhU</span>
+  </div>
+
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; font-family:'SF Mono','Fira Code',monospace; font-size:12px; line-height:1.9;">
+    <div style="color:var(--muted); margin-bottom:8px;">LLMs-from-scratch/</div>
+    <div>├── <span style="color:var(--green)">CLAUDE.md</span> <span style="color:var(--muted); font-family:inherit;">← session brief, hardware topology, rules (committed)</span></div>
+    <div>├── <span style="color:var(--green)">.claude/rules/</span></div>
+    <div>│&nbsp;&nbsp; ├── <span style="color:var(--green)">agency-codes.md</span> <span style="color:var(--muted); font-family:inherit;">← NYC_DOT/NYCEDC/OATH corrections</span></div>
+    <div>│&nbsp;&nbsp; └── <span style="color:var(--green)">agency-sequencing.md</span> <span style="color:var(--muted); font-family:inherit;">← sequential_after / blocking rules</span></div>
+    <div>└── <span style="color:var(--green)">iphone-llm/</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">ROADMAP.md</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">agencies.yaml</span> <span style="color:var(--muted); font-family:inherit;">← 139 orgs, 1156 lines — deterministic foundation ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">micro_config.py</span> <span style="color:var(--muted); font-family:inherit;">← MICRO_1B_CONFIG + MICRO_TINY_CONFIG (34 lines)</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">micro_model.py</span> <span style="color:var(--muted); font-family:inherit;">← MoswalkLLM: GQA+SWA+SwiGLU+RMSNorm+RoPE (268 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">micro_quantize.py</span> <span style="color:var(--muted); font-family:inherit;">← INT4 group-wise PTQ + QuantizedLinear (247 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">micro_export.py</span> <span style="color:var(--muted); font-family:inherit;">← CoreML .mlpackage + Swift template (298 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">swarm_config.py</span> <span style="color:var(--muted); font-family:inherit;">← SwarmConfig, 4 topology factories (164 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">swarm_worker.py</span> <span style="color:var(--muted); font-family:inherit;">← SwarmWorker, LocalTransport, TcpTransport (228 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--green)">swarm_coordinator.py</span> <span style="color:var(--muted); font-family:inherit;">← orchestrator, speculative decode (424 lines) ✓</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--red)">convert_llama.py</span> <span style="color:var(--red); font-family:inherit;">← MISSING — Day 1 debt — highest priority</span></div>
+    <div>&nbsp;&nbsp;&nbsp; ├── <span style="color:var(--red)">swarm_inference.py</span> <span style="color:var(--red); font-family:inherit;">← MISSING — unified entry point</span></div>
+    <div>&nbsp;&nbsp;&nbsp; └── <span style="color:var(--muted)">[iOS Swift app]</span> <span style="color:var(--red); font-family:inherit;">← MISSING — separate Xcode project</span></div>
+    <div style="margin-top:12px; color:var(--muted);">.claude/skills/ <span style="color:var(--red); font-family:inherit;">← MISSING — 4 skills: agency_pattern_navigator, property_trigger_scanner, t3_discovery, premortem</span></div>
+  </div>
+
+  <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+    <span class="pill pill-green">✓ 9 files committed</span>
+    <span class="pill pill-red">✗ 2 Python files missing</span>
+    <span class="pill pill-red">✗ 4 skills missing</span>
+    <span class="pill pill-red">✗ iOS app missing</span>
+    <span class="pill pill-orange">~ Neo4j + API connectors undefined</span>
+    <span class="pill pill-orange">~ No tests or CI</span>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<div class="footer">
+  <div>moswalk Architecture Spec · Branch <code>claude/llm-iphone-17-pro-KuHhU</code> · May 12, 2026</div>
+  <div style="text-align:right; color:var(--muted);">
+    1,663 lines of Python · 139 agencies · 4 hardware nodes · 0 tests
+  </div>
+</div>
+
+</body>
+</html>

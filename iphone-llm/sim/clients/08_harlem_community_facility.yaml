@@ -1,0 +1,159 @@
+# Client 08 — Harlem Nonprofit Community Facility (BSA Variance)
+# Archetype: Nonprofit, highest complexity — BSA quasi-judicial + LPC adjacency
+# BBL: 1-01870-0044 (West Harlem, Manhattan — R7-2 zone with C1-4 overlay)
+# Grounding: BSA Special Permit process, NYC Zoning Resolution §22-00, LPC adjacency rules
+
+client_id: "SIM-008"
+name: "West Harlem Community Arts Foundation"
+client_type: nonprofit
+
+data_sources:
+  - "NYC Zoning Resolution §22-13 (community facility use in R7-2)"
+  - "BSA Special Permit / Variance process (ZR §72-21 hardship variance)"
+  - "LPC — St. Nicholas Historic District adjacency rules"
+  - "DOB Alt-1 change of occupancy requirements"
+  - "PLUTO v25v4 — R7-2 zone with C1-4 overlay, building class S0"
+  - "agencies.yaml — DOB, DCP, BSA, LPC, FDNY codes"
+
+property:
+  bbl: "1-01870-0044"
+  address: "542 West 147th Street, New York, NY 10031"
+  borough: Manhattan
+  zoning_district: "R7-2"
+  building_class: "S0"      # mixed-use (formerly commercial ground + residential)
+  year_built: 1931
+  stories: 5
+  residential_units: 12
+  gross_sq_ft: 11600
+  flags:
+    landmarked: false         # not individually landmarked
+    landmark_type: null
+    flood_zone: null
+    rent_stabilized: true     # 12 residential units, 1931 building
+    hpd_registered: true
+    within_subway_easement: false
+    active_violations: 1      # 1 open DOB violation for fire escape repair
+    c_of_o_mismatch: true     # ground floor and basement used as storage; CO says retail
+    asbestos_survey_required: true   # 1931 construction
+    special_purpose_district: null
+    waterfront: false
+
+project:
+  type: "Warehouse-to-community facility conversion + BSA parking variance"
+  description: >
+    West Harlem nonprofit wants to convert ground floor + basement (combined
+    3,200 sq ft) from storage/vacant retail into a community facility:
+    performing arts rehearsal space, after-school tutoring, and gallery.
+    Community facility use (Use Group 3/4) is permitted in R7-2 by special
+    permit in some configurations. Ground floor CO currently says retail —
+    requires Alt-1 to change to community facility use.
+
+    Parking: R7-2 requires 1 space per 1,000 sq ft for community facilities
+    over 3,000 sq ft = 3.2 spaces required. Building has zero off-street
+    parking and is on a 25-ft wide lot — impossible to provide. BSA hardship
+    variance (ZR §72-21) required to waive parking requirement.
+
+    Building is adjacent to (not within) St. Nicholas Historic District —
+    any visible exterior changes require LPC advisory review.
+    1 open DOB fire escape violation must be resolved before Alt-1 filing.
+  estimated_cost_usd: 340000
+  scope: "A1"   # change of occupancy (retail/storage → community facility)
+
+  agencies:
+    - code: "DOB"
+      role: "notification"
+      sequential_after: []
+      blocking: false
+      estimated_days: 7
+      confidence: 0.85
+      notes: >
+        Pre-application meeting with DOB recommended before BSA filing.
+        DOB will not issue Alt-1 permit until BSA variance is granted.
+        Resolve fire escape violation first (open DOB violation). Alt-1
+        drawings must show egress, accessibility, occupancy load for
+        performance use (assembly occupancy triggers additional requirements).
+
+    - code: "OATH"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 30
+      confidence: 0.88
+      notes: >
+        Open DOB fire escape violation heard at OATH. Must be resolved
+        before DOB will accept Alt-1 filing. Likely $1,500-$5,000 fine
+        + repair requirement. Repair the fire escape + pay fine.
+
+    - code: "DCP"
+      role: "notification"
+      sequential_after: ["BSA"]
+      blocking: false
+      estimated_days: 14
+      confidence: 0.90
+      notes: >
+        DCP reviews BSA variance application as standard ULURP-adjacent
+        process. Community facility in R7-2 may require DCP zoning
+        confirmation letter. DCP issues no-action or referral within 14 days.
+
+    - code: "BSA"
+      role: "primary"
+      sequential_after: ["OATH"]
+      blocking: true
+      estimated_days: 150
+      confidence: 0.55
+      notes: >
+        ZR §72-21 hardship variance for parking waiver. BSA has no reports_to
+        in org chart — fully quasi-judicial. Process: application → public
+        hearing notice → community board review → public hearing → BSA
+        determination. Timeline: 4-6 months. Confidence 0.55: BSA grants
+        parking variances for nonprofits with demonstrated hardship but
+        requires strong case (lot size, no adjacent parking, community need).
+        CB9 (West Harlem) community board support critical.
+
+    - code: "LPC"
+      role: "notification"
+      sequential_after: []
+      blocking: false
+      estimated_days: 21
+      confidence: 0.80
+      notes: >
+        Building is adjacent to (not within) St. Nicholas Historic District.
+        LPC advisory review recommended for any exterior changes (signage,
+        storefront). Not binding if building is not individually landmarked
+        and not within district boundary. Confirm boundary with LPC GIS before
+        assuming advisory-only — some maps show boundary as including this block.
+
+    - code: "DOB"
+      role: "primary"
+      sequential_after: ["BSA", "OATH"]
+      blocking: true
+      estimated_days: 90
+      confidence: 0.82
+      notes: >
+        Alt-1 filing after BSA variance granted. Assembly occupancy (A-3
+        or A-2) for performance space triggers: sprinkler system, panic
+        hardware on exit doors, occupant load placard, emergency lighting,
+        accessible route, accessible restrooms. Plan exam likely 60-90 days
+        for assembly change of use.
+
+    - code: "FDNY"
+      role: "approval"
+      sequential_after: ["DOB"]
+      blocking: true
+      estimated_days: 21
+      confidence: 0.88
+      notes: >
+        Assembly occupancy with over 49 persons requires FDNY Place of
+        Assembly permit (PA). Sprinkler plan review required. Emergency
+        lighting and exit signage inspection. No CO issued without FDNY sign-off.
+
+  escalation_risk: high
+  analyst_notes:
+    - "CRITICAL PATH: OATH (30d) → BSA (150d) → DOB (90d) → FDNY (21d) = ~10 months minimum."
+    - "BSA is the longest pole. Start community board outreach (CB9) before filing BSA — their support matters."
+    - "LPC boundary check is essential: if this block is within the St. Nicholas district, LPC becomes blocking."
+    - "Assembly occupancy: if max occupancy > 299, triggers additional fire code requirements (standpipe, etc.)."
+    - "Rent-stabilized tenants: community facility conversion of ground floor does not affect upper-floor tenants directly, but any building-wide work (sprinkler) triggers notification rights."
+    - "Asbestos: 1931 construction — survey before any demolition of existing retail fit-out."
+    - "PIVOT OPTION: If BSA variance too risky, reduce sq ft of community facility to under 3,000 sq ft to avoid parking requirement. Loses 200 sq ft but eliminates 4-6 month BSA delay."
+    - "NONPROFIT FINANCING: Many NYC capital grants (NYCEDC, SBS) require active permits before disbursement — BSA delay could hold up grant timeline."

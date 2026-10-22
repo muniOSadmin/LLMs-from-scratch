@@ -1,0 +1,1177 @@
+# NYC Agencies and Governance Organizations — moswalk registry
+# Source: NYC Open Data t3jq-9nkf (OTI, April 2026)
+# 139 active orgs: Mayoral Agencies, Advisory/Regulatory, Public Benefit/Dev, State
+# Used by: property_trigger_matrix, agency_patterns.yaml, T3 discovery
+# DO NOT hardcode agency codes in Python — reference this file.
+# Update: pull fresh XML from https://data.cityofnewyork.us/d/t3jq-9nkf/ annually.
+
+agencies:
+
+- code: "Borough Boards"
+  nyc_goid: "NYC_GOID_100001"
+  name: "Borough Boards"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Office of the Borough President of The Bronx;Office of the Borough President of Brooklyn;Office of the Borough President of Manhattan;Office of the Borough President of Queens;Office of the Borough President of Staten Island"
+  in_org_chart: true
+  has_public_portal: false
+
+- code: "Forest Park Trust"
+  nyc_goid: "NYC_GOID_000196"
+  name: "Forest Park Trust"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "New York City School"
+  nyc_goid: "NYC_GOID_000326"
+  name: "New York City School Bus Umbrella Services, Inc."
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "CEO"
+
+- code: "DSNY"
+  nyc_goid: "NYC_GOID_000152"
+  name: "New York City Department of Sanitation"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_names: ['Department of Sanitation', 'NYC Sanitation']
+
+- code: "FDNY"
+  nyc_goid: "NYC_GOID_000191"
+  name: "Fire Department of the City of New York"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "FDNY Business"
+  portal_url: "https://www.nyc.gov/site/fdny/business/permits-and-applications/permits-and-applications.page"
+  principal_officer_title: "Commissioner"
+  alt_names: ['Fire Department']
+
+- code: "ACPL"
+  nyc_goid: "NYC_GOID_000009"
+  name: "Advisory Council on Procurement Lobbying"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Trust for Governors "
+  nyc_goid: "NYC_GOID_000449"
+  name: "Trust for Governors Island"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President and CEO"
+
+- code: "Workforce Developmen"
+  nyc_goid: "NYC_GOID_000462"
+  name: "Workforce Development Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Richmond County Publ"
+  nyc_goid: "NYC_GOID_000412"
+  name: "Richmond County Public Administrator"
+  type: "State Government Agency"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Public Administrator"
+
+- code: "Pay Equity Cabinet"
+  nyc_goid: "NYC_GOID_000388"
+  name: "Pay Equity Cabinet"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "MWBE Advisory Board"
+  nyc_goid: "NYC_GOID_000309"
+  name: "MWBE Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "STAR"
+  nyc_goid: "NYC_GOID_000415"
+  name: "Sales Tax Asset Receivable Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "CPC"
+  nyc_goid: "NYC_GOID_000098"
+  name: "City Planning Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chair and Director"
+
+- code: "NYC DOT"
+  nyc_goid: "NYC_GOID_000157"
+  name: "New York City Department of Transportation"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "NYC Streets"
+  portal_url: "https://nycdot.intelligrants.com/"
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['DOT']
+  alt_names: ['Department of Transportation']
+
+- code: "CAB"
+  nyc_goid: "NYC_GOID_000116"
+  name: "Community Action Board at the NYC Department of Youth and Community Development"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CFB"
+  nyc_goid: "NYC_GOID_000042"
+  name: "Campaign Finance Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "LPC"
+  nyc_goid: "NYC_GOID_000236"
+  name: "Landmarks Preservation Commission"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "LPC Portico"
+  portal_url: "https://lpcportico.nyc.gov/"
+  principal_officer_title: "Executive Director"
+
+- code: "OATH"
+  nyc_goid: "NYC_GOID_000346"
+  name: "Office of Administrative Trials and Hearings"
+  type: "Mayoral Agency"
+  reports_to_dm: "Chief Counsel to the Mayor and City Hall"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner and Chief Administrative Law Judge"
+
+- code: "NYW"
+  nyc_goid: "NYC_GOID_000308"
+  name: "New York City Municipal Water Finance Authority"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chief Executive Officer"
+
+- code: "TSASC"
+  nyc_goid: "NYC_GOID_000445"
+  name: "Tobacco Settlement Asset Securitization Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "CCPC"
+  nyc_goid: "NYC_GOID_000109"
+  name: "Commission to Combat Police Corruption"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Chief Counsel to the Mayor and City Hall"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "LAW"
+  nyc_goid: "NYC_GOID_000238"
+  name: "New York City Law Department"
+  type: "Mayoral Agency"
+  reports_to_dm: "Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Corporation Counsel"
+  alt_acronyms: ['Law', 'Law Dept.']
+  alt_names: ['Law Department', 'Office of the Corporation Counsel']
+
+- code: "LOFT"
+  nyc_goid: "NYC_GOID_000240"
+  name: "New York City Loft Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director / General Counsel"
+
+- code: "MTA"
+  nyc_goid: "NYC_GOID_000476"
+  name: "Metropolitan Transportation Authority"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chair and Chief Executive Officer"
+
+- code: "TCR"
+  nyc_goid: "NYC_GOID_000448"
+  name: "Trust for Cultural Resources"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Get Stuff Built Advi"
+  nyc_goid: "NYC_GOID_000201"
+  name: "Get Stuff Built Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Director"
+
+- code: "New York City Housin"
+  nyc_goid: "NYC_GOID_000320"
+  name: "New York City Housing Authority Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Nonprofit Advisory C"
+  nyc_goid: "NYC_GOID_000338"
+  name: "Nonprofit Advisory Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DCP"
+  nyc_goid: "NYC_GOID_000137"
+  name: "Department of City Planning"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "ZoLa / PLUTO"
+  portal_url: "https://zola.planning.nyc.gov/"
+  principal_officer_title: "Director"
+
+- code: "DVS"
+  nyc_goid: "NYC_GOID_000158"
+  name: "Department of Veterans' Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "Board of Health"
+  nyc_goid: "NYC_GOID_000024"
+  name: "Board of Health"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Charter Revision Com"
+  nyc_goid: "NYC_GOID_000050"
+  name: "Charter Revision Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "SCI"
+  nyc_goid: "NYC_GOID_000425"
+  name: "Special Commissioner of Investigation for the New York City School District"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Special Commissioner"
+
+- code: "CUCF"
+  nyc_goid: "NYC_GOID_000100"
+  name: "City University Construction Fund"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Director"
+
+- code: "Green Economy Adviso"
+  nyc_goid: "NYC_GOID_000205"
+  name: "Green Economy Advisory Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Juvenile Justice Adv"
+  nyc_goid: "NYC_GOID_000233"
+  name: "Juvenile Justice Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CCHR"
+  nyc_goid: "NYC_GOID_000096"
+  name: "City Commission on Human Rights"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chair and Commissioner"
+
+- code: "NYCOA"
+  nyc_goid: "NYC_GOID_000343"
+  name: "New York City Office of the Actuary"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Chief Actuary"
+
+- code: "DDC"
+  nyc_goid: "NYC_GOID_000142"
+  name: "Department of Design and Construction"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Acting Commissioner"
+
+- code: "OPA"
+  nyc_goid: "NYC_GOID_000377"
+  name: "Office of Payroll Administration"
+  type: "Mayoral Agency"
+  reports_to_dm: "Office of the Mayor;Office of the New York City Comptroller"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "CSC"
+  nyc_goid: "NYC_GOID_000103"
+  name: "Civil Service Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director and General Counsel"
+
+- code: "ECF"
+  nyc_goid: "NYC_GOID_000181"
+  name: "Educational Construction Fund"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chief Executive Officer"
+
+- code: "BSA"
+  nyc_goid: "NYC_GOID_000025"
+  name: "Board of Standards and Appeals"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  portal_name: "BSA Online"
+  portal_url: "https://www1.nyc.gov/site/bsa/index.page"
+  principal_officer_title: "Executive Director"
+
+- code: "NYCEM"
+  nyc_goid: "NYC_GOID_000315"
+  name: "New York City Emergency Management"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['OEM']
+  alt_names: ['NYC Emergency Management', 'Office of Emergency Management']
+
+- code: "PEP"
+  nyc_goid: "NYC_GOID_000387"
+  name: "Panel on Educational Policy"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "TLC"
+  nyc_goid: "NYC_GOID_000436"
+  name: "New York City Taxi and Limousine Commission"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner and Chair"
+  alt_acronyms: ['NYC TLC']
+  alt_names: ['Taxi and Limousine Commission']
+
+- code: "NYC HDC"
+  nyc_goid: "NYC_GOID_000215"
+  name: "Housing Development Corporation"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "Deputy Mayor of Housing Economic and Workforce Development"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "President"
+
+- code: "CCDC"
+  nyc_goid: "NYC_GOID_000125"
+  name: "Convention Center Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "TRIE"
+  nyc_goid: "NYC_GOID_000433"
+  name: "Taskforce on Racial Inclusion and Equity"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+
+- code: "NYCHA"
+  nyc_goid: "NYC_GOID_000319"
+  name: "New York City Housing Authority"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chief Executive Officer"
+
+- code: "ARRAB"
+  nyc_goid: "NYC_GOID_000014"
+  name: "Archives, Reference and Research Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CORE"
+  nyc_goid: "NYC_GOID_000113"
+  name: "Commission on Racial Equity"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chair & Executive Director"
+
+- code: "New York City Distri"
+  nyc_goid: "NYC_GOID_000314"
+  name: "New York City Districting Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+
+- code: "BOE"
+  nyc_goid: "NYC_GOID_000023"
+  name: "Board of Elections"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "NYPD"
+  nyc_goid: "NYC_GOID_000389"
+  name: "New York City Police Department"
+  type: "Mayoral Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_names: ['Police Department']
+
+- code: "BOC"
+  nyc_goid: "NYC_GOID_000021"
+  name: "Board of Correction"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "NYCPS"
+  nyc_goid: "NYC_GOID_000143"
+  name: "New York City Public Schools"
+  type: "Mayoral Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chancellor"
+  alt_acronyms: ['DOE']
+  alt_names: ['Department of Education', 'NYC Public Schools']
+
+- code: "HPD"
+  nyc_goid: "NYC_GOID_000216"
+  name: "Department of Housing Preservation and Development"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "HPD Online"
+  portal_url: "https://hpdonline.nyc.gov/"
+  principal_officer_title: "Commissioner"
+  alt_names: ['Housing Preservation and Development']
+
+- code: "HASA"
+  nyc_goid: "NYC_GOID_000214"
+  name: "HIV/AIDS Services Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "IBO"
+  nyc_goid: "NYC_GOID_000222"
+  name: "Independent Budget Office"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Director"
+
+- code: "NYCEDC"
+  nyc_goid: "NYC_GOID_000177"
+  name: "Economic Development Corporation"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "President and CEO"
+
+- code: "Senior Advisory Coun"
+  nyc_goid: "NYC_GOID_000418"
+  name: "Senior Advisory Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Bronx County Public "
+  nyc_goid: "NYC_GOID_000395"
+  name: "Bronx County Public Administrator"
+  type: "State Government Agency"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Public Administrator"
+
+- code: "Tax Appeals Tribunal"
+  nyc_goid: "NYC_GOID_100023"
+  name: "Tax Appeals Tribunal"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+
+- code: "DOC"
+  nyc_goid: "NYC_GOID_000140"
+  name: "Department of Correction"
+  type: "Mayoral Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "MACJ"
+  nyc_goid: "NYC_GOID_000245"
+  name: "Mayor's Advisory Committee on the Judiciary"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Chief Counsel to the Mayor and City Hall"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chair"
+
+- code: "DOB"
+  nyc_goid: "NYC_GOID_000136"
+  name: "Department of Buildings"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "DOB NOW"
+  portal_url: "https://dobnowasbuild.nyc.gov/"
+  portal_name_secondary: "BIS"
+  portal_url_secondary: "https://a810-bisweb.nyc.gov/bisweb/"
+  principal_officer_title: "Commissioner"
+
+- code: "CB"
+  nyc_goid: "NYC_GOID_000118"
+  name: "Community Boards"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+
+- code: "BIC"
+  nyc_goid: "NYC_GOID_000040"
+  name: "Business Integrity Commission"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner/Chair"
+
+- code: "Build NYC Resource C"
+  nyc_goid: "NYC_GOID_100014"
+  name: "Build NYC Resource Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  alt_names: ['Build NYC']
+
+- code: "DSS"
+  nyc_goid: "NYC_GOID_000154"
+  name: "Department of Social Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "CSB"
+  nyc_goid: "NYC_GOID_000119"
+  name: "Community Services Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "EEPC"
+  nyc_goid: "NYC_GOID_000185"
+  name: "Equal Employment Practices Commission"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+  alt_names: ['Equal Employment Opportunity']
+
+- code: "BNYDC"
+  nyc_goid: "NYC_GOID_000037"
+  name: "Brooklyn Navy Yard Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chief Executive Officer & President"
+
+- code: "New York City Public"
+  nyc_goid: "NYC_GOID_000325"
+  name: "New York City Public Housing Preservation Trust"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "ACS"
+  nyc_goid: "NYC_GOID_000002"
+  name: "Administration for Children's Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "VAB"
+  nyc_goid: "NYC_GOID_000456"
+  name: "Veterans Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CCRB"
+  nyc_goid: "NYC_GOID_000105"
+  name: "Civilian Complaint Review Board"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Chief Counsel to the Mayor and City Hall"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "DORIS"
+  nyc_goid: "NYC_GOID_000151"
+  name: "Department of Records and Information Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['DoRIS']
+
+- code: "DPR"
+  nyc_goid: "NYC_GOID_000149"
+  name: "Department of Parks and Recreation"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['Parks']
+  alt_names: ['NYC Parks']
+
+- code: "NYCLDC"
+  nyc_goid: "NYC_GOID_000235"
+  name: "Land Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "VAAC"
+  nyc_goid: "NYC_GOID_000458"
+  name: "Voter Assistance Advisory Committee"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Youth Board"
+  nyc_goid: "NYC_GOID_100026"
+  name: "Youth Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "FRC"
+  nyc_goid: "NYC_GOID_000174"
+  name: "Domestic Violence Fatality Review Committee"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DOI"
+  nyc_goid: "NYC_GOID_000148"
+  name: "Department of Investigation"
+  type: "Mayoral Agency"
+  reports_to_dm: "Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "KCPA"
+  nyc_goid: "NYC_GOID_000234"
+  name: "Kings County Public Administrator"
+  type: "State Government Agency"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Public Administrator"
+
+- code: "WPPC"
+  nyc_goid: "NYC_GOID_000332"
+  name: "New York City Watershed Protection and Partnership Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "PPB"
+  nyc_goid: "NYC_GOID_000392"
+  name: "Procurement Policy Board"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Office of the Mayor;Office of the New York City Comptroller"
+  in_org_chart: true
+  has_public_portal: true
+
+- code: "NYC AGING"
+  nyc_goid: "NYC_GOID_000135"
+  name: "Department for the Aging"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['DFTA']
+  alt_names: ['NYC Aging']
+
+- code: "Banking Commission"
+  nyc_goid: "NYC_GOID_000018"
+  name: "Banking Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "REMIC"
+  nyc_goid: "NYC_GOID_000410"
+  name: "Residential Mortgage Insurance Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CGE"
+  nyc_goid: "NYC_GOID_000111"
+  name: "Commission on Gender Equity"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "DYCD"
+  nyc_goid: "NYC_GOID_000159"
+  name: "Department of Youth and Community Development"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "PCDC"
+  nyc_goid: "NYC_GOID_000391"
+  name: "Primary Care Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "CEO"
+
+- code: "DOP"
+  nyc_goid: "NYC_GOID_000150"
+  name: "Department of Probation"
+  type: "Mayoral Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "NYCIDA"
+  nyc_goid: "NYC_GOID_000224"
+  name: "Industrial Development Agency"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "BBP"
+  nyc_goid: "NYC_GOID_000034"
+  name: "Brooklyn Bridge Park Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "HYIC"
+  nyc_goid: "NYC_GOID_000220"
+  name: "Hudson Yards Infrastructure Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "UNDC"
+  nyc_goid: "NYC_GOID_000452"
+  name: "United Nations Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Vice President & General Counsel"
+
+- code: "Public Administrator"
+  nyc_goid: "NYC_GOID_000401"
+  name: "Public Administrator of Queens County"
+  type: "State Government Agency"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Public Administrator"
+
+- code: "H+H"
+  nyc_goid: "NYC_GOID_000318"
+  name: "NYC Health + Hospitals"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "President and CEO"
+
+- code: "New York County Publ"
+  nyc_goid: "NYC_GOID_000334"
+  name: "New York County Public Administrator"
+  type: "State Government Agency"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Public Administrator"
+
+- code: "LMDC"
+  nyc_goid: "NYC_GOID_000241"
+  name: "Lower Manhattan Development Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President"
+
+- code: "NYCCOC"
+  nyc_goid: "NYC_GOID_000126"
+  name: "Convention Center Operating Corporation (Javits)"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "CEO"
+
+- code: "NYWB"
+  nyc_goid: "NYC_GOID_000459"
+  name: "New York City Water Board"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Director"
+
+- code: "Economic Development"
+  nyc_goid: "NYC_GOID_000179"
+  name: "Economic Development Corporation Life Sciences Advisory Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DCWP"
+  nyc_goid: "NYC_GOID_000139"
+  name: "Department of Consumer and Worker Protection"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['DCA']
+  alt_names: ['Department of Consumer Affairs']
+
+- code: "TAXCOMM"
+  nyc_goid: "NYC_GOID_100024"
+  name: "New York City Tax Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "President"
+  alt_names: ['Tax Commission', 'NYC Tax Commission']
+
+- code: "CUNY"
+  nyc_goid: "NYC_GOID_000099"
+  name: "City University of New York"
+  type: "State Government Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chancellor"
+
+- code: "SBS"
+  nyc_goid: "NYC_GOID_000153"
+  name: "Department of Small Business Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "Three Quarter Housin"
+  nyc_goid: "NYC_GOID_000443"
+  name: "Three Quarter Housing Task Force"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "ECB"
+  nyc_goid: "NYC_GOID_000182"
+  name: "Environmental Control Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Chairperson (Commissioner & Chief Administrative Law Judge)"
+
+- code: "CAAC"
+  nyc_goid: "NYC_GOID_100016"
+  name: "Cultural Affairs Advisory Commission"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DOF"
+  nyc_goid: "NYC_GOID_000145"
+  name: "Department of Finance"
+  type: "Mayoral Agency"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "ACRIS"
+  portal_url: "https://a836-acris.nyc.gov/"
+  principal_officer_title: "Commissioner"
+
+- code: "Audit Committee"
+  nyc_goid: "NYC_GOID_000017"
+  name: "Audit Committee"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "MCCM"
+  nyc_goid: "NYC_GOID_000247"
+  name: "Mayor's Committee on City Marshals"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+
+- code: "OCB"
+  nyc_goid: "NYC_GOID_000354"
+  name: "Office of Collective Bargaining"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "OATA"
+  nyc_goid: "NYC_GOID_000345"
+  name: "Office of Administrative Tax Appeals"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Director"
+
+- code: "HIV Planning Council"
+  nyc_goid: "NYC_GOID_000213"
+  name: "HIV Planning Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "COIB"
+  nyc_goid: "NYC_GOID_000124"
+  name: "Conflicts of Interest Board"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Chief Counsel to the Mayor and City Hall"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "PDC"
+  nyc_goid: "NYC_GOID_000397"
+  name: "Public Design Commission"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Deputy Mayor for Housing and Planning"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+  alt_names: ['Art Commission']
+
+- code: "DEP"
+  nyc_goid: "NYC_GOID_000144"
+  name: "Department of Environmental Protection"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  portal_name: "DEP eFiling / ARTS"
+  portal_url: "https://asbestosportal.cityofnewyork.us/"
+  portal_notes: "Asbestos clearance (ACP5/ACP21) filed here. Separate portal for sewer/water tap-in applications."
+  principal_officer_title: "Commissioner"
+
+- code: "SCA"
+  nyc_goid: "NYC_GOID_000416"
+  name: "School Construction Authority"
+  type: "Public Benefit or Development Organization"
+  reports_to_dm: "First Deputy Mayor"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "President and CEO"
+
+- code: "NYCTRC"
+  nyc_goid: "NYC_GOID_000330"
+  name: "New York City Transit Riders Council"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+  alt_acronyms: ['NYCTAAC']
+  alt_names: ['New York City Transit Authority Advisory Council']
+
+- code: "Roosevelt Island Ope"
+  nyc_goid: "NYC_GOID_000414"
+  name: "Roosevelt Island Operating Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Street Harassment Pr"
+  nyc_goid: "NYC_GOID_000428"
+  name: "Street Harassment Prevention Advisory Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Hudson River Park Tr"
+  nyc_goid: "NYC_GOID_000218"
+  name: "Hudson River Park Trust"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "President & CEO"
+
+- code: "ARB"
+  nyc_goid: "NYC_GOID_100013"
+  name: "Archival Review Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DOHMH"
+  nyc_goid: "NYC_GOID_000146"
+  name: "Department of Health and Mental Hygiene"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+  alt_acronyms: ['DOH']
+  alt_names: ['NYC Health', 'Health Department']
+
+- code: "TFA"
+  nyc_goid: "NYC_GOID_000331"
+  name: "New York City Transitional Finance Authority"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Director"
+
+- code: "DCLA"
+  nyc_goid: "NYC_GOID_000141"
+  name: "Department of Cultural Affairs"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Economic Justice"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"
+
+- code: "NPCC"
+  nyc_goid: "NYC_GOID_000324"
+  name: "New York City Panel on Climate Change"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "Financial Informatio"
+  nyc_goid: "NYC_GOID_000190"
+  name: "Financial Information Services Agency"
+  type: "Advisory or Regulatory Organization"
+  reports_to_dm: "Office of the Mayor;Office of the New York City Comptroller"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "RGB"
+  nyc_goid: "NYC_GOID_000408"
+  name: "Rent Guidelines Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: true
+  principal_officer_title: "Executive Director"
+
+- code: "Workforce Developmen"
+  nyc_goid: "NYC_GOID_000461"
+  name: "Workforce Development Board"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "CWC"
+  nyc_goid: "NYC_GOID_000045"
+  name: "Catskill Watershed Corporation"
+  type: "Public Benefit or Development Organization"
+  in_org_chart: false
+  has_public_portal: false
+  principal_officer_title: "Executive Director"
+
+- code: "OCME"
+  nyc_goid: "NYC_GOID_100021"
+  name: "Office of the Chief Medical Examiner"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Health and Human Services"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Chief Medical Examiner"
+
+- code: "Advisory Council for"
+  nyc_goid: "NYC_GOID_000008"
+  name: "Advisory Council for the NYC Civil Court Housing Part"
+  type: "Advisory or Regulatory Organization"
+  in_org_chart: false
+  has_public_portal: false
+
+- code: "DCAS"
+  nyc_goid: "NYC_GOID_000138"
+  name: "Department of Citywide Administrative Services"
+  type: "Mayoral Agency"
+  reports_to_dm: "Deputy Mayor for Operations"
+  in_org_chart: true
+  has_public_portal: true
+  principal_officer_title: "Commissioner"

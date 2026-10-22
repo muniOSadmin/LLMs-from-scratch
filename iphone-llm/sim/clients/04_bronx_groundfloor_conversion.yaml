@@ -1,0 +1,121 @@
+# Client 04 — Bronx Ground-Floor Commercial-to-Residential Conversion
+# Archetype: Landlord, change of occupancy (Alt-1), DCP zoning review
+# BBL: 2-03412-0044 (South Bronx, Mott Haven — C4-4D zone)
+# Grounding: NYC Zoning Resolution commercial overlay rules, DOB Alt-1 CO requirements
+
+client_id: "SIM-004"
+name: "Morales Property Holdings LLC"
+client_type: landlord
+
+data_sources:
+  - "NYC Zoning Resolution §32-00 (commercial district regulations)"
+  - "DOB Alt-1 Certificate of Occupancy amendment requirements"
+  - "HPD Rent Stabilization — MCI rules for building-wide capital work"
+  - "PLUTO v25v4 — C4-4D zoning, building class D7"
+  - "agencies.yaml — DOB, DCP, HPD codes"
+
+property:
+  bbl: "2-03412-0044"
+  address: "456 East 149th Street, Bronx, NY 10455"
+  borough: Bronx
+  zoning_district: "C4-4D"
+  building_class: "D7"      # mixed-use: elevator apt with retail
+  year_built: 1961
+  stories: 6
+  residential_units: 24
+  gross_sq_ft: 18400
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: null
+    rent_stabilized: true    # 24 units, 1961 building — all likely stabilized
+    hpd_registered: true
+    within_subway_easement: false
+    active_violations: 3     # 3 open HPD heat/hot water violations
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false
+    asbestos_survey_required: true   # 1961 construction, gut-level work on ground floor
+
+project:
+  type: "Ground-floor commercial-to-residential conversion (2 units)"
+  description: >
+    Convert 2,400 sq ft vacant ground-floor retail space (formerly a pharmacy)
+    into two 1-bedroom residential apartments. C4-4D zone allows residential
+    use on ground floors. Requires Alt-1 filing to amend Certificate of
+    Occupancy from mixed-use (commercial ground floor) to fully residential.
+    Pre-1987 building: asbestos survey mandatory before demolition of existing
+    retail fit-out. 3 open HPD heat/hot water violations must be addressed —
+    DOB may flag violations at plan examination.
+  estimated_cost_usd: 185000
+  scope: "A1"   # change of occupancy — CO amendment required
+
+  agencies:
+    - code: "DEP"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 14
+      confidence: 0.90
+      notes: >
+        Mandatory asbestos survey by DEP-certified inspector before any
+        demolition. 1961 construction = high ACM likelihood (floor tiles,
+        ceiling tiles, pipe insulation). If ACM found: DEP-licensed
+        abatement contractor required. File DEP notification 7+ days before
+        work. Timeline adds 2-8 weeks depending on ACM scope.
+
+    - code: "HPD"
+      role: "notification"
+      sequential_after: []
+      blocking: false
+      estimated_days: 30
+      confidence: 0.75
+      notes: >
+        3 open heat/hot water violations — while not technically blocking
+        the Alt-1 filing, DOB plan examiners may flag the violations.
+        Recommend resolving before filing. Adding 2 residential units
+        triggers HPD registration update (new unit count). No MCI filing
+        needed for ground-floor conversion alone.
+
+    - code: "DCP"
+      role: "notification"
+      sequential_after: ["DOB"]
+      blocking: false
+      estimated_days: 14
+      confidence: 0.85
+      notes: >
+        C4-4D allows residential on all floors — no zoning variance needed.
+        DCP notified as part of CEQR review for CO amendment. Ground-floor
+        residential in C4 district is as-of-right. Confirmation only.
+
+    - code: "DOB"
+      role: "primary"
+      sequential_after: ["DEP"]
+      blocking: true
+      estimated_days: 75
+      confidence: 0.80
+      notes: >
+        Alt-1 filing with new CO amendment. Drawings must show egress,
+        ventilation, natural light compliance for new residential units.
+        Ground-floor residential requires: window guards (units with children),
+        sprinkler connection, separate metering. Plan exam + permit + inspections.
+
+    - code: "FDNY"
+      role: "approval"
+      sequential_after: ["DOB"]
+      blocking: true
+      estimated_days: 21
+      confidence: 0.85
+      notes: >
+        Fire protection review for new residential units. Ground-floor
+        residential requires interconnected smoke detectors, CO detectors,
+        and sprinkler head additions. FDNY inspection required before CO issued.
+
+  escalation_risk: medium
+  analyst_notes:
+    - "DEP asbestos survey is the first step — do not begin demo without it."
+    - "Resolve HPD violations before filing — avoids DOB plan exam flagging."
+    - "C4-4D ground-floor residential is as-of-right — no BSA or DCP variance needed."
+    - "Adding 2 units to a rent-stabilized building: new units subject to stabilization if any existing unit is stabilized — confirm with HPD."
+    - "Window guards required if any tenant has a child under 10 — add to spec."
+    - "COST RISK: Asbestos abatement in 2,400 sq ft retail = $15,000-$60,000 additional cost. Budget accordingly."

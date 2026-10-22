@@ -1,0 +1,109 @@
+# Client 02 — Queens Basement ADU Legalization (Flood Zone)
+# Archetype: Homeowner, ADU pilot program, flood zone complication
+# BBL: 4-05765-0023 (Flushing, Queens — R3A zone, Zone AE flood)
+# Grounding: NYC ADU Pilot Program rules (2024), FEMA FIRM panels, PLUTO v25v4
+
+client_id: "SIM-002"
+name: "Chen Household"
+client_type: homeowner
+
+data_sources:
+  - "NYC DOB ADU Pilot Program Rules (effective April 20, 2024)"
+  - "FEMA FIRM Panel 36081C0281H — Flushing Creek AE flood zone"
+  - "PLUTO v25v4 — R3A zoning, building class A1"
+  - "HPD ADU Program intake requirements"
+  - "agencies.yaml — DOB, HPD codes"
+
+property:
+  bbl: "4-05765-0023"
+  address: "143-27 Sanford Avenue, Flushing, NY 11355"
+  borough: Queens
+  zoning_district: "R3A"
+  building_class: "A1"      # single-family detached
+  year_built: 1952
+  stories: 2
+  residential_units: 1
+  gross_sq_ft: 1680
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: "AE"         # 1% annual chance flood zone — CRITICAL
+    rent_stabilized: false
+    hpd_registered: false
+    within_subway_easement: false
+    active_violations: 0
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false
+    asbestos_survey_required: false   # 1952 = pre-1987 but interior only, minimal ACM risk
+
+project:
+  type: "Basement apartment legalization (ADU)"
+  description: >
+    Legalize existing informal basement apartment occupied since 2019.
+    Basement is 600 sq ft, has egress window, kitchen, bath, and separate
+    entrance. Owner wants to formally register under the NYC ADU Pilot Program
+    (Local Law 18 of 2024). Building is in FEMA Zone AE (Flushing Creek
+    floodplain). ADU pilot program explicitly prohibits legalization in flood
+    risk zones — this project is likely INELIGIBLE without variance or zone
+    reclassification.
+  estimated_cost_usd: 38000
+  scope: "A1"   # change of occupancy — adds residential unit to 1-family
+
+  agencies:
+    - code: "HPD"
+      role: "primary"
+      sequential_after: []
+      blocking: true
+      estimated_days: 45
+      confidence: 0.60
+      notes: >
+        HPD intake for ADU Pilot Program. Program requires: building not in
+        flood risk zone (AE/VE). This property IS in Zone AE — HPD will
+        likely reject at eligibility screening. Confidence 0.60: owner should
+        verify FEMA panel before filing. If ineligible, only path is BSA
+        special permit or FEMA LOMA (Letter of Map Amendment) to reclassify lot.
+
+    - code: "DOB"
+      role: "approval"
+      sequential_after: ["HPD"]
+      blocking: true
+      estimated_days: 60
+      confidence: 0.75
+      notes: >
+        Alt-1 filing required (change of occupancy from 1-family to 2-family).
+        Egress, sprinkler, flood sensor, and ventilation upgrades mandatory
+        per 2022 NYC Building Code. Flood-resistant construction standards
+        apply in Zone AE — basement floor elevation, utilities must meet BFE.
+
+    - code: "DEP"
+      role: "notification"
+      sequential_after: []
+      blocking: false
+      estimated_days: 14
+      confidence: 0.85
+      notes: >
+        DEP storm sewer connection review if adding kitchen plumbing. Also
+        flood zone work requires DEP notice in some cases. Not a blocking
+        agency but adds timeline.
+
+    - code: "BSA"
+      role: "approval"
+      sequential_after: ["HPD"]
+      blocking: false
+      estimated_days: 120
+      confidence: 0.40
+      notes: >
+        If HPD rejects due to flood zone, owner may seek BSA Special Permit
+        for flood zone exception. BSA has no reports_to in org chart —
+        quasi-judicial. Timeline 3-6 months. Confidence low: BSA rarely
+        grants flood zone exceptions for residential ADUs.
+
+  escalation_risk: high
+  analyst_notes:
+    - "STOP: Verify FEMA flood zone on FIRM panel before doing anything else."
+    - "Zone AE = ADU pilot program ineligible. This is a likely dead end as filed."
+    - "Best path: obtain FEMA LOMA if lot elevation is above BFE (survey required, ~$3,000)."
+    - "If LOMA succeeds, restart HPD intake with reclassification documentation."
+    - "Alternative: convert to legal 2-family via standard Alt-1 without ADU pilot — different rules apply."
+    - "PRIVACY NOTE: Informal occupancy since 2019 — do not expose in any public filing without client consent."

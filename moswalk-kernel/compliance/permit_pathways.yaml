@@ -1,0 +1,510 @@
+# moswalk-kernel — canonical NYC permit pathways
+#
+# Source of truth for agency sequences by project type.
+# Based on: NYC Building Code 2022, NYC Zoning Resolution, agency rules
+# and DOB NOW filing requirements as of April 2026.
+#
+# TWO CONFIDENCE AXES — these are different instruments, read together:
+#
+#   confidence (this file) = RULE CONFIDENCE — the chart
+#     Certainty of the legal requirement. Does not change with voyage conditions.
+#     1.0 = codified law — exact, no interpretation required
+#     0.9 = well-established practice — consistent, well-charted
+#     0.7 = common but variable — conditions affect interpretation
+#     <0.7 = stale bearing — verify before relying on this reading
+#
+#   confidence_score (pantocraft/archive/flywheel.py) = VOYAGE CONFIDENCE — the sea state
+#     How smooth is this particular passage: examiner history, DOB backlog,
+#     site conditions, property-specific complexity. Live signal from the archive.
+#     Formula: (examiner_approval_rate × filing_type_weight × (1/backlog_days))
+#              / complexity_index
+#
+#   The chart is exact. The ocean is live. A 1.0 rule sits in front of a voyage
+#   that may still be rough. The crew reads both instruments — neither alone
+#   is sufficient. Nothing is ever fully determined before departure.
+#
+# Other fields:
+#   - sequential_after: agencies that MUST resolve before this one begins
+#   - blocking: if unresolved, ALL downstream agencies halt
+#   - self_cert: true if licensed professional can certify without plan exam
+#   - pre_filing_meeting: true if agency offers/requires pre-application meeting
+#   - enforcement_context: posture under which this rule was validated
+#       When posture shifts, entries tagged with prior context are flagged for
+#       operator review — not invalidated. The chart records what was known;
+#       the navigator decides what it means under current conditions.
+#
+# LEGAL SEQUENCING INVARIANT (rule_confidence 1.0):
+#   Buildings with a construction date BEFORE APRIL 1, 1987 require a DEP
+#   asbestos clearance document BEFORE the DOB work permit status can advance
+#   to "Ready for Submission." This invariant cannot be waived by self-cert.
+#   ACP5  = "Not an Asbestos Project" (no ACM present or work is non-disturbance)
+#   ACP21 = "Abatement Completion Certificate" (ACM present, abatement complete)
+#   Trigger condition key: "pre-1987 construction"
+#
+# DO NOT encode professional strategy here — that belongs in pantocraft //
+# Strategy is how we navigate. This file is the chart.
+
+pathways:
+
+  # ══════════════════════════════════════════════════════════════════
+  # NEW BUILDING (NB)
+  # ══════════════════════════════════════════════════════════════════
+
+  new_building:
+    description: "New Building — DOB NB filing. Vacant lot or full demolition + rebuild."
+    dob_filing_type: "NB"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Vacant lot construction"
+      - "Full demolition of existing structure followed by new construction"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 90
+        self_cert: false
+        pre_filing_meeting: true
+        notes: "NB filing: site plan, foundation, structural, MEP, zoning analysis. Pre-filing meeting strongly recommended for any building > 3 stories."
+
+      - code: "DEP"
+        role: approval
+        sequential_after: []
+        blocking: true
+        confidence: 0.95
+        typical_days: 21
+        notes: "New sewer connection (tap-in application) and water service required before DOB issues foundation permit."
+
+      - code: "NYC DOT"
+        role: approval
+        sequential_after: []
+        blocking: false
+        confidence: 0.90
+        typical_days: 14
+        notes: "Curb cut permit, sidewalk restoration bond, street opening permit for DEP tap-in."
+
+      - code: "FDNY"
+        role: inspection
+        sequential_after: ["DOB"]
+        blocking: false
+        confidence: 0.90
+        typical_days: 14
+        notes: "Smoke/CO detector inspection. Sprinkler plan review if > 3 stories residential."
+
+    conditional_agencies:
+      - condition: "Landmark building or within historic district"
+        add_agency:
+          code: "LPC"
+          role: approval
+          sequential_after: []
+          blocking: true
+          confidence: 0.95
+          typical_days: 45
+          inject_before: ["DOB"]
+          notes: "Certificate of Appropriateness required BEFORE DOB issues permits for any exterior work."
+
+      - condition: "Flood zone AE or VE"
+        add_agency:
+          code: "DEP"
+          role: flood_review
+          sequential_after: []
+          blocking: true
+          confidence: 0.90
+          typical_days: 14
+          notes: "Flood-resistant construction per NYC BC Appendix G. BFE compliance verification."
+
+      - condition: "Pre-1987 construction"
+        add_agency:
+          code: "DEP"
+          role: asbestos_clearance
+          sequential_after: []
+          blocking: true
+          confidence: 1.0
+          typical_days: 14
+          inject_before: ["DOB"]
+          notes: >
+            LEGAL SEQUENCING INVARIANT. Buildings constructed before April 1, 1987
+            require a DEP asbestos clearance BEFORE DOB work permit advances to
+            "Ready for Submission." Required document:
+            ACP5  = Certificate of Non-Applicability ("Not an Asbestos Project") —
+                    when no ACM is present or the work does not disturb ACM.
+            ACP21 = Abatement Completion Certificate — when ACM is present and
+                    full abatement has been completed by a licensed contractor.
+            Filed via DEP eFiling portal. DEP-certified inspector required for survey.
+            Demolition work: 7+ days advance DEP notification required regardless of
+            asbestos presence. Non-compliance: stop-work order + civil penalty up to $10,000/day.
+
+      - condition: "Site > 20,000 sq ft or involves mapped street"
+        add_agency:
+          code: "DCP"
+          role: notification
+          sequential_after: []
+          blocking: false
+          confidence: 0.85
+          typical_days: 30
+          notes: "CEQR environmental review may be required. City Map amendment if unmapped street."
+
+  # ══════════════════════════════════════════════════════════════════
+  # ALT-1: Major Alteration (Change of Use / Egress / Occupancy)
+  # ══════════════════════════════════════════════════════════════════
+
+  alteration_type_1:
+    description: "Alt-1: Change of use, egress, or occupancy. New Certificate of Occupancy required."
+    dob_filing_type: "A1"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Change of occupancy classification (e.g., commercial → residential)"
+      - "Change in legal use without CO amendment"
+      - "Addition of stories or floor area requiring new CO"
+      - "Change in means of egress"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 90
+        self_cert: false
+        pre_filing_meeting: true
+        notes: "Full architectural drawings required. Plan examination mandatory (no self-cert for A1). CO amendment issued after final inspection."
+
+      - code: "FDNY"
+        role: approval
+        sequential_after: ["DOB"]
+        blocking: true
+        confidence: 0.95
+        typical_days: 21
+        notes: "Fire protection review required for any change of use. Sprinkler, alarm, egress compliance."
+
+    conditional_agencies:
+      - condition: "Pre-1987 construction"
+        add_agency:
+          code: "DEP"
+          role: asbestos_clearance
+          sequential_after: []
+          blocking: true
+          confidence: 1.0
+          typical_days: 14
+          inject_before: ["DOB"]
+          notes: >
+            LEGAL SEQUENCING INVARIANT. Construction date before April 1, 1987:
+            ACP5  = Certificate of Non-Applicability — no ACM present or work does not disturb ACM.
+            ACP21 = Abatement Completion Certificate — ACM present, licensed contractor abatement complete.
+            DEP eFiling portal. DEP-certified inspector required for survey.
+            7+ days advance DEP notification before any demolition work.
+            DOB work permit cannot advance to "Ready for Submission" without clearance on file.
+
+      - condition: "Open ECB/DOB violations on record"
+        add_agency:
+          code: "OATH"
+          role: approval
+          sequential_after: []
+          blocking: true
+          confidence: 0.90
+          typical_days: 30
+          notes: "Open ECB violations must be resolved at OATH before DOB accepts A1 filing. Resolve first."
+
+      - condition: "Landmark building or within historic district"
+        add_agency:
+          code: "LPC"
+          role: approval
+          sequential_after: []
+          blocking: true
+          confidence: 0.95
+          typical_days: 45
+          inject_before: ["DOB"]
+          notes: "Certificate of Appropriateness before DOB permits any exterior work."
+
+      - condition: "Rent-stabilized building AND building-wide capital work"
+        add_agency:
+          code: "HPD"
+          role: notification
+          sequential_after: []
+          blocking: false
+          confidence: 0.85
+          typical_days: 30
+          notes: "MCI (Major Capital Improvement) approval required if rent increase sought. Tenant notification required."
+
+      - condition: "Residential change of use requiring parking per ZR"
+        add_agency:
+          code: "BSA"
+          role: approval
+          sequential_after: ["DOB"]
+          blocking: false
+          confidence: 0.55
+          typical_days: 150
+          notes: "ZR §72-21 hardship variance for parking waiver if required spaces cannot be provided. Quasi-judicial — 4-6 month timeline. Community Board support critical."
+
+  # ══════════════════════════════════════════════════════════════════
+  # ALT-2: Multiple Work Types (No CO Change)
+  # ══════════════════════════════════════════════════════════════════
+
+  alteration_type_2:
+    description: "Alt-2: Multiple types of work, no change of use or occupancy. No new CO required."
+    dob_filing_type: "A2"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Structural work (non-egress)"
+      - "Multiple plumbing/mechanical/electrical work types"
+      - "Rooftop additions (open, non-enclosed)"
+      - "Facade repairs not requiring CO amendment"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 45
+        self_cert: true
+        self_cert_notes: "Professional Certification (Directive 14) available for A2 if licensed RA/PE. Bypasses plan examination — DOB audits ~25% of self-cert filings."
+        pre_filing_meeting: false
+        notes: "Drawings required. Self-certification available for qualifying work types. Inspection required before sign-off."
+
+    conditional_agencies:
+      - condition: "Landmark building or within historic district"
+        add_agency:
+          code: "LPC"
+          role: approval
+          sequential_after: []
+          blocking: true
+          confidence: 0.95
+          typical_days: 15
+          inject_before: ["DOB"]
+          notes: "Exterior work visible from a public way requires LPC approval before DOB permit. Staff-level approval for minor work: 10-15 business days. Full Certificate of Appropriateness with hearing: 60-90 days."
+
+      - condition: "Pre-1987 construction"
+        add_agency:
+          code: "DEP"
+          role: asbestos_clearance
+          sequential_after: []
+          blocking: true
+          confidence: 1.0
+          typical_days: 14
+          inject_before: ["DOB"]
+          notes: >
+            LEGAL SEQUENCING INVARIANT. ACP5 or ACP21 required before DOB permit
+            advances to "Ready for Submission." See new_building pathway for full detail.
+
+      - condition: "Open violations"
+        add_agency:
+          code: "OATH"
+          role: resolution
+          sequential_after: []
+          blocking: false
+          confidence: 0.88
+          typical_days: 30
+          notes: "Open violations don't block A2 filing but DOB plan examiners will flag them. Recommend resolution."
+
+  # ══════════════════════════════════════════════════════════════════
+  # ALT-3: Minor Alteration (Single Work Type)
+  # ══════════════════════════════════════════════════════════════════
+
+  alteration_type_3:
+    description: "Alt-3: Single type of work, minor scope. Simplest alteration pathway."
+    dob_filing_type: "A3"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Single plumbing fixture addition/replacement"
+      - "HVAC unit replacement (no duct work)"
+      - "Minor structural (non-egress)"
+      - "Sidewalk café structural anchors only"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 21
+        self_cert: true
+        notes: "Simplest filing. Self-cert available. Usually no plan examination required."
+
+  # ══════════════════════════════════════════════════════════════════
+  # FISP / LOCAL LAW 11 (Façade Inspection Safety Program)
+  # ══════════════════════════════════════════════════════════════════
+
+  fisp_facade:
+    description: "FISP / Local Law 11: Mandatory façade inspection and repair for buildings > 6 stories."
+    dob_filing_type: "TR6"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Building > 6 stories"
+      - "FISP cycle deadline (Cycle 9 closed Feb 21, 2025)"
+      - "UNSAFE or SWARMP condition found in inspection"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 14
+        notes: >
+          TR6 report filed by QEWI within 60 days of inspection.
+          UNSAFE: sidewalk shed required IMMEDIATELY. Repair Alt-2 permit required.
+          SAFE WITH A REPAIR AND MONITORING PROGRAM (SWARMP): repairs within 2 years.
+          SAFE: no action required until next cycle.
+          Non-filing fine: $1,000/month.
+
+      - code: "NYC DOT"
+        role: approval
+        sequential_after: []
+        blocking: false
+        confidence: 0.92
+        typical_days: 10
+        notes: "Sidewalk shed permit and construction fence permit. Crane/hoist requires separate revocable consent."
+
+  # ══════════════════════════════════════════════════════════════════
+  # SIDEWALK CAFÉ (Revocable Consent)
+  # ══════════════════════════════════════════════════════════════════
+
+  sidewalk_cafe:
+    description: "Sidewalk café — NYC DOT revocable consent. Community Board review required."
+    dob_filing_type: null
+    enforcement_context: "current-administration"
+    triggers:
+      - "Outdoor seating in public right-of-way"
+      - "New or amended revocable consent for dining enclosure or open café"
+    agencies:
+      - code: "NYC DOT"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 0.95
+        typical_days: 120
+        pre_filing_meeting: false
+        notes: >
+          Revocable Consent application. DOT routes to Community Board within 5 days.
+          Standard review: up to 6 months. Second public hearing if CB recommends
+          denial or substantial modification: add 60-90 days.
+          Siting clearances: 8-ft pedestrian clear path, 2-ft from curb,
+          no blockage of fire hydrant, bus stop, or subway entrance.
+
+      - code: "DCP"
+        role: notification
+        sequential_after: ["NYC DOT"]
+        blocking: false
+        confidence: 0.95
+        typical_days: 5
+        notes: "DCP receives forwarded copy for zoning compliance check. C-zone allows cafés by right."
+
+      - code: "DEP"
+        role: notification
+        sequential_after: ["NYC DOT"]
+        blocking: false
+        confidence: 0.92
+        typical_days: 5
+        notes: "Environmental review forwarded by DOT."
+
+    conditional_agencies:
+      - condition: "Open ECB violations"
+        add_agency:
+          code: "OATH"
+          role: approval
+          sequential_after: []
+          blocking: true
+          confidence: 0.90
+          typical_days: 30
+          notes: "DOT will not process revocable consent with unresolved ECB violations. Resolve at OATH first."
+
+      - condition: "Enclosure structure requires electrical or anchoring"
+        add_agency:
+          code: "DOB"
+          role: approval
+          sequential_after: ["NYC DOT"]
+          blocking: false
+          confidence: 0.88
+          typical_days: 21
+          notes: "Alt-3 or electrical permit for canopy anchors and heaters/lighting."
+
+      - condition: "Landmark building or within historic district"
+        add_agency:
+          code: "LPC"
+          role: approval
+          sequential_after: []
+          blocking: false
+          confidence: 0.80
+          typical_days: 21
+          notes: "LPC advisory review if café structure or signage visible from public way in historic district."
+
+  # ══════════════════════════════════════════════════════════════════
+  # ADU / BASEMENT APARTMENT (Pilot Program)
+  # ══════════════════════════════════════════════════════════════════
+
+  adu_legalization:
+    description: "NYC ADU Pilot Program — basement/cellar apartment legalization (Local Law 18/2024)."
+    dob_filing_type: "A1"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Existing informal basement/cellar unit occupied before April 20, 2024"
+      - "1-3 family home in designated pilot area"
+    agencies:
+      - code: "HPD"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 0.85
+        typical_days: 45
+        notes: >
+          HPD intake for pilot program eligibility. Disqualifiers:
+          (1) flood zone AE/VE, (2) no occupancy before April 20 2024,
+          (3) not in pilot program geographic area. If ineligible, standard
+          A1 path still available but without pilot program protections.
+
+      - code: "DOB"
+        role: approval
+        sequential_after: ["HPD"]
+        blocking: true
+        confidence: 0.88
+        typical_days: 60
+        notes: "Alt-1 for change of occupancy (adds residential unit). Sprinkler, flood sensor, egress window, ventilation required."
+
+    conditional_agencies:
+      - condition: "Flood zone AE or VE"
+        add_agency:
+          code: "HPD"
+          role: eligibility_block
+          sequential_after: []
+          blocking: true
+          confidence: 0.95
+          typical_days: 0
+          notes: "INELIGIBLE: ADU pilot program prohibits legalization in flood zones. Verify FEMA FIRM panel before proceeding. Only path: FEMA LOMA (Letter of Map Amendment) to reclassify lot, then restart."
+
+  # ══════════════════════════════════════════════════════════════════
+  # PLACE OF ASSEMBLY (PA) — Community Facility / Event Space
+  # ══════════════════════════════════════════════════════════════════
+
+  place_of_assembly:
+    description: "Place of Assembly permit for spaces with occupancy > 74 persons."
+    dob_filing_type: "A1"
+    enforcement_context: "current-administration"
+    triggers:
+      - "Change of use to assembly occupancy (A-1 through A-5)"
+      - "Occupant load > 74 persons in new or renovated space"
+      - "Community facility, event space, theater, house of worship"
+    agencies:
+      - code: "DOB"
+        role: primary
+        sequential_after: []
+        blocking: true
+        confidence: 1.0
+        typical_days: 90
+        notes: "A1 filing required. Assembly occupancy triggers: panic hardware, emergency lighting, occupant load placard, accessible route, accessible restrooms."
+
+      - code: "FDNY"
+        role: approval
+        sequential_after: ["DOB"]
+        blocking: true
+        confidence: 0.95
+        typical_days: 30
+        notes: "Place of Assembly permit (PA) required for > 49 occupants. Sprinkler plan review, emergency lighting, exit signage inspection."
+
+    conditional_agencies:
+      - condition: "Parking requirement not met"
+        add_agency:
+          code: "BSA"
+          role: approval
+          sequential_after: []
+          blocking: false
+          confidence: 0.50
+          typical_days: 150
+          notes: "ZR §72-21 hardship variance for parking waiver. Quasi-judicial, 4-6 months. Community Board support critical. PIVOT: reduce sq ft below parking threshold to avoid BSA entirely."

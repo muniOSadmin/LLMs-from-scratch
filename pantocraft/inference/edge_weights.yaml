@@ -1,0 +1,230 @@
+# pantocraft // — edge weights for real-world inference
+#
+# This is the proprietary professional judgment layer.
+# Kernel (moswalk-kernel) knows what the law says.
+# pantocraft // knows how the system actually works.
+#
+# LEGAL FRAMING (required per NY S7263 risk):
+#   All entries here are REGULATORY INFORMATION based on publicly documented
+#   formal processes, official agency guidance, and professional practice patterns.
+#   No entry constitutes legal or architectural advice.
+#   A licensed professional (RA, PE, attorney, expediter) must review all
+#   outputs before client action. pantocraft // is decision support, not
+#   decision making.
+#
+# Schema:
+#   agency: agency code (from agencies.yaml)
+#   track: formal processing track name
+#   speed_multiplier: relative speed vs standard review (1.0 = baseline)
+#   condition: when this track applies
+#   formal_source: the official DOB/LPC/BSA document or rule that enables this
+#   professional_note: what an experienced practitioner knows about this track
+#   risk: what can go wrong
+#   confidence: 0.0-1.0 (how reliable this track is)
+
+edge_weights:
+
+  # ── DOB Professional Certification (Self-Cert) ─────────────────────────────
+
+  - agency: "DOB"
+    track: "Professional Certification (Pro Cert)"
+    speed_multiplier: 5.0
+    condition: "Alt-1, Alt-2, or Alt-3 filed by licensed RA or PE who certifies code compliance"
+    formal_source: "NYC Building Code §28-104.7; LL158/2017 (with 2023 exception update)"
+    professional_note: >
+      Plans approved at end of data entry — effectively immediate permit issuance.
+      Bypasses all plan examination queues. Most powerful speed lever in the DOB system.
+      RA/PE signs POC-1 form (Professional's and Owner's Certification) — both signatures required.
+      Ineligible work types: new buildings, certain special district work, buildings with LL158 flags.
+    risk: >
+      20% random DOB audit after first permit. If audit finds non-compliance, all open
+      permits on the property are suspended and the RA faces license risk. Exposes the
+      professional of record, not just the owner. Do not use for borderline zoning
+      interpretations — standard review is safer when compliance is arguable.
+    confidence: 0.95
+
+  - agency: "DOB"
+    track: "Directive 14 Self-Inspection"
+    speed_multiplier: 3.0
+    condition: "Limited alteration work; RA/PE performs final inspection in lieu of DOB inspector"
+    formal_source: "NYC DOB Directive 14; Admin Code §28-116.2"
+    professional_note: >
+      Eliminates DOB inspection queue for final sign-off. Combinable with Pro Cert —
+      self-cert plans + self-inspect = fastest possible Alt-2/3 pathway.
+      Architect submits TR8 (Technical Report 8) as final inspection report.
+      Common for interior fit-outs, window replacements, minor structural.
+    risk: >
+      Random DOB audit risk same as Pro Cert (~20%). Audit covers both plans and
+      inspection report. If deficiencies found post-CO, owner liability and RA
+      license exposure are both higher than standard review path.
+    confidence: 0.90
+
+  - agency: "DOB"
+    track: "Pre-Filing Meeting (OPPN 01/04)"
+    speed_multiplier: 1.3
+    condition: "Any complex filing — especially Alt-1, NB, or anything involving special districts"
+    formal_source: "DOB Operational Policy and Procedure Notice 01/04"
+    professional_note: >
+      Pre-filer reviews 3 drawing copies, estimates cost, determines job type, enters
+      BIS data, assesses fees, assigns job number — before formal submission.
+      Surfaces correction items BEFORE they become formal objections.
+      Effective for: confirming filing type (A1 vs A2), fee estimation, catching
+      missing TR forms before they stall plan examination.
+      Cost: no additional fee. Time: 1-2 hours appointment.
+    risk: "None — advisory only. Does not bind DOB to the pre-filer's assessment."
+    confidence: 0.92
+
+  # ── LPC Expedited Tracks ───────────────────────────────────────────────────
+
+  - agency: "LPC"
+    track: "XCNE — Expedited Certificate of No Effect"
+    speed_multiplier: 10.0
+    condition: >
+      Interior work only; above 2nd floor or in cellar/basement;
+      no ground-floor or exterior work visible from a public way
+    formal_source: "LPC XCNE Service — official LPC expedited program"
+    professional_note: >
+      3–5 business days. Eliminates the standard 10-60 day LPC review entirely
+      for qualifying interior work. File through LPC Portico. Most interior
+      renovation work in landmark buildings qualifies — architects routinely
+      miss this track and wait 15-45 days unnecessarily.
+      Ground-floor commercial spaces do NOT qualify.
+    risk: "If work is subsequently found to affect exterior character, LPC can revoke. Verify scope carefully."
+    confidence: 0.93
+
+  - agency: "LPC"
+    track: "FasTrack — Interior Alterations"
+    speed_multiplier: 4.0
+    condition: >
+      Interior alterations, window replacement (in-kind), non-visible HVAC;
+      no outstanding LPC violations on the property
+    formal_source: "LPC FasTrack expedited review program"
+    professional_note: >
+      10-business-day approval guarantee if application is complete.
+      LPC staff guaranteed to review within 10 business days of complete submission.
+      Outstanding LPC violations disqualify — check LPC records before filing.
+      Portico auto-routes qualifying applications — no need to self-identify the track.
+    risk: "Disqualified if any outstanding LPC violations. Run LPC violation check first."
+    confidence: 0.90
+
+  - agency: "LPC"
+    track: "Business Express"
+    speed_multiplier: 3.0
+    condition: "Small business in landmark building or historic district"
+    formal_source: "LPC Business Express program (dedicated team + hotline)"
+    professional_note: >
+      Dedicated LPC team and hotline for small business applicants.
+      Designed for: storefront alterations, signage, accessibility upgrades.
+      429% growth in usage since launch. If client is a small business,
+      this track is consistently faster than standard review.
+    risk: "Scope must be clearly commercial/small business — residential owners don't qualify."
+    confidence: 0.85
+
+  # ── BSA Pre-Determination ──────────────────────────────────────────────────
+
+  - agency: "BSA"
+    track: "Pre-Determination (DOB NOW)"
+    speed_multiplier: 0.5
+    condition: "Complex or uncertain zoning question before investing in full BSA variance application"
+    formal_source: "DOB NOW: +Determinations → Pre-Determination → BSA GCL 35/36"
+    professional_note: >
+      Formal BSA written position on a zoning question before filing a variance.
+      Prevents $15,000-$50,000 in application costs on a case BSA won't approve.
+      Standard BSA variance (ZR §72-21) takes 4-6 months. Pre-determination takes
+      6-8 weeks. If Pre-Determination is unfavorable, pivot (reduce scope, redesign)
+      before spending on full application.
+      CRITICAL: BSA has no reports_to in the org chart — fully quasi-judicial.
+      Community Board support is necessary but not sufficient. CB vote is advisory.
+    risk: "Pre-determination is not binding — BSA can reach a different conclusion in full hearing. Use as signal, not guarantee."
+    confidence: 0.75
+
+  # ── Community Board Strategy ───────────────────────────────────────────────
+
+  - agency: "CB"
+    track: "Pre-Negotiation with CB Staff"
+    speed_multiplier: 1.5
+    condition: "Any application requiring Community Board review (ULURP, revocable consent, sidewalk café)"
+    formal_source: "NYC Charter §197-c (ULURP); DOT Revocable Consent rules"
+    professional_note: >
+      CB vote is advisory only — does not block any application.
+      Practical effect: hostile CB vote increases cost of City Council negotiation.
+      Professional strategy: pre-negotiate with CB staff BEFORE formal certification.
+      File for more than you need. Concede floor area, use restrictions, or
+      affordable unit commitments to achieve CB support while retaining feasibility.
+      A supportive CB recommendation is the cheapest insurance in land use work.
+    risk: >
+      Over-concession in pre-negotiation binds the applicant before formal
+      review begins. Never make commitments that can't be walked back if
+      the CB escalates demands at the public hearing.
+    confidence: 0.82
+
+  # ── OATH Violation Resolution ──────────────────────────────────────────────
+
+  - agency: "OATH"
+    track: "Default Judgment Avoidance"
+    speed_multiplier: 2.0
+    condition: "Open ECB violations blocking permit applications"
+    formal_source: "OATH rules; Admin Code §28-202"
+    professional_note: >
+      ECB violations heard by OATH. Violations with default judgments
+      (no appearance) are harder and more expensive to resolve than
+      violations contested at hearing. Resolve violations before default
+      by appearing at OATH and presenting evidence of correction or
+      mitigating circumstances. Most construction violations can be
+      resolved with proof of correction — full fine often reduced.
+      Bring: dated photos, contractor receipts, and a correction affidavit.
+    risk: "Appearing without evidence or without addressing the underlying condition often results in full penalty."
+    confidence: 0.88
+
+  # ── Timing and Filing Windows ──────────────────────────────────────────────
+
+  - agency: "DOB"
+    track: "Filing Window Optimization"
+    speed_multiplier: 1.2
+    condition: "Alt-1 or NB in DOB NOW plan examination queue"
+    formal_source: "Internal DOB processing patterns (professional practice observation)"
+    professional_note: >
+      DOB plan examination queues are longest in Q4 (October-December) due to
+      year-end activity and holiday staffing. Q1 (January-March) historically
+      has faster plan examination turnaround. No official DOB policy — based
+      on professional practice patterns. For projects where timing is flexible,
+      targeting a Q1 submission improves throughput probability.
+      INFORMATION NOTE: This is observational, not codified. Confidence reflects that.
+    risk: "Waiting for Q1 costs calendar time. Only use this optimization if project timeline permits."
+    confidence: 0.65
+
+  - agency: "LPC"
+    track: "Hearing Calendar Optimization"
+    speed_multiplier: 1.3
+    condition: "LPC full Certificate of Appropriateness with public hearing required"
+    formal_source: "LPC hearing calendar (public)"
+    professional_note: >
+      LPC holds monthly Landmarks Preservation Commission hearings.
+      Applications must be complete 30 days before target hearing date.
+      Hearing calendar is public — expediters track it to time submissions
+      for earliest available slot. Missing a deadline by 1 day = 30 days delay.
+      Applications filed in August typically face September hearing as earliest —
+      August filings with September targets are common professional practice.
+    risk: "Hearing calendar subject to change. Always confirm current dates on LPC website."
+    confidence: 0.85
+
+  # ── DEP Asbestos — Scope Containment ──────────────────────────────────────
+
+  - agency: "DEP"
+    track: "Limited Asbestos Survey Scope"
+    speed_multiplier: 1.5
+    condition: "Pre-1987 building, limited renovation scope (not gut reno)"
+    formal_source: "NYC DEP asbestos rules; 15 RCNY Chapter 1"
+    professional_note: >
+      Asbestos survey requirement applies to the DISTURBED area only —
+      not the entire building. For a kitchen renovation, survey the kitchen.
+      For rooftop work, survey the roof membrane and mechanical equipment only.
+      Limiting survey scope (with proper documentation) reduces cost ($500-$1,500
+      vs $3,000-$8,000 for full building) and timeline.
+      If ACM found in surveyed area: abatement required. If not: proceed.
+      Survey must be performed by DEP-certified inspector — not the contractor.
+    risk: >
+      If scope expands during construction and ACM encountered in unsurveyed area,
+      work must stop and new survey/abatement required. Scope creep = cost surprise.
+      Document survey scope boundaries clearly before demo begins.
+    confidence: 0.88

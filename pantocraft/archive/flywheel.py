@@ -29,6 +29,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import time
 import uuid
@@ -40,6 +41,133 @@ from typing import Generator, Optional
 
 _ARCHIVE_DIR = Path(__file__).parent
 _DB_PATH = _ARCHIVE_DIR / "jobs.db"
+
+# ---------------------------------------------------------------------------
+# Backend selection
+# FLYWHEEL_BACKEND env var:
+#   sqlite   (default) — local only, no network dependency
+#   supabase           — Supabase only (requires SUPABASE_URL + SUPABASE_KEY)
+#   both               — write to SQLite first, then Supabase; read prefers Supabase
+# ---------------------------------------------------------------------------
+
+def _backend() -> str:
+    return os.environ.get("FLYWHEEL_BACKEND", "sqlite").lower().strip()
+
+
+def _supabase_client():
+    """Return a Supabase client or None if not configured / not installed."""
+    url = os.environ.get("SUPABASE_URL", "").strip()
+    key = os.environ.get("SUPABASE_KEY", "").strip()
+    if not url or not key:
+        return None
+    try:
+        from supabase import create_client
+        return create_client(url, key)
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Supabase write helpers
+# ---------------------------------------------------------------------------
+
+def _sb_write_job(record: "JobRecord") -> None:
+    """Upsert one job record to Supabase. Errors are logged, not raised."""
+    client = _supabase_client()
+    if client is None:
+        return
+    try:
+        row = {
+            "job_id":               record.job_id,
+            "engagement_id":        record.engagement_id,
+            "bbl":                  record.bbl,
+            "borough":              record.borough,
+            "filing_type":          record.filing_type,
+            "filing_mode":          record.filing_mode,
+            "examiner_id":          record.examiner_id,
+            "outcome":              record.outcome,
+            "confidence_score":     record.confidence_score,
+            "pathway_type":         record.pathway_type,
+            "enforcement_context":  record.enforcement_context,
+            "filing_date":          record.filing_date,
+            "first_objection_date": record.first_objection_date,
+            "approval_date":        record.approval_date,
+            "created_at":           record.created_at,
+            "updated_at":           record.updated_at,
+            "payload":              record.to_dict(),
+        }
+        client.table("moswalk_jobs").upsert(row).execute()
+
+        # Refresh objections: delete existing, re-insert
+        client.table("moswalk_objections").delete().eq("job_id", record.job_id).execute()
+        for obj in record.objections:
+            client.table("moswalk_objections").insert({
+                "job_id":             record.job_id,
+                "bbl":                record.bbl,
+                "objection_code":     obj.get("objection_code", ""),
+                "description":        obj.get("description", ""),
+                "resolution_method":  obj.get("resolution_method", ""),
+                "resolution_days":    obj.get("resolution_days", 0),
+                "documentation_used": obj.get("documentation_used", []),
+            }).execute()
+    except Exception as e:
+        print(f"[flywheel] supabase write error (non-fatal): {e}")
+
+
+def _sb_query_archive(q: "ArchiveQuery") -> Optional["ArchiveResult"]:
+    """
+    Query moswalk_jobs from Supabase. Returns ArchiveResult or None on failure.
+    Mirrors query_archive() logic but runs against Supabase PostgREST.
+    """
+    client = _supabase_client()
+    if client is None:
+        return None
+    try:
+        stmt = client.table("moswalk_jobs").select("payload")
+        if q.bbl:
+            stmt = stmt.eq("bbl", q.bbl)
+        if q.borough:
+            stmt = stmt.eq("borough", q.borough)
+        if q.filing_type:
+            stmt = stmt.eq("filing_type", q.filing_type)
+        if q.examiner_id:
+            stmt = stmt.eq("examiner_id", q.examiner_id)
+        if q.pathway_type:
+            stmt = stmt.eq("pathway_type", q.pathway_type)
+        resp = stmt.order("updated_at", desc=True).limit(q.limit).execute()
+        rows = resp.data or []
+        if not rows:
+            return None  # fall through to SQLite
+        # Reuse the local aggregation logic by building JobRecord list
+        records = [JobRecord.from_dict(r["payload"]) for r in rows]
+        return _aggregate_archive_result(records, q)
+    except Exception as e:
+        print(f"[flywheel] supabase query error (falling back to sqlite): {e}")
+        return None
+
+
+def migrate_to_supabase() -> int:
+    """
+    Push all local SQLite jobs to Supabase. Safe to run multiple times (upsert).
+    Returns the number of records synced.
+    Returns 0 if Supabase is not configured or SQLite has no data.
+
+    Usage:
+        python -m pantocraft.archive.flywheel migrate
+    """
+    init_db()
+    with _db(readonly=True) as conn:
+        rows = conn.execute("SELECT payload FROM jobs ORDER BY created_at").fetchall()
+    if not rows:
+        return 0
+    count = 0
+    for row in rows:
+        rec = JobRecord.from_dict(json.loads(row["payload"]))
+        _sb_write_job(rec)
+        count += 1
+    return count
 
 # ---------------------------------------------------------------------------
 # Mode A/B/C (Blueprint Layer 4 thresholds)
@@ -268,45 +396,50 @@ def write_job(record: JobRecord) -> str:
     """
     Insert or replace a job record. Returns job_id.
     Automatically sets filing_mode from confidence_score.
+    Writes to SQLite and/or Supabase depending on FLYWHEEL_BACKEND.
     """
     if not record.filing_mode:
         record.filing_mode = classify_mode(record.confidence_score).value
     record.updated_at = time.time()
 
-    init_db()
-    payload = json.dumps(record.to_dict())
+    backend = _backend()
 
-    with _db() as conn:
-        conn.execute("""
-            INSERT OR REPLACE INTO jobs
-            (job_id, engagement_id, bbl, borough, filing_type, filing_mode,
-             examiner_id, outcome, confidence_score, pathway_type,
-             enforcement_context, filing_date, first_objection_date,
-             approval_date, created_at, updated_at, payload)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            record.job_id, record.engagement_id, record.bbl, record.borough,
-            record.filing_type, record.filing_mode, record.examiner_id,
-            record.outcome, record.confidence_score, record.pathway_type,
-            record.enforcement_context, record.filing_date,
-            record.first_objection_date, record.approval_date,
-            record.created_at, record.updated_at, payload,
-        ))
-        # Write objections to the flat table for fast queries
-        for obj_dict in record.objections:
+    if backend in ("sqlite", "both"):
+        init_db()
+        payload = json.dumps(record.to_dict())
+        with _db() as conn:
             conn.execute("""
-                INSERT INTO objections
-                (job_id, bbl, objection_code, description,
-                 resolution_method, resolution_days, documentation_used)
-                VALUES (?,?,?,?,?,?,?)
+                INSERT OR REPLACE INTO jobs
+                (job_id, engagement_id, bbl, borough, filing_type, filing_mode,
+                 examiner_id, outcome, confidence_score, pathway_type,
+                 enforcement_context, filing_date, first_objection_date,
+                 approval_date, created_at, updated_at, payload)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
-                record.job_id, record.bbl,
-                obj_dict.get("objection_code", ""),
-                obj_dict.get("description", ""),
-                obj_dict.get("resolution_method", ""),
-                obj_dict.get("resolution_days", 0),
-                json.dumps(obj_dict.get("documentation_used", [])),
+                record.job_id, record.engagement_id, record.bbl, record.borough,
+                record.filing_type, record.filing_mode, record.examiner_id,
+                record.outcome, record.confidence_score, record.pathway_type,
+                record.enforcement_context, record.filing_date,
+                record.first_objection_date, record.approval_date,
+                record.created_at, record.updated_at, payload,
             ))
+            for obj_dict in record.objections:
+                conn.execute("""
+                    INSERT INTO objections
+                    (job_id, bbl, objection_code, description,
+                     resolution_method, resolution_days, documentation_used)
+                    VALUES (?,?,?,?,?,?,?)
+                """, (
+                    record.job_id, record.bbl,
+                    obj_dict.get("objection_code", ""),
+                    obj_dict.get("description", ""),
+                    obj_dict.get("resolution_method", ""),
+                    obj_dict.get("resolution_days", 0),
+                    json.dumps(obj_dict.get("documentation_used", [])),
+                ))
+
+    if backend in ("supabase", "both"):
+        _sb_write_job(record)
 
     return record.job_id
 
@@ -393,69 +526,29 @@ class ArchiveResult:
     archive_confidence: float          # how much to trust this result (sample size signal)
 
 
-def query_archive(q: ArchiveQuery) -> ArchiveResult:
-    """
-    Query archive by borough + filing_type + examiner_id combination.
-    Returns historical patterns to inform confidence scoring and defensive documentation.
-    """
-    init_db()
+def _aggregate_archive_result(records: list[JobRecord], q: "ArchiveQuery") -> ArchiveResult:
+    """Shared aggregation logic — takes a list of JobRecords, returns ArchiveResult."""
+    import math
+    from datetime import date as _date
 
-    clauses = []
-    params: list = []
-
-    if q.bbl:
-        clauses.append("bbl = ?")
-        params.append(q.bbl)
-    if q.borough:
-        clauses.append("borough = ?")
-        params.append(q.borough)
-    if q.filing_type:
-        clauses.append("filing_type = ?")
-        params.append(q.filing_type)
-    if q.examiner_id:
-        clauses.append("examiner_id = ?")
-        params.append(q.examiner_id)
-    if q.pathway_type:
-        clauses.append("pathway_type = ?")
-        params.append(q.pathway_type)
-
-    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
-    sql = f"SELECT payload FROM jobs {where} ORDER BY created_at DESC LIMIT ?"
-    params.append(q.limit)
-
-    with _db(readonly=True) as conn:
-        rows = conn.execute(sql, params).fetchall()
-
-    if not rows:
+    if not records:
         return ArchiveResult(
-            matched_jobs=0,
-            objection_rate=0.0,
-            most_common_objections=[],
-            avg_approval_days=0.0,
-            examiner_approval_rate=None,
-            similar_jobs=[],
-            recommended_documentation=[],
-            archive_confidence=0.0,
+            matched_jobs=0, objection_rate=0.0, most_common_objections=[],
+            avg_approval_days=0.0, examiner_approval_rate=None,
+            similar_jobs=[], recommended_documentation=[], archive_confidence=0.0,
         )
 
-    records = [JobRecord.from_dict(json.loads(r["payload"])) for r in rows]
-
-    # Objection analysis
     jobs_with_objections = [r for r in records if r.objections]
     objection_rate = len(jobs_with_objections) / len(records)
 
-    # Aggregate objection codes
     obj_counts: dict[str, dict] = {}
     for rec in records:
         for obj in rec.objections:
             code = obj.get("objection_code", "")
             if code not in obj_counts:
                 obj_counts[code] = {
-                    "code": code,
-                    "description": obj.get("description", ""),
-                    "count": 0,
-                    "total_resolution_days": 0,
-                    "documentation": [],
+                    "code": code, "description": obj.get("description", ""),
+                    "count": 0, "total_resolution_days": 0, "documentation": [],
                 }
             obj_counts[code]["count"] += 1
             obj_counts[code]["total_resolution_days"] += obj.get("resolution_days", 0)
@@ -465,25 +558,22 @@ def query_archive(q: ArchiveQuery) -> ArchiveResult:
     for entry in most_common:
         n = entry["count"]
         entry["avg_resolution_days"] = round(entry["total_resolution_days"] / n, 1) if n else 0
-        entry["documentation"] = list(dict.fromkeys(entry["documentation"]))  # dedupe
+        entry["documentation"] = list(dict.fromkeys(entry["documentation"]))
         del entry["total_resolution_days"]
 
-    # Approval days
     approved = [r for r in records if r.approval_date and r.filing_date]
     avg_days = 0.0
     if approved:
-        from datetime import date
         deltas = []
         for r in approved:
             try:
-                d0 = date.fromisoformat(r.filing_date)
-                d1 = date.fromisoformat(r.approval_date)
+                d0 = _date.fromisoformat(r.filing_date)
+                d1 = _date.fromisoformat(r.approval_date)
                 deltas.append((d1 - d0).days)
             except (ValueError, TypeError):
                 pass
         avg_days = sum(deltas) / len(deltas) if deltas else 0.0
 
-    # Examiner-specific approval rate
     examiner_rate = None
     if q.examiner_id:
         examiner_jobs = [r for r in records if r.examiner_id == q.examiner_id]
@@ -491,24 +581,18 @@ def query_archive(q: ArchiveQuery) -> ArchiveResult:
             approved_by = [r for r in examiner_jobs if r.outcome == "approved"]
             examiner_rate = len(approved_by) / len(examiner_jobs)
 
-    # Recommended documentation from successful resolutions
     docs: list[str] = []
     for entry in most_common:
         docs.extend(entry.get("documentation", []))
-    recommended = list(dict.fromkeys(docs))[:8]  # dedupe, top 8
+    recommended = list(dict.fromkeys(docs))[:8]
 
-    # Archive confidence: logarithmic sample size signal
-    import math
     n = len(records)
-    archive_confidence = min(0.95, math.log(n + 1) / math.log(51))  # 50 jobs → 0.95
+    archive_confidence = min(0.95, math.log(n + 1) / math.log(51))
 
     similar = [
         {
-            "job_id": r.job_id[:8],
-            "bbl": r.bbl,
-            "outcome": r.outcome,
-            "confidence_score": r.confidence_score,
-            "filing_date": r.filing_date,
+            "job_id": r.job_id[:8], "bbl": r.bbl, "outcome": r.outcome,
+            "confidence_score": r.confidence_score, "filing_date": r.filing_date,
             "objection_count": len(r.objections),
         }
         for r in records[:5]
@@ -524,6 +608,48 @@ def query_archive(q: ArchiveQuery) -> ArchiveResult:
         recommended_documentation=recommended,
         archive_confidence=round(archive_confidence, 3),
     )
+
+
+def query_archive(q: ArchiveQuery) -> ArchiveResult:
+    """
+    Query archive by borough + filing_type + examiner_id combination.
+    Prefers Supabase when FLYWHEEL_BACKEND is 'supabase' or 'both'.
+    Falls back to SQLite on Supabase failure or when backend is 'sqlite'.
+    """
+    backend = _backend()
+
+    # Try Supabase first when configured
+    if backend in ("supabase", "both"):
+        result = _sb_query_archive(q)
+        if result is not None:
+            return result
+        if backend == "supabase":
+            # Supabase-only mode, no SQLite fallback
+            return ArchiveResult(
+                matched_jobs=0, objection_rate=0.0, most_common_objections=[],
+                avg_approval_days=0.0, examiner_approval_rate=None,
+                similar_jobs=[], recommended_documentation=[], archive_confidence=0.0,
+            )
+
+    # SQLite path
+    init_db()
+    clauses, params = [], []
+    if q.bbl:         clauses.append("bbl = ?");          params.append(q.bbl)
+    if q.borough:     clauses.append("borough = ?");      params.append(q.borough)
+    if q.filing_type: clauses.append("filing_type = ?");  params.append(q.filing_type)
+    if q.examiner_id: clauses.append("examiner_id = ?");  params.append(q.examiner_id)
+    if q.pathway_type: clauses.append("pathway_type = ?"); params.append(q.pathway_type)
+
+    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    params.append(q.limit)
+    with _db(readonly=True) as conn:
+        rows = conn.execute(
+            f"SELECT payload FROM jobs {where} ORDER BY created_at DESC LIMIT ?",
+            params,
+        ).fetchall()
+
+    records = [JobRecord.from_dict(json.loads(r["payload"])) for r in rows]
+    return _aggregate_archive_result(records, q)
 
 
 def archive_summary_toon(q: ArchiveQuery) -> str:
@@ -574,6 +700,7 @@ if __name__ == "__main__":
     sub = parser.add_subparsers(dest="cmd")
 
     sub.add_parser("init", help="Initialize database")
+    sub.add_parser("migrate", help="Push all SQLite records to Supabase (upsert, safe to re-run)")
 
     q_parser = sub.add_parser("query", help="Query archive")
     q_parser.add_argument("--borough", default=None)
@@ -587,6 +714,11 @@ if __name__ == "__main__":
     if args.cmd == "init":
         init_db()
         print(f"Archive initialized: {_DB_PATH}")
+
+    elif args.cmd == "migrate":
+        n = migrate_to_supabase()
+        print(f"Migrated {n} records to Supabase."
+              if n else "No records to migrate (or Supabase not configured).")
 
     elif args.cmd == "query":
         q = ArchiveQuery(

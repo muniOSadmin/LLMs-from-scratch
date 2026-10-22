@@ -1,30 +1,32 @@
 # Reports
 reports/
 
-# ── pantocraft // — client data (NEVER commit) ───────────────────────────────
-pantocraft/clients/
-pantocraft/reports/
-pantocraft/agentic/sessions/
-pantocraft/agentic/escalations/
-pantocraft/agentic/*.log
-pantocraft/archive/jobs.db
+# ── MAST // — client data (NEVER commit) ─────────────────────────────────────
+mast/clients/
+mast/reports/
+mast/agentic/sessions/
+mast/agentic/escalations/
+mast/agentic/*.log
+mast/archive/jobs.db
 
 # Vault OS: queue contents + generated outputs (may contain BBL/client context)
 # Directories tracked via .keep; contents gitignored
-pantocraft/queue/*.md
-pantocraft/queue/processed/*.md
-pantocraft/generated/consultations/*.md
-pantocraft/generated/briefings/*.md
-pantocraft/generated/reports/*.md
+mast/queue/*.md
+mast/queue/processed/*.md
+mast/generated/consultations/*.md
+mast/generated/briefings/*.md
+mast/generated/reports/*.md
 
 **/*.enc
-**/.pantocraft_keystore
+**/.mast_keystore
+**/.MAST_keystore
 
 # NY SHIELD Act: no PII in repo history
 **/client_data/
 **/bbl_records/
 
-# API keys and secrets (pantocraft)
+# API keys and secrets (MAST)
+MAST_DEV_KEY
 PANTOCRAFT_DEV_KEY
 tailscale_authkey*
 geoclient_api_key*

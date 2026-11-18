@@ -137,7 +137,8 @@ mast/
 ├── data/filing_weights.yaml  ← filing type weights for voyage_confidence (NB/A1/A2/A3/TR6) ✓
 ├── prompts/intake_pipeline.py ← 8 Claude API prompt templates (Prompt 8 wired) ✓
 ├── field/mobile_api.py       ← FieldAPI: consult + archive_result → optimizer ✓
-├── field/server.py           ← stdlib HTTPServer: POST /consult, GET /health, GET /archive/signal ✓
+├── field/server.py           ← stdlib HTTPServer: GET / (front door), POST /consult, GET /health, GET /archive/signal ✓
+├── web/index.html            ← front door: 3 interactions → free pathway + ways forward (Domus × Archigram) ✓
 ├── vault/MOSWALK.md          ← business constitution (read by every workflow) ✓
 ├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE/OUTCOME ✓
 ├── pulse.py                  ← daily engagement pulse (session_log + HEP scan) ✓

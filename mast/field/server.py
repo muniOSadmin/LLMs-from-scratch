@@ -28,9 +28,9 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 _ROOT       = Path(__file__).parents[2]
-_PANTOCRAFT = Path(__file__).parent.parent
+_MAST = Path(__file__).parent.parent
 
-for p in [str(_ROOT / "moswalk-kernel"), str(_PANTOCRAFT)]:
+for p in [str(_ROOT / "moswalk-kernel"), str(_MAST)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
@@ -46,7 +46,7 @@ def _load_server_token() -> str | None:
     env_val = os.environ.get("MOSWALK_SERVER_TOKEN", "").strip()
     if env_val:
         return env_val
-    cfg_path = _PANTOCRAFT / "field" / "SwarmConfig.json"
+    cfg_path = _MAST / "field" / "SwarmConfig.json"
     if cfg_path.exists():
         try:
             cfg = json.loads(cfg_path.read_text())
@@ -56,6 +56,9 @@ def _load_server_token() -> str | None:
     return None
 
 _SERVER_TOKEN: str | None = None  # populated at startup
+
+_WEB_INDEX = _MAST / "web" / "index.html"
+_MAX_BODY_BYTES = 64 * 1024
 
 try:
     from field.mobile_api import FieldAPI, ConsultResult
@@ -92,7 +95,9 @@ def _consult_result_to_dict(result) -> dict:
         "optimized_days":   result.optimized_days,
         "days_saved":       result.days_saved,
         "escalation_flags": result.escalation_flags,
-        "MAST_flags": result.MAST_flags,
+        "mast_flags":       result.mast_flags,
+        "optimization_tracks": result.optimization_tracks,
+        "track_details":    result.track_details,
         "overall_confidence": result.overall_confidence,
         "stale_agencies":   result.stale_agencies,
         "hep_payload":      None,  # populated below if HEP fired
@@ -107,30 +112,35 @@ def _handle_consult(body_bytes: bytes) -> tuple[int, dict]:
     except json.JSONDecodeError as e:
         return 400, {"error": f"Invalid JSON: {e}"}
 
-    bbl          = req.get("bbl", "")
-    address      = req.get("address", bbl)
+    bbl          = (req.get("bbl") or "").strip()
+    address      = (req.get("address") or bbl).strip()
     engagement_id = req.get("engagementId", f"API-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}")
     project      = req.get("project", "")
     filing_type  = req.get("filingType", "A2")
     flags        = req.get("flags", {}) or {}
 
-    if not bbl:
-        return 400, {"error": "bbl is required"}
+    if not bbl and not address:
+        return 400, {"error": "bbl or address is required"}
+
+    borough = req.get("borough") or _bbl_borough(bbl)
 
     # Normalize Swift camelCase flags → snake_case
+    # Unknown facts are omitted, not sent as None: the kernel treats absence as "not triggered"
     normalized_flags = {
-        "landmarked":        flags.get("landmarked", False),
-        "landmark_type":     flags.get("landmarkType"),
-        "year_built":        flags.get("yearBuilt"),
-        "flood_zone":        flags.get("floodZone"),
-        "open_violations":   flags.get("openViolations", 0),
+        k: v for k, v in {
+            "landmarked":      flags.get("landmarked", False),
+            "landmark_type":   flags.get("landmarkType"),
+            "year_built":      flags.get("yearBuilt"),
+            "flood_zone":      flags.get("floodZone"),
+            "open_violations": flags.get("openViolations", 0),
+        }.items() if v is not None
     }
 
     # Archive query for voyage_confidence
     archive_result = None
     if _ARCHIVE_AVAILABLE:
         try:
-            q = ArchiveQuery(bbl=bbl, borough=_bbl_borough(bbl), filing_type=filing_type)
+            q = ArchiveQuery(bbl=bbl or None, borough=borough, filing_type=filing_type)
             archive_result = query_archive(q)
         except Exception:
             pass
@@ -144,7 +154,7 @@ def _handle_consult(body_bytes: bytes) -> tuple[int, dict]:
             engagement_id=engagement_id,
             bbl=bbl,
             address=address,
-            borough=_bbl_borough(bbl),
+            borough=borough,
             project_type=project,
             dob_filing_type=filing_type,
             property_flags=normalized_flags,
@@ -224,11 +234,17 @@ class MoswalkHandler(BaseHTTPRequestHandler):
         return auth == _SERVER_TOKEN
 
     def do_GET(self):
+        parsed = urlparse(self.path)
+        path = parsed.path.rstrip("/")
+
+        # Front door: static page with no data in it; the API it calls stays behind auth.
+        if path == "":
+            self._html(200, _WEB_INDEX.read_bytes())
+            return
+
         if not self._check_auth():
             self._json(401, {"error": "unauthorized"})
             return
-        parsed = urlparse(self.path)
-        path = parsed.path.rstrip("/")
 
         if path == "/health":
             self._json(200, {
@@ -250,6 +266,9 @@ class MoswalkHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
         length = int(self.headers.get("Content-Length", 0))
+        if length > _MAX_BODY_BYTES:
+            self._json(413, {"error": "request too large"})
+            return
         body = self.rfile.read(length) if length else b""
 
         if path == "/consult":
@@ -263,6 +282,17 @@ class MoswalkHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _html(self, code: int, body: bytes):
+        self.send_response(code)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Security-Policy",
+                         "default-src 'self'; style-src 'self' 'unsafe-inline'; "
+                         "script-src 'self' 'unsafe-inline'; img-src 'self' data:")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(body)
 

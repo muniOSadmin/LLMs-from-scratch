@@ -34,9 +34,9 @@ if TYPE_CHECKING:
 # Paths
 _ROOT       = Path(__file__).parents[2]
 _KERNEL     = _ROOT / "moswalk-kernel"
-_PANTOCRAFT = Path(__file__).parent.parent
+_MAST = Path(__file__).parent.parent
 
-for p in [str(_KERNEL), str(_PANTOCRAFT)]:
+for p in [str(_KERNEL), str(_MAST)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
@@ -72,7 +72,8 @@ class ConsultResult:
     optimized_days: int = 0
     days_saved: int = 0
     optimization_tracks: list[str] = field(default_factory=list)
-    MAST_flags: list[str] = field(default_factory=list)
+    track_details: list[dict] = field(default_factory=list)
+    mast_flags: list[str] = field(default_factory=list)
 
     # Confidence and data freshness
     overall_confidence: float = 0.0
@@ -108,9 +109,9 @@ class ConsultResult:
             lines.append(f"Tracks: {', '.join(self.optimization_tracks)}")
         if self.stale_agencies:
             lines.append(f"\n⚠ Stale data (confidence < 70%): {', '.join(self.stale_agencies)} — verify before relying.")
-        if self.escalation_flags or self.MAST_flags:
+        if self.escalation_flags or self.mast_flags:
             lines.append("\nFlags:")
-            for f in self.escalation_flags + self.MAST_flags:
+            for f in self.escalation_flags + self.mast_flags:
                 lines.append(f"  ⚑ {f[:120]}")
         if educational and _KERNEL_AVAILABLE:
             lines.append("\n── What each agency means ──")
@@ -155,7 +156,7 @@ class FieldAPI:
 
         # Lazy imports to allow running without full stack
         self._pathways_yaml = pathways_yaml or (_KERNEL / "compliance" / "permit_pathways.yaml")
-        self._edge_weights_yaml = edge_weights_yaml or (_PANTOCRAFT / "inference" / "edge_weights.yaml")
+        self._edge_weights_yaml = edge_weights_yaml or (_MAST / "inference" / "edge_weights.yaml")
 
         self._optimizer = None  # lazy load
 
@@ -209,6 +210,19 @@ class FieldAPI:
         )
 
         tracks = [s.speed_track for s in optimized.steps if s.is_optimized and s.speed_track]
+        track_details = [
+            {
+                "agency": s.agency_code,
+                "track": s.speed_track,
+                "standard_days": s.standard_days,
+                "optimized_days": s.optimized_days,
+                "days_saved": s.days_saved,
+                "note": s.professional_note,
+                "risk": s.risk,
+                "risk_level": s.risk_level,
+            }
+            for s in optimized.steps if s.is_optimized and s.speed_track
+        ]
 
         # Build LLM prompt
         llm_prompt = self._build_llm_prompt(
@@ -226,7 +240,8 @@ class FieldAPI:
             optimized_days=optimized.optimized_critical_days,
             days_saved=optimized.total_savings_days,
             optimization_tracks=tracks,
-            MAST_flags=optimized.flags,
+            track_details=track_details,
+            mast_flags=optimized.flags,
             overall_confidence=min((s.get("confidence", 1.0) for s in agency_steps), default=1.0),
             stale_agencies=stale,
             llm_prompt=llm_prompt,

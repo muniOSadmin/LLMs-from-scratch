@@ -79,7 +79,7 @@ struct ConsultResult: Codable, Identifiable {
     let optimizedDays: Int
     let daysSaved: Int
     let escalationFlags: [String]
-    let MASTFlags: [String]
+    let mastFlags: [String]
     let overallConfidence: Double
     let staleAgencies: [String]
     let hepPayload: HEPPayload?
@@ -94,7 +94,7 @@ struct ConsultResult: Codable, Identifiable {
         case optimizedDays      = "optimized_days"
         case daysSaved          = "days_saved"
         case escalationFlags    = "escalation_flags"
-        case MASTFlags    = "MAST_flags"
+        case mastFlags    = "mast_flags"
         case overallConfidence  = "overall_confidence"
         case staleAgencies      = "stale_agencies"
         case hepPayload         = "hep_payload"

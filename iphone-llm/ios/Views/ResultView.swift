@@ -17,7 +17,7 @@ struct ResultView: View {
                 if !result.escalationFlags.isEmpty || result.hepPayload != nil {
                     hepSection
                 }
-                if !result.MASTFlags.isEmpty {
+                if !result.mastFlags.isEmpty {
                     flagsSection
                 }
                 if microInference.isLoaded {
@@ -119,7 +119,7 @@ struct ResultView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Flags")
                 .font(.subheadline.bold())
-            ForEach(result.MASTFlags, id: \.self) { flag in
+            ForEach(result.mastFlags, id: \.self) { flag in
                 flagRow(flag, color: .secondary)
             }
         }
@@ -283,7 +283,7 @@ struct HEPCard: View {
             optimizedDays: 45,
             daysSaved: 14,
             escalationFlags: [],
-            MASTFlags: [],
+            mastFlags: [],
             overallConfidence: 0.85,
             staleAgencies: [],
             hepPayload: nil,

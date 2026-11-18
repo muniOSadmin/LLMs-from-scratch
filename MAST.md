@@ -158,6 +158,34 @@ client data leaves the device.
 
 ---
 
+## The Front Door
+
+Three interactions from a question to a free, honest answer.
+
+```
+01  Where          address or BBL, borough
+02  What           one tap: interior, façade, new unit, new building, small work, FISP
+03  The building   era, landmark, flood zone ("Not sure" is a valid answer)
+        ↓
+    The pathway    agencies in legal order, days standard vs. with professional tracks,
+                   open questions named rather than guessed
+        ↓
+    Ways forward   i.   keep the brief (free)
+                   ii.  formal speed tracks this project may qualify for
+                   iii. work with MAST: a licensed professional carries the file
+```
+
+`mast/web/index.html`, served at `/` by `mast/field/server.py`. One file, no external
+assets, nothing loaded from a CDN.
+
+**Design direction.** Domus for the editorial voice: a masthead, oversized grotesk
+headlines, italic serif decks, numbered sections and thin rules on warm paper.
+Archigram for the optimism: capsule controls, hard offset shadows, primary yellow, cyan
+and red, halftone texture, and a walking pod. The agency sequence draws as a chain of
+plug-in capsules, a small Walking City.
+
+---
+
 ## Simulated Projects
 
 Eight simulated NYC projects in `iphone-llm/sim/clients/` train and test the system:

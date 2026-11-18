@@ -139,7 +139,7 @@ final class FieldAPIClient: ObservableObject {
             optimizedDays: critDays,
             daysSaved: 0,
             escalationFlags: flags.filter { $0.contains("HEP") || $0.contains("Landmark") },
-            MASTFlags: flags,
+            mastFlags: flags,
             overallConfidence: confidence,
             staleAgencies: [],
             hepPayload: nil,

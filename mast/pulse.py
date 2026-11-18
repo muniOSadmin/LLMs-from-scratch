@@ -19,13 +19,13 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 _ROOT       = Path(__file__).parents[1]
-_PANTOCRAFT = Path(__file__).parent
-_SESSIONS   = _PANTOCRAFT / "agentic" / "sessions"
-_ESCALATIONS = _PANTOCRAFT / "agentic" / "escalations"
-_VAULT      = _PANTOCRAFT / "vault" / "MOSWALK.md"
-_GENERATED  = _PANTOCRAFT / "generated" / "briefings"
+_MAST = Path(__file__).parent
+_SESSIONS   = _MAST / "agentic" / "sessions"
+_ESCALATIONS = _MAST / "agentic" / "escalations"
+_VAULT      = _MAST / "vault" / "MOSWALK.md"
+_GENERATED  = _MAST / "generated" / "briefings"
 
-for p in [str(_ROOT / "moswalk-kernel"), str(_PANTOCRAFT)]:
+for p in [str(_ROOT / "moswalk-kernel"), str(_MAST)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 

@@ -24,8 +24,8 @@ _KERNEL = Path(__file__).parents[2] / "moswalk-kernel"
 if str(_KERNEL) not in sys.path:
     sys.path.insert(0, str(_KERNEL))
 
-_PANTOCRAFT = Path(__file__).parent
-_EDGE_WEIGHTS_PATH = _PANTOCRAFT / "edge_weights.yaml"
+_MAST = Path(__file__).parent
+_EDGE_WEIGHTS_PATH = _MAST / "edge_weights.yaml"
 
 
 @dataclass

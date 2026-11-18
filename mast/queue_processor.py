@@ -28,13 +28,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT       = Path(__file__).parents[1]
-_PANTOCRAFT = Path(__file__).parent
-_QUEUE      = _PANTOCRAFT / "queue"
+_MAST = Path(__file__).parent
+_QUEUE      = _MAST / "queue"
 _PROCESSED  = _QUEUE / "processed"
-_GENERATED  = _PANTOCRAFT / "generated"
-_VAULT      = _PANTOCRAFT / "vault" / "MOSWALK.md"
+_GENERATED  = _MAST / "generated"
+_VAULT      = _MAST / "vault" / "MOSWALK.md"
 
-for p in [str(_ROOT / "moswalk-kernel"), str(_PANTOCRAFT)]:
+for p in [str(_ROOT / "moswalk-kernel"), str(_MAST)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 

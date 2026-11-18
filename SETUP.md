@@ -478,5 +478,5 @@ Save changes to server:       git add FILE → git commit -m "message" → git p
 
 ---
 
-*moswalk — Sovereign AI for NYC building professionals.*
+*mos · the engine under MAST*
 *Information only. A licensed professional is always in the loop.*

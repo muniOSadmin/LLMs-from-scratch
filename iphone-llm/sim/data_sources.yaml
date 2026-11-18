@@ -1,0 +1,138 @@
+# External data sources for moswalk simulated client grounding.
+# Identified via research session, May 2026.
+# These ground the simulated clients in real NYC regulatory data.
+# Priority: integrate highest-value sources first.
+
+sources:
+
+  # ── BBL / Address Resolution ─────────────────────────────────────────────
+
+  - name: "python-geosupport"
+    type: python_library
+    url: "https://pypi.org/project/python-geosupport/"
+    provides: "Offline address → BBL/BIN resolution via NYC Geosupport Desktop Edition"
+    freshness: "Bundled data; update when NYC releases new Geosupport version"
+    integration_priority: HIGH
+    notes: "Best choice for local-first/offline — no API key needed. Runs on Linux."
+
+  - name: "python-geoclient"
+    type: python_library
+    url: "https://python-geoclient.readthedocs.io/en/latest/"
+    provides: "Online address → BBL/BIN/coordinates via NYC Geoclient API"
+    freshness: "Live API"
+    integration_priority: MEDIUM
+    notes: "Requires NYC developer account and API key. Fallback to geosupport for offline."
+
+  - name: "little-bbl"
+    type: python_library
+    url: "https://github.com/TripleMint/little-bbl"
+    provides: "BBL resolution by scraping NYC DOF"
+    freshness: "Real-time scrape"
+    integration_priority: LOW
+    notes: "Fragile (scrape-based). Use python-geosupport or python-geoclient instead."
+
+  # ── Property Data (PLUTO) ─────────────────────────────────────────────────
+
+  - name: "NYCPlanning/db-pluto"
+    type: github_repo
+    url: "https://github.com/NYCPlanning/db-pluto"
+    provides: "Canonical PLUTO/MapPLUTO — zoning district, building class, year built, FAR, units, lot area for all NYC tax lots"
+    freshness: "Monthly releases (v25v4 as of May 2026)"
+    integration_priority: HIGH
+    notes: >
+      Download latest release CSV for all 5 boroughs (~880MB).
+      Key fields: BBL, ZoneDist1, BldgClass, YearBuilt, NumFloors, UnitsRes,
+      GrossArea, LotArea, OwnerName, LandUse, HistDist, SplitZone.
+      Load into SQLite or DuckDB for fast BBL lookups.
+
+  # ── DOB Permit Data ───────────────────────────────────────────────────────
+
+  - name: "DOB NOW: Build — Approved Permits"
+    type: nyc_open_data_socrata
+    url: "https://data.cityofnewyork.us/Housing-Development/DOB-NOW-Build-Approved-Permits/rbx6-tga4"
+    provides: "All approved DOB permits: job type, work type, filing date, estimated cost, BIN, BBL"
+    freshness: "Daily updates"
+    integration_priority: HIGH
+    notes: >
+      Socrata SODA API. Filter by BBL or BIN. Use for: verifying permit history,
+      estimating realistic costs by job type and borough, finding permit patterns.
+      Endpoint: https://data.cityofnewyork.us/resource/rbx6-tga4.json?bbl=3007830001
+
+  - name: "maxmcd/bis"
+    type: github_repo
+    url: "https://github.com/maxmcd/bis"
+    provides: "Python wrapper for NYC BIS (Building Information System) scraping"
+    freshness: "Real-time via scraping BISweb"
+    integration_priority: MEDIUM
+    notes: "Useful for permit history and violation lookups. Scrape-based, may break."
+
+  # ── Violations ─────────────────────────────────────────────────────────────
+
+  - name: "DOB Violations — NYC Open Data"
+    type: nyc_open_data_socrata
+    url: "https://data.cityofnewyork.us/Housing-Development/DOB-Violations/bwiv-7tpu"
+    provides: "All DOB violations: violation code, description, date, status, BBL/BIN"
+    freshness: "Real-time"
+    integration_priority: HIGH
+    notes: "Filter by BBL to check active violations before generating client consultation."
+
+  # ── Property Records (ACRIS) ──────────────────────────────────────────────
+
+  - name: "fitnr/acris-download"
+    type: github_repo
+    url: "https://github.com/fitnr/acris-download"
+    provides: "Download and ingest NYC ACRIS real property transaction data to local database"
+    freshness: "Near-current (scrape/API)"
+    integration_priority: MEDIUM
+    notes: "Useful for ownership verification and lien/mortgage context for client projects."
+
+  - name: "ACRIS Real Property Master"
+    type: nyc_open_data_socrata
+    url: "https://data.cityofnewyork.us/City-Government/ACRIS-Real-Property-Master/bnx9-e6tj"
+    provides: "Property transaction records, ownership, mortgage info by BBL"
+    freshness: "Near-current"
+    integration_priority: MEDIUM
+    notes: "Use for ownership lookup in client intake. Do not store PII in repo."
+
+  # ── Building Footprints ───────────────────────────────────────────────────
+
+  - name: "NYC Building Footprints"
+    type: nyc_open_data_socrata
+    url: "https://data.cityofnewyork.us/City-Government/Building-Footprints/5zhs-2jue"
+    provides: "3D building footprints with BIN, BBL, roof height, construction year"
+    freshness: "Daily"
+    integration_priority: LOW
+    notes: "Useful for stories/height validation in client schema. Secondary to PLUTO."
+
+  # ── Integrated LLM / MCP ─────────────────────────────────────────────────
+
+  - name: "NYC Property Intel MCP Server"
+    type: mcp_server
+    url: "https://nycpropertyintel.com/"
+    provides: "20+ NYC databases in one MCP: permits, violations, zoning, sales, ownership, liens, fire, crime — all queryable by BBL or address"
+    freshness: "Daily sync from open data sources"
+    integration_priority: HIGH
+    notes: >
+      Best single integration for moswalk field use. Free trial: 10 queries/day × 30 days.
+      Paid tier required for production. MCP protocol means direct tool-use by coordinator.
+      This replaces manual PLUTO + DOB NOW + ACRIS plumbing for most queries.
+      PRIVACY: all queries go to external server — do not send client PII (owner names, unit numbers).
+      Send BBL only.
+
+  # ── Zoning / LLM Tools ───────────────────────────────────────────────────
+
+  - name: "NYC Zoning Resolution (online)"
+    type: web_reference
+    url: "https://zr.planning.nyc.gov/"
+    provides: "Full text of NYC Zoning Resolution, searchable by section and district"
+    freshness: "Updated with each zoning amendment"
+    integration_priority: MEDIUM
+    notes: "Primary reference for ZR section citations in agency patterns. Scrape via Firecrawl on sifting node."
+
+  - name: "NYCPlanning/db-zoning"
+    type: github_repo
+    url: "https://github.com/NYCPlanning/db-zoning"
+    provides: "GIS zoning district boundaries for all NYC lots"
+    freshness: "Quarterly"
+    integration_priority: MEDIUM
+    notes: "Needed for spatial overlay — does a given BBL fall within a special purpose district, flood zone, or historic district boundary?"

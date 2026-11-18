@@ -1,6 +1,44 @@
 # Reports
 reports/
 
+# ── MAST // — client data (NEVER commit) ─────────────────────────────────────
+mast/clients/
+mast/reports/
+mast/agentic/sessions/
+mast/agentic/escalations/
+mast/agentic/*.log
+mast/archive/jobs.db
+
+# Vault OS: queue contents + generated outputs (may contain BBL/client context)
+# Directories tracked via .keep; contents gitignored
+mast/queue/*.md
+mast/queue/processed/*.md
+mast/generated/consultations/*.md
+mast/generated/briefings/*.md
+mast/generated/reports/*.md
+
+**/*.enc
+**/.mast_keystore
+**/.MAST_keystore
+
+# NY SHIELD Act: no PII in repo history
+**/client_data/
+**/bbl_records/
+
+# API keys and secrets (MAST)
+MAST_DEV_KEY
+PANTOCRAFT_DEV_KEY
+tailscale_authkey*
+geoclient_api_key*
+dob_api_key*
+
+# CoreML exports (large binary)
+*.mlpackage/
+*.mlmodel
+
+# Simulation reports (may contain derived client data)
+iphone-llm/sim/reports/
+
 # Configs and keys
 .chainlit
 ch05/07_gpt_to_llama/config.json

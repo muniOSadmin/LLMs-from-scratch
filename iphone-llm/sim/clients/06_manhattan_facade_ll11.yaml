@@ -1,0 +1,112 @@
+# Client 06 — Manhattan Façade Repair / Local Law 11 (FISP Cycle 9)
+# Archetype: Condo board, mandatory compliance filing, sidewalk shed, high cost
+# BBL: 1-01234-0018 (Midtown Manhattan — C6-4.5 zone, 22-story tower)
+# Grounding: NYC FISP (Façade Inspection Safety Program) Cycle 9 rules, LL11 of 1998
+
+client_id: "SIM-006"
+name: "1234 Sixth Avenue Condominium Association"
+client_type: condo_board
+
+data_sources:
+  - "NYC Local Law 11 of 1998 (FISP) — Cycle 9 deadline Feb 21, 2025"
+  - "DOB FISP filing requirements (TR6 report, QEWI sign-off)"
+  - "NYC DOT sidewalk shed / construction fence permit rules"
+  - "DDC (Dept of Design & Construction) — city-owned infrastructure coordination"
+  - "PLUTO v25v4 — C6-4.5 zone, building class D4 (elevator apt)"
+  - "agencies.yaml — DOB, NYC DOT, DDC codes"
+
+property:
+  bbl: "1-01234-0018"
+  address: "235 West 48th Street, New York, NY 10036"
+  borough: Manhattan
+  zoning_district: "C6-4.5"
+  building_class: "D4"      # elevator apartment
+  year_built: 1968
+  stories: 22
+  residential_units: 180
+  gross_sq_ft: 198000
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: null
+    rent_stabilized: false   # condominium — not rent-stabilized
+    hpd_registered: false
+    within_subway_easement: true   # Midtown — likely over or near B/D/F/M lines
+    active_violations: 0
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false
+    asbestos_survey_required: true  # 1968 construction, exterior work may disturb ACM
+
+project:
+  type: "Façade inspection and repair — FISP Cycle 9 compliance"
+  description: >
+    Mandatory Local Law 11 / FISP Cycle 9 inspection and repair filing.
+    22-story tower with brick and precast concrete façade, circa 1968.
+    QEWI (Qualified Exterior Wall Inspector) hired — initial inspection
+    found UNSAFE conditions at 4th floor spandrel beam panels (cracked
+    mortar, one displaced brick). Must file TR6 report within 60 days of
+    inspection, install sidewalk shed immediately (unsafe designation),
+    and complete repairs within 1 year of unsafe filing.
+    Water tower on roof also needs replacement (steel tank, >20 years old).
+  estimated_cost_usd: 875000
+  scope: "A2"   # multiple work types — no change of use or CO amendment
+
+  agencies:
+    - code: "DOB"
+      role: "primary"
+      sequential_after: []
+      blocking: true
+      estimated_days: 14
+      confidence: 0.95
+      notes: >
+        TR6 (Technical Report 6) must be filed by QEWI within 60 days of
+        inspection. UNSAFE designation requires immediate sidewalk shed
+        installation. Filing acknowledged within 14 days. Repair permit
+        (Alt-2) required before any façade work begins. Final QEWI sign-off
+        and TR6 closeout required after repairs complete.
+
+    - code: "NYC DOT"
+      role: "approval"
+      sequential_after: []
+      blocking: false
+      estimated_days: 10
+      confidence: 0.90
+      notes: >
+        Sidewalk shed permit (immediate — UNSAFE designation). Construction
+        fence permit. Any crane or material hoist on sidewalk requires
+        separate DOT revocable consent. Midtown location: Dept of Transportation
+        coordinates with Theater District; avoid sidewalk closures during
+        Broadway show hours (7-11pm) per DOT Midtown guidelines.
+
+    - code: "DDC"
+      role: "notification"
+      sequential_after: []
+      blocking: false
+      estimated_days: 7
+      confidence: 0.80
+      notes: >
+        If any street opening required (e.g., ground-level repair anchoring),
+        DDC coordinates with DOT. Notification only for standard façade work.
+
+    - code: "DEP"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 21
+      confidence: 0.80
+      notes: >
+        Water tower replacement requires DEP plumbing permit (new water
+        storage vessel). 1968 construction: asbestos survey required before
+        removing old tank or any roof membrane disturbed during water tower
+        access. DEP notification 7+ days before demo of existing tank.
+
+  escalation_risk: low
+  analyst_notes:
+    - "UNSAFE designation means sidewalk shed is legally required NOW — do not delay."
+    - "FISP Cycle 9 closed Feb 21, 2025. If TR6 not filed, building is in violation — fine $1,000/month."
+    - "Subway easement: confirm with MTA/NYC Transit before any below-grade anchor drilling (unlikely for façade but flag)."
+    - "Water tower and façade can be permitted concurrently — separate permits, same contractor."
+    - "Asbestos survey scope: 1968 exterior may have ACM in caulk, window glazing compound — survey must cover all disturbed areas."
+    - "Midtown theater district: coordinate sidewalk shed placement with DOT and building's retail tenants."
+    - "COST REALITY: $875K estimate is mid-range. Midtown scaffold + labor premiums can push to $1.2M."

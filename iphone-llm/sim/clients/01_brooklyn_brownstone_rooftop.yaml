@@ -1,0 +1,93 @@
+# Client 01 — Brooklyn Brownstone Rooftop Deck (Historic District)
+# Archetype: Homeowner, high-complexity LPC pathway
+# BBL: 3-00783-0001 (Park Slope, Brooklyn — R6B zone, historic district)
+# Grounding: PLUTO v25v4, LPC Historic Districts dataset, DOB NOW permit patterns
+
+client_id: "SIM-001"
+name: "Rivera Family"
+client_type: homeowner
+
+data_sources:
+  - "PLUTO v25v4 (NYCPlanning/db-pluto) — zoning R6B, building class A5"
+  - "LPC Historic Districts GIS — Park Slope Historic District"
+  - "DOB NOW Socrata API — rooftop alteration permit cost patterns"
+  - "agencies.yaml — LPC, DOB codes"
+
+property:
+  bbl: "3-00783-0001"
+  address: "347 4th Street, Brooklyn, NY 11215"
+  borough: Brooklyn
+  zoning_district: "R6B"
+  building_class: "A5"      # rowhouse / townhouse
+  year_built: 1899
+  stories: 3
+  residential_units: 2
+  gross_sq_ft: 2800
+  flags:
+    landmarked: true
+    landmark_type: "historic_district"   # Park Slope Historic District
+    flood_zone: null
+    rent_stabilized: false
+    hpd_registered: false
+    within_subway_easement: false
+    active_violations: 0
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false
+    asbestos_survey_required: false
+
+project:
+  type: "Open rooftop deck addition"
+  description: >
+    Install an open rooftop deck (no enclosure) on the existing flat roof of a
+    3-story brownstone rowhouse. Deck will be wood composite, 400 sq ft, with a
+    steel parapet guard rail and rooftop hatch access from the 3rd floor. No
+    plumbing. No HVAC. Structural engineer to certify roof load capacity.
+    Building is in the Park Slope Historic District — LPC review required for
+    any visible exterior change.
+  estimated_cost_usd: 65000
+  scope: "A2"   # multiple work types (structural + exterior) but no CO change
+
+  agencies:
+    - code: "LPC"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 45
+      confidence: 0.80
+      notes: >
+        Certificate of Appropriateness required before DOB will issue permits.
+        Open decks are typically staff-level approval (10-15 days) unless
+        design conflicts with guidelines. Steel railings and composite decking
+        in historic districts often require material justification.
+
+    - code: "DOB"
+      role: "primary"
+      sequential_after: ["LPC"]
+      blocking: true
+      estimated_days: 30
+      confidence: 0.90
+      notes: >
+        Alt-2 filing. Structural engineer drawings required showing roof load
+        capacity. 15-foot setback visibility compliance must be documented
+        (R6B buildings under 60 ft require 12-inch max parapet visibility).
+        DOB plan examination → permit → inspection → sign-off.
+
+    - code: "NYC DOT"
+      role: "notification"
+      sequential_after: ["DOB"]
+      blocking: false
+      estimated_days: 5
+      confidence: 0.70
+      notes: >
+        Sidewalk shed / construction fence permit likely needed if materials
+        are hoisted over the sidewalk. Revocable consent not required for
+        open decks unless structure encroaches on airspace.
+
+  escalation_risk: medium
+  analyst_notes:
+    - "LPC is the rate-limiting agency — start there, not DOB."
+    - "Open deck (no enclosure) avoids Alt-1 and CO amendment."
+    - "Roof visibility setback calculation is critical — confirm building height before filing."
+    - "If owner wants a pergola or any partial enclosure later, scope jumps to Alt-1."
+    - "PIVOT RISK: If LPC requests full public hearing (rare for open decks), add 60-90 days."

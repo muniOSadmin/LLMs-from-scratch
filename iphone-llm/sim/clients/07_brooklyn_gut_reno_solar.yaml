@@ -1,0 +1,131 @@
+# Client 07 — Brooklyn Gut Renovation + Rooftop Solar (Bushwick)
+# Archetype: Developer, highest technical complexity, multi-agency parallel + sequential
+# BBL: 3-03265-0031 (Bushwick, Brooklyn — M1-1 zone, former light industrial)
+# Grounding: NYC solar permitting process, asbestos rules, FDNY Alt-1 requirements
+
+client_id: "SIM-007"
+name: "Bushwick Arts & Housing Partners LLC"
+client_type: developer
+
+data_sources:
+  - "NY Solar Map NYC Solar Permitting Process Guide 2025"
+  - "NYC DEP Asbestos Abatement rules (pre-1987 construction)"
+  - "DOB Alt-1 / change of occupancy for M1-1 to residential"
+  - "Con Edison Interconnection Application (non-city agency, tracked for reference)"
+  - "PLUTO v25v4 — M1-1 zoning, building class S4 (loft with stores)"
+  - "NYC Zoning Resolution §15-00 (light manufacturing / residential use)"
+  - "agencies.yaml — DOB, DEP, FDNY, DCP codes"
+
+property:
+  bbl: "3-03265-0031"
+  address: "1087 Flushing Avenue, Brooklyn, NY 11237"
+  borough: Brooklyn
+  zoning_district: "M1-1"
+  building_class: "S4"      # loft with stores — mixed-use light industrial
+  year_built: 1924
+  stories: 4
+  residential_units: 0      # currently commercial / light industrial
+  gross_sq_ft: 14200
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: null
+    rent_stabilized: false
+    hpd_registered: false
+    within_subway_easement: false
+    active_violations: 2     # 2 open ECB violations for unpermitted interior work
+    c_of_o_mismatch: true    # currently used as artist studios without CO for residential
+    asbestos_survey_required: true   # 1924 construction — high ACM risk
+    special_purpose_district: null
+    waterfront: false
+
+project:
+  type: "Gut renovation: M1-1 loft → 12-unit live-work residential + rooftop solar"
+  description: >
+    Full gut renovation of 4-story 1924 brick loft building in Bushwick.
+    Convert from light industrial / artist studio use to 12 live-work
+    residential units (loft-style, legal residential occupancy).
+    M1-1 zone allows residential as-of-right via ZR §15-021 (Loft Law
+    converted buildings may be legalized). Rooftop: 36kW solar array
+    (120 panels, 300W each) on 3,200 sq ft flat roof. Includes full MEP
+    upgrade, new egress stairs, sprinkler system, and elevator.
+    Pre-1924 construction: extremely high ACM risk (pipe insulation,
+    tin ceilings, floor tiles, window caulk). Full building asbestos
+    survey and abatement before any structural work.
+    Open ECB violations must be resolved at OATH before Alt-1 filing.
+  estimated_cost_usd: 2800000
+  scope: "A1"   # change of occupancy (commercial → residential) + CO amendment
+
+  agencies:
+    - code: "OATH"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 30
+      confidence: 0.90
+      notes: >
+        2 open ECB violations must be resolved. ECB violations are heard
+        by OATH (not ECB directly). Resolve first — DOB will not accept
+        Alt-1 filing on a building with unresolved ECB violations.
+
+    - code: "DEP"
+      role: "approval"
+      sequential_after: ["OATH"]
+      blocking: true
+      estimated_days: 45
+      confidence: 0.85
+      notes: >
+        Full building asbestos survey required (1924 construction). High
+        likelihood of ACM in pipe insulation, tin ceilings, floor tiles,
+        window glazing compound. DEP notification 7+ days before demolition.
+        Licensed abatement contractor required. Air monitoring required
+        during abatement. Timeline: survey 1-2 weeks, abatement 4-8 weeks.
+
+    - code: "DCP"
+      role: "notification"
+      sequential_after: ["DOB"]
+      blocking: false
+      estimated_days: 14
+      confidence: 0.80
+      notes: >
+        M1-1 to residential via Loft Law legalization — DCP notified for
+        CEQR Type II determination. No discretionary review needed for
+        as-of-right conversion. Confirmation only.
+
+    - code: "DOB"
+      role: "primary"
+      sequential_after: ["DEP", "OATH"]
+      blocking: true
+      estimated_days: 120
+      confidence: 0.80
+      notes: >
+        Alt-1 filing for CO amendment (commercial → 12-unit residential).
+        Full architectural drawings: egress (2 stairs + elevator), structural
+        (loft floors must support residential load), MEP, accessibility.
+        Solar: structural permit for roof penetrations and rack anchoring.
+        Electrical permit for inverter, interconnection panel, metering.
+        Plan exam for a project of this scope: 90-120 days. DOB structural
+        engineer review required for loft floor load certification.
+
+    - code: "FDNY"
+      role: "approval"
+      sequential_after: ["DOB"]
+      blocking: true
+      estimated_days: 30
+      confidence: 0.85
+      notes: >
+        12-unit residential requires full automatic sprinkler system (NFPA 13R).
+        FDNY plan review for sprinkler drawings. Smoke detector / CO detector
+        per unit. Elevator (if >3 stories, mandatory). Fire-rated corridor
+        construction. FDNY inspection before final CO issued.
+
+  escalation_risk: high
+  analyst_notes:
+    - "Sequence is strict: OATH → DEP (survey + abate) → DOB → FDNY. Do not overlap OATH and DEP."
+    - "C_OF_O MISMATCH: Current use as artist studios without residential CO = violation. Disclose in Alt-1 filing."
+    - "Solar track: Con Edison interconnection app should be submitted concurrent with DOB electrical permit — parallel, not sequential."
+    - "Loft Law legalization: confirm units qualify under MDL Article 7-C before filing. Pre-1981 occupancy may be required."
+    - "Elevator mandatory for residential building > 3 stories in NYC — budget $120,000-$180,000 and add 6-month lead time."
+    - "COST RISK: Asbestos abatement in 14,200 sq ft 1924 building = $80,000-$250,000 additional. This is the biggest unknown."
+    - "PRIVACY: Developer LLC — all filings will be public record. No PII exposure risk on this client type."
+    - "SECURITY: Con Edison interconnection application will include system specs and grid connection point — do not store in public repo."

@@ -1,0 +1,114 @@
+# Client 03 — Manhattan Sidewalk Café Expansion (LES)
+# Archetype: Restaurant owner, NYC DOT revocable consent, Community Board involvement
+# BBL: 1-00397-0025 (Lower East Side, Manhattan — C2-6 zone)
+# Grounding: NYC DOT Dining Out NYC rules, CB3 review process, SLA NYS overlay
+
+client_id: "SIM-003"
+name: "Delgado Restaurant Group"
+client_type: business_owner
+
+data_sources:
+  - "NYC DOT Revocable Consent & Licensing rules (Dining Out NYC)"
+  - "Community Board 3 Manhattan — public hearing schedule"
+  - "NYC Zoning Resolution §14-40 (sidewalk café regulations)"
+  - "NYS SLA (State Liquor Authority) — outdoor dining license extension"
+  - "agencies.yaml — NYC DOT, DCP, LPC, FDNY codes"
+
+property:
+  bbl: "1-00397-0025"
+  address: "178 Orchard Street, New York, NY 10002"
+  borough: Manhattan
+  zoning_district: "C2-6"
+  building_class: "O4"     # restaurant/bar ground floor with residential above
+  year_built: 1911
+  stories: 5
+  residential_units: 8
+  gross_sq_ft: 6800
+  flags:
+    landmarked: false
+    landmark_type: null
+    flood_zone: null
+    rent_stabilized: true      # upper floors rent-stabilized — renovation scope matters
+    hpd_registered: true
+    within_subway_easement: false
+    active_violations: 1       # open ECB violation for prior unpermitted signage
+    c_of_o_mismatch: false
+    special_purpose_district: null
+    waterfront: false
+    asbestos_survey_required: false
+
+project:
+  type: "Sidewalk café license — expansion from 4 to 14 seats"
+  description: >
+    Restaurant currently operates a 4-seat sidewalk café under an existing
+    revocable consent. Owner wants to expand to 14 seats (adding 10 seats and
+    a 30-ft enclosure with retractable canopy). Expansion requires amended
+    revocable consent from NYC DOT. Community Board 3 (Lower East Side) must
+    review. Building is in C2-6 zone — sidewalk cafés permitted by right
+    subject to siting clearances. Open ECB violation for signage must be
+    resolved before DOT will process application. Alcohol service outdoors
+    requires NYS SLA license amendment.
+  estimated_cost_usd: 28000
+  scope: "A3"   # minor alteration — canopy + structural anchors only
+
+  agencies:
+    - code: "OATH"
+      role: "approval"
+      sequential_after: []
+      blocking: true
+      estimated_days: 30
+      confidence: 0.85
+      notes: >
+        Open ECB signage violation must be resolved at OATH before DOT will
+        process revocable consent amendment. OATH hearings typically scheduled
+        within 30 days. Violation likely $800-$2,500 — resolve first.
+
+    - code: "NYC DOT"
+      role: "primary"
+      sequential_after: ["OATH"]
+      blocking: true
+      estimated_days: 120
+      confidence: 0.80
+      notes: >
+        Revocable consent amendment application. DOT routes to Community Board
+        within 5 days of receipt. Standard review up to 6 months. If CB3
+        recommends denial, DOT holds second public hearing (+60-90 days).
+        Siting clearances: 8-ft clear pedestrian path, 2-ft from curb,
+        not blocking fire hydrant or bus stop.
+
+    - code: "DCP"
+      role: "notification"
+      sequential_after: ["NYC DOT"]
+      blocking: false
+      estimated_days: 5
+      confidence: 0.95
+      notes: >
+        DCP receives forwarded copy from DOT for zoning compliance review.
+        C2-6 allows sidewalk cafés — no variance needed. Notification only.
+
+    - code: "DEP"
+      role: "notification"
+      sequential_after: ["NYC DOT"]
+      blocking: false
+      estimated_days: 5
+      confidence: 0.90
+      notes: "Environmental review forwarded by DOT. No issues expected in C2-6 non-waterfront location."
+
+    - code: "DOB"
+      role: "approval"
+      sequential_after: ["NYC DOT"]
+      blocking: true
+      estimated_days: 21
+      confidence: 0.85
+      notes: >
+        Alt-3 permit required for structural anchors for canopy posts.
+        Electrical permit if heaters or lighting added to enclosure.
+
+  escalation_risk: medium
+  analyst_notes:
+    - "Clear the OATH violation first — it's cheap and unblocks everything."
+    - "CB3 (LES) is historically active on outdoor dining — attend public hearing prepared."
+    - "NYS SLA outdoor license extension is a separate state process — does NOT go through city agencies."
+    - "Canopy must be fully retractable or removable — permanent structures require different consent."
+    - "ESCALATION: DOB vs DOT both have Operations DM chain — no cross-DM conflict here. Low risk."
+    - "Rent-stabilized floors above: café expansion has no impact on residential tenants — no HPD filing needed."

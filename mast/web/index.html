@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAST</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --paper: #f2eee4;
+    --paper-deep: #e7e1d3;
+    --ink: #141414;
+    --muted: #5d584f;
+    --red: #d32a1f;
+    --yellow: #ffd23f;
+    --cyan: #1ea5cf;
+    --grotesk: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --shadow: 5px 5px 0 var(--ink);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--grotesk);
+    font-size: 17px;
+    line-height: 1.45;
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* Masthead — Domus */
+  .mast-head {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    padding: 20px 0 10px; border-bottom: 3px solid var(--ink);
+  }
+  .wordmark {
+    font-weight: 900; font-size: clamp(3rem, 12vw, 6.5rem); line-height: .82;
+    letter-spacing: -.045em; margin: 0;
+  }
+  .issue {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+  }
+  .issue .pod { width: 86px; height: auto; margin-bottom: 6px; }
+  .subrule { height: 6px; border-bottom: 1px solid var(--ink); margin-bottom: 18px; }
+
+  /* Progress */
+  .progress { display: flex; gap: 0; list-style: none; margin: 0 0 28px; padding: 0; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .progress li { flex: 1; padding: 8px 0 0; border-top: 4px solid var(--paper-deep); color: var(--muted); }
+  .progress li + li { margin-left: 6px; }
+  .progress li.on { border-top-color: var(--red); color: var(--ink); }
+  .progress li.done { border-top-color: var(--ink); color: var(--ink); }
+
+  /* Editorial type */
+  .kicker { font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin: 0 0 10px; }
+  .headline {
+    font-weight: 900; font-size: clamp(2.5rem, 9vw, 5.6rem); line-height: .9; letter-spacing: -.035em;
+    margin: 0 0 18px; outline: none;
+  }
+  .headline.small { font-size: clamp(1.9rem, 6.5vw, 3.6rem); }
+  .dek { font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, 2.6vw, 1.4rem); line-height: 1.35; max-width: 34em; margin: 0 0 28px; color: #2c2a26; }
+
+  /* Controls — Archigram capsules */
+  label.field { display: block; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  input[type=text] {
+    width: 100%; font: inherit; font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 700;
+    padding: 16px 20px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink);
+  }
+  input[type=text]:focus { outline: none; box-shadow: var(--shadow); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; border: 0; }
+  .pills legend { width: 100%; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; padding: 0; }
+  .pill { position: relative; }
+  .pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .pill span {
+    display: inline-block; padding: 10px 16px; border: 2px solid var(--ink); border-radius: 999px;
+    font-weight: 700; font-size: 15px; background: transparent; cursor: pointer; user-select: none;
+  }
+  .pill input:checked + span { background: var(--ink); color: var(--paper); }
+  .pill input:focus-visible + span { box-shadow: 0 0 0 3px var(--cyan); }
+
+  .go {
+    display: inline-flex; align-items: center; gap: 12px; margin-top: 28px;
+    font: inherit; font-weight: 900; font-size: 1.15rem; letter-spacing: -.01em;
+    padding: 16px 28px; border: 3px solid var(--ink); border-radius: 999px;
+    background: var(--yellow); color: var(--ink); cursor: pointer; box-shadow: var(--shadow);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .go:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
+  .go:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+  .go:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+  .go[disabled] { opacity: .55; cursor: progress; }
+  .back { margin-top: 28px; margin-left: 16px; background: none; border: 0; font: inherit; font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; text-decoration: underline; cursor: pointer; color: var(--ink); }
+  .error { color: var(--red); font-weight: 700; margin: 14px 0 0; min-height: 1.4em; }
+
+  /* Step 2 cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .card {
+    text-align: left; font: inherit; color: var(--ink); background: #fff; cursor: pointer;
+    border: 3px solid var(--ink); border-radius: 28px; padding: 20px 20px 18px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 56px 1fr; gap: 4px 14px; align-items: start;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .card:hover { transform: translate(-1px, -1px); box-shadow: 7px 7px 0 var(--ink); }
+  .card:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+  .card:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+  .card .glyph {
+    grid-row: span 3; width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--ink);
+    display: grid; place-items: center; font-weight: 900; font-size: 24px;
+  }
+  .card:nth-child(3n+1) .glyph { background: var(--yellow); }
+  .card:nth-child(3n+2) .glyph { background: var(--cyan); }
+  .card:nth-child(3n+3) .glyph { background: var(--red); color: #fff; }
+  .card .t { font-weight: 900; font-size: 1.25rem; line-height: 1.05; letter-spacing: -.01em; }
+  .card .d { font-family: var(--serif); font-style: italic; font-size: .98rem; color: #3a3732; }
+  .card .c { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+  /* Step 3 */
+  .facts { display: grid; gap: 22px; }
+  .facts .pills { margin: 0; }
+
+  /* Result */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); margin: 6px 0 36px; }
+  .stat { padding: 16px 16px 18px 0; }
+  .stat + .stat { border-left: 1px solid var(--ink); padding-left: 16px; }
+  .stat .n { font-weight: 900; font-size: clamp(2.6rem, 8vw, 4.4rem); line-height: .9; letter-spacing: -.04em; }
+  .stat .n small { font-size: .38em; letter-spacing: 0; font-weight: 700; margin-left: 4px; }
+  .stat .l { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-top: 8px; }
+  .stat.fast .n { color: var(--red); }
+
+  .section-title { display: flex; align-items: baseline; gap: 14px; border-top: 1px solid var(--ink); padding-top: 12px; margin: 40px 0 18px; }
+  .section-title .num { font-weight: 900; font-size: 2.2rem; line-height: 1; color: var(--red); letter-spacing: -.03em; }
+  .section-title h2 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -.02em; }
+
+  /* Walking chain */
+  .chain { list-style: none; margin: 0; padding: 0; position: relative; }
+  .chain::before { content: ""; position: absolute; left: 31px; top: 20px; bottom: 20px; border-left: 4px solid var(--ink); }
+  .chain li { position: relative; display: grid; grid-template-columns: 66px 1fr; gap: 14px; margin-bottom: 16px; }
+  .chain .node {
+    position: relative; z-index: 1; width: 66px; height: 66px; border: 3px solid var(--ink); border-radius: 50%;
+    background: var(--yellow); display: grid; place-items: center; font-weight: 900; font-size: 14px; letter-spacing: -.01em;
+  }
+  .chain li:nth-child(2n) .node { background: var(--cyan); }
+  .chain li.last .node { background: var(--red); color: #fff; }
+  .capsule { background: #fff; border: 3px solid var(--ink); border-radius: 26px; padding: 14px 18px; box-shadow: var(--shadow); }
+  .capsule .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .capsule .name { font-weight: 900; font-size: 1.12rem; line-height: 1.15; }
+  .capsule .days { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  .capsule .why { font-family: var(--serif); font-style: italic; color: #3a3732; margin-top: 4px; }
+  .capsule .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 8px; }
+  .tag.hot { background: var(--ink); color: var(--paper); }
+
+  .notes { margin: 0; padding: 0; list-style: none; }
+  .notes li { padding: 12px 0; border-bottom: 1px solid #c9c2b2; font-family: var(--serif); font-size: 1.05rem; }
+  .notes li strong { font-family: var(--grotesk); }
+
+  /* Options */
+  .options { display: grid; gap: 18px; }
+  .option { border: 3px solid var(--ink); border-radius: 28px; padding: 20px 22px; background: #fff; box-shadow: var(--shadow); }
+  .option.free { background: var(--yellow); }
+  .option.work {
+    background-color: var(--cyan);
+    background-image: radial-gradient(rgba(20,20,20,.18) 1.2px, transparent 1.3px);
+    background-size: 9px 9px;
+  }
+  .option .roman { font-family: var(--serif); font-style: italic; font-size: 1.1rem; }
+  .option h3 { margin: 2px 0 8px; font-size: 1.5rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
+  .option p { margin: 0 0 12px; max-width: 40em; }
+  .option .go { margin-top: 6px; background: #fff; }
+  .track { border-top: 1px solid var(--ink); padding: 12px 0 4px; }
+  .track:first-of-type { border-top: 0; }
+  .track .tn { font-weight: 900; font-size: 1.08rem; }
+  .track .tm { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+  .track details { margin-top: 6px; font-size: .95rem; }
+  .track summary { cursor: pointer; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .track details p { margin: 8px 0 0; }
+  .ref { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; display: inline-block; word-break: break-all; }
+
+  .fine { margin-top: 48px; padding-top: 14px; border-top: 3px solid var(--ink); font-family: var(--serif); font-style: italic; font-size: .95rem; color: #3a3732; }
+  .loading { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 30px 0; }
+  .loading::after { content: "…"; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (max-width: 520px) {
+    .stat + .stat { border-left: 0; border-top: 1px solid var(--ink); padding-left: 0; }
+    .issue .pod { width: 64px; }
+  }
+  @media print {
+    body { background: #fff; font-size: 12pt; }
+    .progress, .go, .back, .no-print, .step:not(#step-result) { display: none !important; }
+    .capsule, .option, .card { box-shadow: none; }
+    .option.work, .option.free { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="mast-head">
+    <p class="wordmark">MAST</p>
+    <div class="issue" aria-hidden="true">
+      <svg class="pod" viewBox="0 0 120 70" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round">
+        <rect x="8" y="6" width="104" height="34" rx="17" fill="#ffd23f"/>
+        <circle cx="34" cy="23" r="6" fill="#1ea5cf"/><circle cx="54" cy="23" r="6" fill="#1ea5cf"/>
+        <circle cx="74" cy="23" r="6" fill="#1ea5cf"/><circle cx="94" cy="23" r="6" fill="#d32a1f"/>
+        <path d="M24 40 L16 64 M44 40 L48 64 M76 40 L72 64 M96 40 L104 64"/>
+      </svg>
+      <span>New York</span>
+      <span id="issue-step">01 / 03</span>
+    </div>
+  </header>
+  <div class="subrule"></div>
+
+  <ol class="progress no-print" id="progress" aria-label="Progress">
+    <li data-p="1">01 Where</li>
+    <li data-p="2">02 What</li>
+    <li data-p="3">03 The building</li>
+  </ol>
+
+  <main>
+    <!-- 01 — Where -->
+    <section class="step" id="step-1" aria-labelledby="h-1">
+      <p class="kicker">01 — Where</p>
+      <h1 class="headline" id="h-1" tabindex="-1">Where is the building?</h1>
+      <p class="dek">Every building arrives carrying its own history: a century of code, a district, the currents of the block it stands on. Start with where it is.</p>
+      <form id="form-1" novalidate>
+        <label class="field" for="address">Street address, or BBL</label>
+        <input type="text" id="address" name="address" autocomplete="street-address" placeholder="245 Clinton Ave, or a BBL" required>
+        <fieldset class="pills" id="borough-group">
+          <legend>Borough</legend>
+          <label class="pill"><input type="radio" name="borough" value="Manhattan"><span>Manhattan</span></label>
+          <label class="pill"><input type="radio" name="borough" value="Brooklyn"><span>Brooklyn</span></label>
+          <label class="pill"><input type="radio" name="borough" value="Queens"><span>Queens</span></label>
+          <label class="pill"><input type="radio" name="borough" value="Bronx"><span>The Bronx</span></label>
+          <label class="pill"><input type="radio" name="borough" value="Staten Island"><span>Staten Island</span></label>
+        </fieldset>
+        <p class="error" id="error-1" role="alert"></p>
+        <button class="go" type="submit">Continue <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <!-- 02 — What -->
+    <section class="step" id="step-2" aria-labelledby="h-2" hidden>
+      <p class="kicker">02 — What</p>
+      <h1 class="headline" id="h-2" tabindex="-1">What will you make?</h1>
+      <p class="dek">Pick the closest. This sets the heading: which agencies, in what order, and how long the passage runs.</p>
+      <div class="cards" id="cards"></div>
+      <button class="back" type="button" data-back="1">← Back</button>
+    </section>
+
+    <!-- 03 — The building -->
+    <section class="step" id="step-3" aria-labelledby="h-3" hidden>
+      <p class="kicker">03 — The building</p>
+      <h1 class="headline" id="h-3" tabindex="-1">The building, briefly.</h1>
+      <p class="dek">Three facts set the course. "Not sure" is a fine answer: we'll leave it open on the chart rather than guess.</p>
+      <form id="form-3" novalidate>
+        <div class="facts">
+          <fieldset class="pills">
+            <legend>When was it built?</legend>
+            <label class="pill"><input type="radio" name="era" value="pre1938"><span>Before 1938</span></label>
+            <label class="pill"><input type="radio" name="era" value="mid"><span>1938 – 1986</span></label>
+            <label class="pill"><input type="radio" name="era" value="post1987"><span>1987 or later</span></label>
+            <label class="pill"><input type="radio" name="era" value="unknown" checked><span>Not sure</span></label>
+          </fieldset>
+          <fieldset class="pills">
+            <legend>Is it a landmark?</legend>
+            <label class="pill"><input type="radio" name="landmark" value="individual"><span>Individual landmark</span></label>
+            <label class="pill"><input type="radio" name="landmark" value="historic_district"><span>In a historic district</span></label>
+            <label class="pill"><input type="radio" name="landmark" value="no"><span>No</span></label>
+            <label class="pill"><input type="radio" name="landmark" value="unknown" checked><span>Not sure</span></label>
+          </fieldset>
+          <fieldset class="pills">
+            <legend>Is it in a flood zone?</legend>
+            <label class="pill"><input type="radio" name="flood" value="yes"><span>Yes</span></label>
+            <label class="pill"><input type="radio" name="flood" value="no"><span>No</span></label>
+            <label class="pill"><input type="radio" name="flood" value="unknown" checked><span>Not sure</span></label>
+          </fieldset>
+        </div>
+        <p class="error" id="error-3" role="alert"></p>
+        <button class="go" type="submit" id="go-3">See the pathway <span aria-hidden="true">→</span></button>
+        <button class="back" type="button" data-back="2">← Back</button>
+      </form>
+    </section>
+
+    <!-- Result -->
+    <section class="step" id="step-result" aria-labelledby="h-r" aria-live="polite" hidden>
+      <div id="result"></div>
+    </section>
+  </main>
+
+  <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PROJECTS = [
+    { g: "I",  t: "Remake the interior",        d: "Kitchens, baths, layouts, finishes.",                 filing: "A2", project: "interior alteration" },
+    { g: "F",  t: "Change the face",            d: "Façade, windows, storefront, roof.",                  filing: "A2", project: "exterior alteration" },
+    { g: "+",  t: "Add a unit or change the use", d: "New dwelling unit, conversion, occupancy change.",  filing: "A1", project: "change of use" },
+    { g: "N",  t: "Build from the ground",      d: "A new building on the lot.",                          filing: "NB", project: "new building" },
+    { g: "S",  t: "Small work, equipment",      d: "Boilers, scaffolds, minor repairs.",                  filing: "A3", project: "minor alteration" },
+    { g: "LL", t: "Façade inspection (FISP)",   d: "Local Law 11 cycle for buildings over six stories.",  filing: "TR6", project: "facade inspection" }
+  ];
+  var ERA_YEAR = { pre1938: 1920, mid: 1960, post1987: 2000 };
+  var BOROUGH_BY_DIGIT = { "1": "Manhattan", "2": "Bronx", "3": "Brooklyn", "4": "Queens", "5": "Staten Island" };
+  var BBL_RE = /^([1-5])[-\s]?(\d{1,5})[-\s]?(\d{1,4})$/;
+
+  var state = { address: "", borough: "", bbl: "", project: null, flags: {}, unknowns: [] };
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function storageGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function storageSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+
+  function show(step) {
+    ["1", "2", "3", "result"].forEach(function (s) { $("step-" + s).hidden = (s !== String(step)); });
+    var n = step === "result" ? 4 : Number(step);
+    Array.prototype.forEach.call($("progress").children, function (li) {
+      var p = Number(li.getAttribute("data-p"));
+      li.className = p === n ? "on" : (p < n ? "done" : "");
+    });
+    $("issue-step").textContent = step === "result" ? "Pathway" : ("0" + step + " / 03");
+    var h = step === "result" ? $("h-r") : $("h-" + step);
+    if (h) h.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+
+  // 01 — Where
+  $("form-1").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var raw = $("address").value.trim();
+    var picked = document.querySelector("input[name=borough]:checked");
+    var m = raw.match(BBL_RE);
+    if (!raw) { $("error-1").textContent = "Add an address or BBL to begin."; $("address").focus(); return; }
+    if (m) {
+      state.bbl = m[1] + "-" + m[2].padStart(5, "0") + "-" + m[3].padStart(4, "0");
+      state.borough = BOROUGH_BY_DIGIT[m[1]];
+    } else {
+      if (!picked) { $("error-1").textContent = "Choose the borough."; return; }
+      state.bbl = "";
+      state.borough = picked.value;
+    }
+    state.address = raw;
+    $("error-1").textContent = "";
+    show(2);
+  });
+
+  // 02 — What
+  PROJECTS.forEach(function (p, i) {
+    var b = el("button", "card");
+    b.type = "button";
+    var g = el("span", "glyph", p.g); g.setAttribute("aria-hidden", "true");
+    b.appendChild(g);
+    b.appendChild(el("span", "t", p.t));
+    b.appendChild(el("span", "d", p.d));
+    b.appendChild(el("span", "c", "DOB filing " + p.filing));
+    b.addEventListener("click", function () { state.project = PROJECTS[i]; show(3); });
+    $("cards").appendChild(b);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function (b) {
+    b.addEventListener("click", function () { show(b.getAttribute("data-back")); });
+  });
+
+  // 03 — The building
+  $("form-3").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var era = document.querySelector("input[name=era]:checked").value;
+    var lm = document.querySelector("input[name=landmark]:checked").value;
+    var fl = document.querySelector("input[name=flood]:checked").value;
+    var flags = {}, unknowns = [];
+
+    if (ERA_YEAR[era]) flags.yearBuilt = ERA_YEAR[era];
+    else unknowns.push(["Year built", "If the building predates 1987, DEP asbestos clearance (ACP5 or ACP21) comes before any DOB permit."]);
+
+    if (lm === "individual" || lm === "historic_district") { flags.landmarked = true; flags.landmarkType = lm; }
+    else if (lm === "no") flags.landmarked = false;
+    else unknowns.push(["Landmark status", "If the building is a landmark or sits in a historic district, LPC must approve before DOB issues a permit."]);
+
+    if (fl === "yes") flags.floodZone = "AE";
+    else if (fl === "unknown") unknowns.push(["Flood zone", "Flood-zone sites carry extra construction standards, and some uses, such as basement units, are not permitted."]);
+
+    state.flags = flags;
+    state.unknowns = unknowns;
+    consult();
+  });
+
+  function consult() {
+    var go = $("go-3");
+    go.disabled = true;
+    show("result");
+    var r = $("result");
+    r.textContent = "";
+    var h = el("h1", "headline small", "Taking bearings");
+    h.id = "h-r"; h.tabIndex = -1;
+    r.appendChild(h);
+    r.appendChild(el("p", "loading", "Reading the chart"));
+
+    var headers = { "Content-Type": "application/json" };
+    var token = storageGet("mast-token");
+    if (token) headers["X-Mast-Token"] = token;
+
+    fetch("/consult", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({
+        bbl: state.bbl,
+        address: state.address,
+        borough: state.borough,
+        project: state.project.project,
+        filingType: state.project.filing,
+        flags: state.flags
+      })
+    }).then(function (res) {
+      if (res.status === 401) { renderToken(); return null; }
+      return res.json().then(function (data) {
+        if (!res.ok) throw new Error(data.error || ("Server returned " + res.status));
+        return data;
+      });
+    }).then(function (data) {
+      if (data) renderResult(data);
+    }).catch(function (err) {
+      renderError(err.message || "Could not reach the MAST server.");
+    }).then(function () { go.disabled = false; });
+  }
+
+  function heading(text) {
+    var h = el("h1", "headline small", text);
+    h.id = "h-r"; h.tabIndex = -1;
+    return h;
+  }
+
+  function renderError(msg) {
+    var r = $("result"); r.textContent = "";
+    r.appendChild(el("p", "kicker", "Interrupted"));
+    r.appendChild(heading("The route could not be traced."));
+    r.appendChild(el("p", "dek", msg));
+    var b = el("button", "go", "Try again"); b.type = "button";
+    b.addEventListener("click", consult);
+    r.appendChild(b);
+    $("h-r").focus();
+  }
+
+  function renderToken() {
+    var r = $("result"); r.textContent = "";
+    r.appendChild(el("p", "kicker", "Access"));
+    r.appendChild(heading("This MAST node needs an access token."));
+    var f = el("form");
+    var lab = el("label", "field", "Access token"); lab.htmlFor = "tok";
+    var inp = el("input"); inp.type = "text"; inp.id = "tok"; inp.autocomplete = "off";
+    var b = el("button", "go", "Continue"); b.type = "submit";
+    f.appendChild(lab); f.appendChild(inp); f.appendChild(b);
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (inp.value.trim()) { storageSet("mast-token", inp.value.trim()); consult(); }
+    });
+    r.appendChild(f);
+    inp.focus();
+  }
+
+  function sectionTitle(num, text) {
+    var d = el("div", "section-title");
+    d.appendChild(el("span", "num", num));
+    d.appendChild(el("h2", null, text));
+    return d;
+  }
+
+  function stat(n, label, cls) {
+    var s = el("div", "stat" + (cls ? " " + cls : ""));
+    var big = el("div", "n", String(n));
+    big.appendChild(el("small", null, "days"));
+    s.appendChild(big);
+    s.appendChild(el("div", "l", label));
+    return s;
+  }
+
+  function renderResult(d) {
+    var r = $("result"); r.textContent = "";
+    var steps = d.agency_pathway || [];
+    var tracks = d.track_details || [];
+
+    r.appendChild(el("p", "kicker", "Your pathway — " + state.project.t));
+    r.appendChild(heading(state.address));
+    r.appendChild(el("p", "dek",
+      steps.length + (steps.length === 1 ? " agency" : " agencies") + ", in this order. " +
+      "The chart below is the law as written; the passage depends on the people reading your file."));
+
+    var stats = el("div", "stats");
+    stats.appendChild(stat(d.critical_path_days, "Standard sequence"));
+    if (d.days_saved > 0) stats.appendChild(stat(d.optimized_days, "With professional tracks", "fast"));
+    var cert = el("div", "stat");
+    var cn = el("div", "n", Math.round((d.overall_confidence || 0) * 100) + "%");
+    cert.appendChild(cn);
+    cert.appendChild(el("div", "l", "Chart certainty"));
+    stats.appendChild(cert);
+    r.appendChild(stats);
+
+    // I — The sequence
+    r.appendChild(sectionTitle("I", "The course"));
+    var ol = el("ol", "chain");
+    steps.forEach(function (s, i) {
+      var li = el("li", i === steps.length - 1 ? "last" : "");
+      li.appendChild(el("div", "node", s.code));
+      var cap = el("div", "capsule");
+      var top = el("div", "top");
+      top.appendChild(el("div", "name", s.full_name || s.code));
+      top.appendChild(el("div", "days", "~" + (s.estimated_days || 0) + " days"));
+      cap.appendChild(top);
+      if (s.triggered_by) cap.appendChild(el("div", "why", "Because: " + s.triggered_by));
+      var tags = el("div", "tags");
+      if (s.blocking) tags.appendChild(el("span", "tag hot", "Must clear first"));
+      if ((d.stale_agencies || []).indexOf(s.code) !== -1) tags.appendChild(el("span", "tag", "Verify current practice"));
+      if (tags.childNodes.length) cap.appendChild(tags);
+      li.appendChild(cap);
+      ol.appendChild(li);
+    });
+    r.appendChild(ol);
+
+    // II — Open questions & notes
+    var notes = [];
+    state.unknowns.forEach(function (u) { notes.push([u[0], u[1]]); });
+    (d.escalation_flags || []).forEach(function (f) { notes.push(["From the chart", String(f).replace(/_/g, " ")]); });
+    if (notes.length) {
+      r.appendChild(sectionTitle("II", state.unknowns.length ? "Open questions" : "Notes"));
+      var ul = el("ul", "notes");
+      notes.forEach(function (n) {
+        var li = el("li");
+        li.appendChild(el("strong", null, n[0] + ". "));
+        li.appendChild(document.createTextNode(n[1]));
+        ul.appendChild(li);
+      });
+      r.appendChild(ul);
+    }
+
+    // Ways forward
+    r.appendChild(sectionTitle(notes.length ? "III" : "II", "Ways forward"));
+    var opts = el("div", "options");
+
+    var o1 = el("div", "option free");
+    o1.appendChild(el("div", "roman", "i."));
+    o1.appendChild(el("h3", null, "Keep this brief"));
+    o1.appendChild(el("p", null, "Free. Print it or save it as a PDF and take it to your architect, your contractor or the next meeting."));
+    var pb = el("button", "go no-print", "Print or save"); pb.type = "button";
+    pb.addEventListener("click", function () { window.print(); });
+    o1.appendChild(pb);
+    opts.appendChild(o1);
+
+    if (tracks.length) {
+      var o2 = el("div", "option");
+      o2.appendChild(el("div", "roman", "ii."));
+      var saved = tracks.reduce(function (a, t) { return a + (t.days_saved || 0); }, 0);
+      o2.appendChild(el("h3", null, "Faster, formal tracks: up to ~" + saved + " days saved"));
+      o2.appendChild(el("p", null, "Documented, legal procedures that this project may qualify for. Each needs a licensed professional to use it."));
+      tracks.forEach(function (t) {
+        var tr = el("div", "track");
+        tr.appendChild(el("div", "tn", t.track));
+        tr.appendChild(el("div", "tm", t.agency + " · ~" + t.standard_days + " → ~" + t.optimized_days + " days · risk " + String(t.risk_level || "").toLowerCase()));
+        var det = el("details");
+        det.appendChild(el("summary", null, "How it works and the risk"));
+        det.appendChild(el("p", null, t.note));
+        det.appendChild(el("p", null, "Risk: " + t.risk));
+        tr.appendChild(det);
+        o2.appendChild(tr);
+      });
+      opts.appendChild(o2);
+    }
+
+    var o3 = el("div", "option work");
+    o3.appendChild(el("div", "roman", tracks.length ? "iii." : "ii."));
+    o3.appendChild(el("h3", null, "Work with MAST"));
+    o3.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and steers the file through each agency. Quote this reference when you get in touch:"));
+    var ref = el("span", "ref", d.engagement_id);
+    o3.appendChild(ref);
+    var cb = el("button", "go no-print", "Copy reference"); cb.type = "button";
+    cb.addEventListener("click", function () {
+      var done = function () { cb.textContent = "Copied"; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(d.engagement_id).then(done, function () {});
+      } else {
+        var range = document.createRange(); range.selectNodeContents(ref);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      }
+    });
+    o3.appendChild(document.createElement("br"));
+    o3.appendChild(cb);
+    opts.appendChild(o3);
+    r.appendChild(opts);
+
+    var again = el("button", "back no-print", "← Start a new pathway"); again.type = "button";
+    again.addEventListener("click", function () {
+      $("form-1").reset(); $("form-3").reset();
+      state = { address: "", borough: "", bbl: "", project: null, flags: {}, unknowns: [] };
+      show(1);
+    });
+    r.appendChild(again);
+    $("h-r").focus({ preventScroll: true });
+  }
+
+  show(1);
+})();
+</script>
+</body>
+</html>

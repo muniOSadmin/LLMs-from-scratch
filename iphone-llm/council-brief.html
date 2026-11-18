@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>moswalk // Platform Council Brief — May 2026</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #222;
+    --accent: #e8ff47;
+    --accent2: #47ffe8;
+    --warn: #ff6b35;
+    --ok: #47ff8a;
+    --muted: #555;
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --font: 'SF Mono', 'Fira Code', monospace;
+    --serif: 'Georgia', serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; line-height: 1.7; }
+
+  header { border-bottom: 1px solid var(--border); padding: 32px 40px 24px; }
+  header h1 { font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: 0.02em; }
+  header .sub { color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+  header .meta { margin-top: 12px; display: flex; gap: 24px; font-size: 11px; color: var(--muted); }
+  header .meta span { color: var(--text-dim); }
+
+  nav { display: flex; gap: 2px; padding: 0 40px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  nav button { background: none; border: none; color: var(--text-dim); font-family: var(--font); font-size: 11px;
+    padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  nav button.active, nav button:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab { display: none; padding: 36px 40px; max-width: 1100px; }
+  .tab.active { display: block; }
+
+  h2 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+  h3 { font-size: 12px; font-weight: 700; color: var(--text); margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  p { color: var(--text-dim); margin-bottom: 12px; font-family: var(--serif); font-size: 13px; line-height: 1.8; }
+  strong { color: var(--text); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+  .card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .card .value { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .card .desc { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+  .source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 12px; }
+  .source-card .title { font-size: 12px; font-weight: 700; color: var(--accent2); margin-bottom: 6px; }
+  .source-card .signal { font-size: 11px; color: var(--text-dim); font-family: var(--serif); line-height: 1.7; }
+  .source-card .verdict { margin-top: 10px; font-size: 11px; padding: 6px 10px; border-radius: 4px; }
+  .verdict.validated { background: rgba(71,255,138,0.08); color: var(--ok); border-left: 3px solid var(--ok); }
+  .verdict.gap { background: rgba(255,107,53,0.08); color: var(--warn); border-left: 3px solid var(--warn); }
+  .verdict.partial { background: rgba(232,255,71,0.08); color: var(--accent); border-left: 3px solid var(--accent); }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px; }
+  th { text-align: left; padding: 8px 12px; color: var(--muted); font-size: 10px; text-transform: uppercase;
+       letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid #1a1a1a; color: var(--text-dim); vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+  .ok { color: var(--ok); }
+  .warn { color: var(--warn); }
+  .dim { color: var(--muted); }
+  .accent { color: var(--accent); }
+
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; }
+  .pill-ok { background: rgba(71,255,138,0.1); color: var(--ok); }
+  .pill-gap { background: rgba(255,107,53,0.1); color: var(--warn); }
+  .pill-partial { background: rgba(232,255,71,0.1); color: var(--accent); }
+  .pill-blocked { background: rgba(136,136,136,0.1); color: var(--muted); }
+
+  .roadmap-item { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #1a1a1a; }
+  .roadmap-item .num { color: var(--muted); font-size: 11px; min-width: 24px; }
+  .roadmap-item .body { flex: 1; }
+  .roadmap-item .body strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 4px; }
+  .roadmap-item .body .detail { color: var(--text-dim); font-size: 11px; font-family: var(--serif); }
+  .roadmap-item .tag { font-size: 10px; padding: 2px 8px; border-radius: 3px; align-self: start; white-space: nowrap; }
+
+  .quote { border-left: 3px solid var(--accent); padding: 12px 16px; margin: 16px 0; background: rgba(232,255,71,0.03); }
+  .quote p { font-family: var(--serif); font-style: italic; color: var(--text); font-size: 13px; }
+  .quote .attr { font-size: 10px; color: var(--muted); margin-top: 6px; font-style: normal; }
+
+  .flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+  .flow-node { background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+               padding: 8px 14px; font-size: 11px; color: var(--text); white-space: nowrap; }
+  .flow-node.active { border-color: var(--ok); color: var(--ok); }
+  .flow-node.gap { border-color: var(--warn); color: var(--warn); }
+  .flow-arrow { color: var(--muted); font-size: 14px; }
+
+  code { background: #1a1a1a; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: var(--accent2); }
+  pre { background: #1a1a1a; border: 1px solid var(--border); border-radius: 6px; padding: 16px;
+        overflow-x: auto; font-size: 11px; color: var(--accent2); margin: 12px 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>moswalk // Platform Council Brief</h1>
+  <div class="sub">Intelligence synthesis — 9 external sources across 3 batches — May 2026</div>
+  <div class="meta">
+    <div>Branch: <span>claude/llm-iphone-17-pro-KuHhU</span></div>
+    <div>Commit: <span>1b3cb14</span></div>
+    <div>Tests: <span style="color:var(--ok)">40/40 passing</span></div>
+    <div>CLAUDE.md: <span>160 lines (safe)</span></div>
+    <div>Skills: <span>5/5 complete</span></div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="show('signals')">Signals</button>
+  <button onclick="show('validation')">Validation</button>
+  <button onclick="show('gaps')">Gaps</button>
+  <button onclick="show('roadmap')">Roadmap</button>
+  <button onclick="show('intake')">Intel Process</button>
+</nav>
+
+<!-- ── TAB 1: SIGNALS ── -->
+<div id="signals" class="tab active">
+  <h2>What the sources are saying</h2>
+
+  <div class="source-card">
+    <div class="title">Blueprint for an NYC Municipal Agent System</div>
+    <div class="signal">
+      The decisive engineering choice is not which LLM to call but how you wrap it.
+      A four-layer architecture (CLAUDE.md → Skills → Hooks → Agents) sitting on a
+      durable-execution runtime, a bitemporal property graph, and a hard-edged human
+      escalation protocol. The same model swings from 42% to 78% on benchmark tasks
+      purely from harness changes. <strong>Escalation is the product.</strong>
+      A system that autonomously handles 60% and emits a structured reviewable action
+      card for 40% is vastly more valuable than one that handles 90% but can't explain itself.
+    </div>
+    <div class="verdict partial">Partial match to moswalk — architecture validated, HEP + Neo4j + Temporal missing</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">How to Use Claude Skills to Automate Any Workflow</div>
+    <div class="signal">
+      A Skill is not a saved prompt — it is a trained employee. The difference in output
+      quality is enormous. Skills need a three-question test before building and a
+      three-scenario test (happy path / edge case / stress) before shipping.
+      One Skill saving 30 min/week = 26 hours/year. Ten Skills = 260 hours.
+      <strong>Build a library, not a collection of one-offs.</strong>
+    </div>
+    <div class="verdict validated">Validated — moswalk has 4/4 skills complete, correct format, now needs three-scenario testing</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">The Unreasonable Effectiveness of HTML (Thariq)</div>
+    <div class="signal">
+      HTML is not a rendering detail — it is an information density choice.
+      Markdown is a restricting format for documents over 100 lines. HTML enables
+      color, diagrams, tabular data, SVG, two-way interaction (sliders, knobs),
+      and shareable links. Claude Code can read the full file system + MCPs to build
+      it. <strong>Use HTML for specs, client output, code review, and briefings.</strong>
+    </div>
+    <div class="verdict validated">Validated — this brief is the demonstration. PathwayResult needs HTML rendering mode.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Build the Shared Brain First (Vox)</div>
+    <div class="signal">
+      Before adding agents, answer: what belongs to a single agent's private notebook?
+      What belongs to shared team facts? Who can write to the shared study?
+      What can never enter it?
+      <strong>The shared brain is a capability, not oxygen</strong> — if it goes down,
+      agents keep working, they just get dumber. Control plane and knowledge must
+      be separated. Write access only to a few agents.
+    </div>
+    <div class="verdict validated">Validated — moswalk already implements this. agencies.yaml + permit_pathways.yaml IS the shared brain. session_log.py is the private notebook. Graceful degradation (_KERNEL_AVAILABLE) is exactly "capability not oxygen."</div>
+  </div>
+
+  <h3 style="margin-top:32px">Batch 3 — May 2026</h3>
+
+  <div class="source-card">
+    <div class="title">Ashwin Gopinath — The Price of Meaning: Why RAG, KGs, and Every Semantic Memory Will Always Fail</div>
+    <div class="signal">
+      A formal no-escape theorem: any memory system that retrieves by meaning will suffer interference-driven
+      forgetting and false recall as memory grows — provably, regardless of architecture (vector DB, knowledge
+      graph, context window, parametric). Effective semantic dimensionality is 10–50 across all models; crowding
+      is inevitable. <strong>The only principled exit: semantic layer + exact episodic record.</strong>
+      Filesystem/BM25 achieves full immunity but loses usefulness (15.5% semantic agreement).
+      Knowledge graphs fail for the same geometric reason as RAG — their underlying representations are still
+      embeddings. The principled architecture couples both: exact files for episodic storage, LLM for semantic
+      reasoning on top.
+    </div>
+    <div class="verdict validated">Validates moswalk architecture — agencies.yaml + permit_pathways.yaml ARE the exact episodic record. Never add embedding-based agency lookup. Future Neo4j = structural/relational only, no dense semantic retrieval.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Immanuel — Unpopular Dockerfile Takes</div>
+    <div class="signal">
+      Use <code>python:3.11-slim</code> not alpine (musl ≠ glibc, silent perf regression).
+      Layer order = cache strategy: copy lockfile first, run install, then copy source.
+      Multi-stage builds are load-bearing for lean prod images (not best practice theater).
+      BuildKit <code>--mount=type=cache</code> for pip/apt between builds.
+      Pin base images by digest, not tag.
+    </div>
+    <div class="verdict partial">Operational hygiene — applicable when containerizing swarm workers. Not immediate. Queue for Day 6+ deployment work.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Scala language roadmap</div>
+    <div class="signal">
+      Visual roadmap.sh overview of Scala ecosystem (data types, collections, functional patterns, Akka, Spark).
+    </div>
+    <div class="verdict gap">Discarded — no moswalk relevance. Scala is not in the stack.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">Nico — Unified Agentic Memory System (substack tech)</div>
+    <div class="signal">
+      4-tier memory: <strong>core</strong> (hot, 50-item eviction, always-in-context),
+      <strong>atom store</strong> (persistent knowledge, semantic recall),
+      <strong>graph</strong> (FalkorDB — relationships, provenance, agent topology),
+      <strong>vault</strong> (4,327+ Obsidian notes, semantically indexed).
+      SM-2 spaced repetition on knowledge triples. Evolution engine (proposer → evaluator → research registry).
+      Azure OpenAI 1536-dim HNSW. 60s auto-embedding pipeline, zero manual intervention.
+    </div>
+    <div class="verdict validated">Validates moswalk's session_log.py as the "core/hot" tier. Evolution engine pattern aligns with intelligence_intake skill. SM-2 on regulatory triples (agency sequences, Local Laws) is a concrete post-ship enhancement.</div>
+  </div>
+
+  <div class="source-card">
+    <div class="title">AXI — Agent eXperience Interface (10 principles)</div>
+    <div class="signal">
+      915-run benchmark: AXI design = 100% success, $0.074/task, 21.5s, 4.5 turns vs.
+      MCP = $0.100, 26s, 6.2 turns. Key principles: <strong>TOON format</strong> (Token-Optimized Object Notation —
+      omit braces/quotes/commas, ~40% fewer tokens), pre-computed aggregates inline,
+      contextual disclosure (next-step suggestions after output), definitive empty states,
+      combined operations. Agent-ergonomic CLI design beats generic JSON on every metric.
+    </div>
+    <div class="verdict validated">Implemented this session — TOON applied to PathwayResult.summary_table() and ConsultResult.to_llm_context(). pre-computed aggregates, contextual next[], definitive empty states all wired.</div>
+  </div>
+
+  <div class="grid" style="margin-top:28px">
+    <div class="card">
+      <div class="label">Consensus signal (3 batches)</div>
+      <div class="value" style="font-size:14px; line-height:1.5">Harness &gt; Model</div>
+      <div class="desc">All 9 sources converge: architecture, escalation surface, and knowledge layer matter more than which LLM. Ashwin adds: exact records beat semantic retrieval for correctness.</div>
+    </div>
+    <div class="card">
+      <div class="label">Biggest remaining gap</div>
+      <div class="value" style="font-size:14px; line-height:1.5">Hooks + Durable Execution</div>
+      <div class="desc">HEP built (hep.py, 40 tests). Hooks still missing. Durable execution (Temporal) is post-ship but load-bearing for multi-week LPC and BSA workflows.</div>
+    </div>
+    <div class="card">
+      <div class="label">Architectural guardrail (new)</div>
+      <div class="value" style="font-size:14px; line-height:1.5">Exact Records, Not Embeddings</div>
+      <div class="desc">Ashwin's no-escape theorem: never use semantic search for agency code lookup. agencies.yaml = filesystem/BM25 layer. Future Neo4j = structural graph, no dense embeddings.</div>
+    </div>
+    <div class="card">
+      <div class="label">Token savings wired</div>
+      <div class="value" style="font-size:14px; line-height:1.5">~40% via TOON</div>
+      <div class="desc">AXI TOON format applied to to_llm_context() and summary_table(). key:val pairs, pre-computed aggregates, contextual disclosure, definitive empty states.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB 2: VALIDATION ── -->
+<div id="validation" class="tab">
+  <h2>What the sources validate about our architecture</h2>
+
+  <div class="flow">
+    <div class="flow-node active">CLAUDE.md<br><small>160 lines ✓</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node active">5 Skills<br><small>complete ✓</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node active">Rules<br><small>2 rules ✓</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node gap">Hooks<br><small>missing ✗</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node active">HEP v1<br><small>built ✓</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node gap">Temporal<br><small>missing ✗</small></div>
+  </div>
+
+  <table>
+    <tr><th>Architecture component</th><th>Blueprint requires</th><th>moswalk has</th><th>Status</th></tr>
+    <tr>
+      <td>Behavioral constitution</td>
+      <td>&lt;200 lines, 3 sections only</td>
+      <td>CLAUDE.md, 155 lines, project/commands/conventions</td>
+      <td class="ok">✓ Validated</td>
+    </tr>
+    <tr>
+      <td>Skills (knowledge layer)</td>
+      <td>50–70 line SKILL.md, domain clusters, lazy-loaded</td>
+      <td>5 skills: agency_pattern_navigator, property_trigger_scanner, t3_discovery, premortem, intelligence_intake</td>
+      <td class="accent">~ Slightly large per skill but correct structure</td>
+    </tr>
+    <tr>
+      <td>Rules (path-scoped)</td>
+      <td>.claude/rules/ with agency + filing rules</td>
+      <td>agency-codes.md + agency-sequencing.md</td>
+      <td class="ok">✓ Validated</td>
+    </tr>
+    <tr>
+      <td>Hooks (guardrail layer)</td>
+      <td>6 hooks: secrets-scrub, submit-gate, idempotency, CAPTCHA-timer, SessionStart, Stop</td>
+      <td>None</td>
+      <td class="warn">✗ Missing</td>
+    </tr>
+    <tr>
+      <td>Shared brain / reference memory</td>
+      <td>Curated team facts, write-access limited, degradation-safe</td>
+      <td>agencies.yaml + permit_pathways.yaml (curated, not raw); _KERNEL_AVAILABLE fallback</td>
+      <td class="ok">✓ Architecture correct</td>
+    </tr>
+    <tr>
+      <td>Private agent notebook</td>
+      <td>Per-agent local memory, write access = owner only</td>
+      <td>session_log.py, chmod 600, SHA-256 filenames</td>
+      <td class="ok">✓ Validated</td>
+    </tr>
+    <tr>
+      <td>Property graph</td>
+      <td>Neo4j bitemporal (BBL, BIN, ACRIS, HPD, OATH)</td>
+      <td>Designed, not provisioned</td>
+      <td class="warn">✗ Not built</td>
+    </tr>
+    <tr>
+      <td>Human Escalation Protocol</td>
+      <td>Versioned JSON HEP payload, tier 1/2/3, SLA, checkpoint</td>
+      <td>pantocraft/agentic/hep.py — HEPPayload, build_hep(), hep_from_pathway_result(), write_hep(). 9 tests.</td>
+      <td class="ok">✓ Built (hep/v1)</td>
+    </tr>
+    <tr>
+      <td>Durable execution</td>
+      <td>Temporal (or LangGraph+Postgres) for multi-week workflows</td>
+      <td>None</td>
+      <td class="warn">✗ Missing</td>
+    </tr>
+    <tr>
+      <td>Idempotency ledger</td>
+      <td>sha256(workflow_id|tool|args) → cached result, 24-48h TTL</td>
+      <td>None</td>
+      <td class="warn">✗ Missing</td>
+    </tr>
+    <tr>
+      <td>Subagent roster</td>
+      <td>12 agents: Planner, Researcher, Property-Resolver, Ownership-Tracer, Zoning-Analyst, LPC-Specialist, BSA-Specialist, Filing-Drafter, Reviewer, Credential-Broker, Violation-Analyst, Escalation-Router</td>
+      <td>FieldAPI (coordinator) + inference engine only</td>
+      <td class="warn">✗ Not built</td>
+    </tr>
+    <tr>
+      <td>Obsidian wiki / reference memory</td>
+      <td>Git-versioned markdown vault, grep-based retrieval</td>
+      <td>agencies.yaml only</td>
+      <td class="dim">Partial</td>
+    </tr>
+    <tr>
+      <td>HTML output format</td>
+      <td>Client-facing documents, specs, briefings in HTML</td>
+      <td>moswalk-architecture.html (spec), this brief</td>
+      <td class="accent">~ Starting</td>
+    </tr>
+    <tr>
+      <td>CLAUDE.md line count discipline</td>
+      <td>&lt;200 lines hard limit (Blueprint cites compliance cliff)</td>
+      <td>155 lines</td>
+      <td class="ok">✓ 45 lines of headroom</td>
+    </tr>
+  </table>
+
+  <div class="quote">
+    <p>"Escalation is the product. For a compliance-heavy domain, the reviewer UX, the HEP payload schema, and the audit trail are the deliverable; the agent is the delivery mechanism."</p>
+    <div class="attr">— Blueprint for an NYC Municipal Agent System</div>
+  </div>
+
+  <div class="quote">
+    <p>"The shared brain is a capability, not oxygen. Lose a capability, the team gets dumber. Lose oxygen, the team stops breathing."</p>
+    <div class="attr">— Vox, Building My AI Native Team</div>
+  </div>
+</div>
+
+<!-- ── TAB 3: GAPS ── -->
+<div id="gaps" class="tab">
+  <h2>Gaps — ordered by blast radius if left unaddressed</h2>
+
+  <div class="grid-3">
+    <div class="card" style="border-color:var(--ok)">
+      <div class="label">Resolved — liability surface</div>
+      <div class="value" style="font-size:13px; color:var(--ok)">HEP v1 ✓</div>
+      <div class="desc">pantocraft/agentic/hep.py — HEPPayload, build_hep() factory, tier 1/2/3 deterministic assignment, hard-stop list (9 actions), SLA table, write_hep() (chmod 600). 9 smoke tests. Wire hep_from_pathway_result() into FieldAPI.consult() as next step.</div>
+    </div>
+    <div class="card" style="border-color:var(--warn)">
+      <div class="label">Critical — no guardrails</div>
+      <div class="value" style="font-size:13px; color:var(--warn)">No Hooks</div>
+      <div class="desc">No PreToolUse submit-gate. No secrets-scrub. No idempotency ledger. Nothing prevents a future agent from double-filing a DOB form or leaking credentials in a tool call.</div>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <div class="label">High — data integrity</div>
+      <div class="value" style="font-size:13px; color:var(--accent)">No Idempotency</div>
+      <div class="desc">Double-filing a DOB alteration is expensive to unwind. Double-recording an ACRIS document is a legal event. The idempotency ledger (sha256 key → cached result) is cheap to build and load-bearing.</div>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <div class="label">High — skill quality</div>
+      <div class="value" style="font-size:13px; color:var(--accent)">Untested Skills</div>
+      <div class="desc">All 4 skills have been written but none have been run through the three-scenario test (happy path / edge case / stress). Production-grade requires passing all three.</div>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <div class="label">High — output quality</div>
+      <div class="value" style="font-size:13px; color:var(--accent)">Markdown Output</div>
+      <div class="desc">PathwayResult renders as plain text / markdown. For field use and client-facing output, HTML is significantly more readable and shareable. Thariq: nobody reads a 100-line markdown file.</div>
+    </div>
+    <div class="card">
+      <div class="label">Medium — infrastructure</div>
+      <div class="value" style="font-size:13px">Neo4j + Temporal</div>
+      <div class="desc">No property graph (BBL bitemporal ownership), no durable execution. Blocked on hardware provisioning. These are Day 6+ work — do not start until after Day 5 ship.</div>
+    </div>
+  </div>
+
+  <h3>What the Blueprint explicitly says about skipping HEP</h3>
+  <p>
+    "A system that can autonomously file 60% of things and emit a structured, reviewable action card for the other 40% is vastly more valuable — and vastly more defensible under SOC2, EU AI Act retrospective oversight, and NYC record-retention requirements — than one that files 90% but cannot explain what it did."
+  </p>
+  <p>
+    The moswalk equivalent: every consult that touches a landmarked property, a rent-stabilized building, or an open ECB violation should emit a structured HEP payload — not just a <code>information_not_advice: True</code> flag. The payload becomes the audit trail and the licensed-professional handoff surface.
+  </p>
+
+  <h3>What the Blueprint says about skipping hooks</h3>
+  <p>
+    "Hooks enforce what prompts cannot." The submit-gate hook is non-negotiable for a domain where double-filing DOB or ACRIS has real legal consequences. It runs in a deterministic 60-second window and exits with a code that Claude Code treats as absolute — it cannot be argued out of by a clever prompt.
+  </p>
+</div>
+
+<!-- ── TAB 4: ROADMAP ── -->
+<div id="roadmap" class="tab">
+  <h2>Maturation roadmap — dynamic, unbloated</h2>
+  <p>Principle from all four sources: <strong>add mechanisms only when the gap causes real pain.</strong> Do not build the full Blueprint spec upfront. Layer in capabilities as needed.</p>
+
+  <h3>Immediate — no blockers (this sprint)</h3>
+
+  <div class="roadmap-item">
+    <div class="num">01</div>
+    <div class="body">
+      <strong>HEP v1 — pantocraft/agentic/hep.py</strong>
+      <div class="detail">HEPPayload dataclass, build_hep() factory, hep_from_pathway_result(), write_hep() (chmod 600). Deterministic tier 1/2/3 assignment. Hard-stop list (9 actions). ALWAYS_TIER_3 set. 9 smoke tests passing. <code>schema_version: hep/v1</code></div>
+    </div>
+    <span class="tag pill-ok">Complete ✓</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">02</div>
+    <div class="body">
+      <strong>HTML rendering mode for PathwayResult</strong>
+      <div class="detail">Add <code>PathwayResult.to_html()</code> method. Tabular agency steps, sequential_after arrows, confidence badges, blocker callouts, educational overlay. Output a self-contained HTML file the client can open. This is the client-facing deliverable format.</div>
+    </div>
+    <span class="tag pill-partial">High value</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">03</div>
+    <div class="body">
+      <strong>Three-scenario testing for all 4 skills</strong>
+      <div class="detail">Happy path + edge case + stress test for agency_pattern_navigator, property_trigger_scanner, t3_discovery, premortem. Add test cases to tests/test_smoke.py. Skills guide: a skill that fails the stress test is not production-grade, period.</div>
+    </div>
+    <span class="tag pill-partial">Skill quality</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">04</div>
+    <div class="body">
+      <strong>hooks/hooks.json — submit-gate + secrets-scrub</strong>
+      <div class="detail">Two hooks minimum: PreToolUse secrets-scrub (block .env, private key, NYC.ID credentials in non-vault paths), PreToolUse submit-gate (block any tool call on the hard-stop list, route to HEP instead). Blueprint: these run in 60s deterministic windows, exit codes Claude Code treats as absolute.</div>
+    </div>
+    <span class="tag pill-gap">Critical guardrail</span>
+  </div>
+
+  <h3>Day 4 (iOS — hardware needed)</h3>
+
+  <div class="roadmap-item">
+    <div class="num">05</div>
+    <div class="body">
+      <strong>SwiftUI iOS app scaffold</strong>
+      <div class="detail">MoswalkApp.swift, MicroInference.swift (CoreML AsyncStream), SwarmSession.swift (MultipeerConnectivity). Wire FieldAPI output as HTML → WKWebView in the app for rich client display.</div>
+    </div>
+    <span class="tag pill-blocked">Needs Xcode</span>
+  </div>
+
+  <h3>Day 6+ (post-ship)</h3>
+
+  <div class="roadmap-item">
+    <div class="num">06</div>
+    <div class="body">
+      <strong>Neo4j bitemporal property graph</strong>
+      <div class="detail">BBL + BIN + ACRIS + HPD + OATH. Bitemporal edges (valid_from/valid_to — never delete, append only). Owner-to-LLC traversal. This is the hard infrastructure problem; JustFix WhoOwnsWhat is the reference implementation to study.</div>
+    </div>
+    <span class="tag pill-blocked">Post-ship</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">07</div>
+    <div class="body">
+      <strong>Idempotency ledger</strong>
+      <div class="detail">sha256(workflow_id | tool | canonical_args) → cached result. SQLite file, 48-hour TTL. Prevents double-filing DOB forms when any downstream step retries. Add before any portal automation is wired.</div>
+    </div>
+    <span class="tag pill-blocked">Pre-portal-automation</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">08</div>
+    <div class="body">
+      <strong>Temporal durable execution</strong>
+      <div class="detail">LPC reviews run weeks, BSA appeals run months. In-memory agent state cannot survive. Temporal @activity.defn wraps every LLM call and portal submission. RetryPolicy distinguishes retryable (429, 5xx) from non-retryable (AuthError, PolicyError — zero retries, emit HEP).</div>
+    </div>
+    <span class="tag pill-blocked">Post-ship</span>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="num">09</div>
+    <div class="body">
+      <strong>Subagent roster expansion</strong>
+      <div class="detail">Blueprint recommends 12. Start with 3: Property-Resolver (Haiku, always-on BBL normalization), Reviewer (adversarial grader, prevents agents praising own output), Filing-Drafter (composes forms, never submits). Add only when a specific pain point demands it.</div>
+    </div>
+    <span class="tag pill-blocked">Post-Neo4j</span>
+  </div>
+
+  <h3>The unbloat principle</h3>
+  <p>From all sources: add a layer only when the absence causes real, named pain. The current architecture (CLAUDE.md + 4 Skills + 2 Rules + session_log + FieldAPI) handles single-device field consultation correctly. Hooks and HEP are the next two load-bearing additions because they protect against the failure modes that grow linearly with usage. Neo4j and Temporal are the two load-bearing additions after ship because they're required for multi-week regulated workflows. Everything else is optional.</p>
+</div>
+
+<!-- ── TAB 5: INTEL PROCESS ── -->
+<div id="intake" class="tab">
+  <h2>Repeatable process for future intelligence influxes</h2>
+  <p>You will receive more articles, PDFs, and research. Here is the repeatable three-step process built into the system as a skill:</p>
+
+  <h3>Step 1 — Intake filter (always applied)</h3>
+  <table>
+    <tr><th>Question</th><th>If yes</th><th>If no</th></tr>
+    <tr><td>Does this change a sequencing or legal invariant?</td><td class="warn">Immediate — update permit_pathways.yaml or rules/</td><td class="dim">Continue to next question</td></tr>
+    <tr><td>Does this validate or invalidate a core architectural choice?</td><td class="accent">Add to council brief + log decision in session_log</td><td class="dim">Continue</td></tr>
+    <tr><td>Does this introduce a new mechanism moswalk doesn't have?</td><td class="accent">Add to roadmap with priority and unbloat test</td><td class="dim">Continue</td></tr>
+    <tr><td>Does this improve how we output, communicate, or explain?</td><td class="ok">Queue for format/UX improvement (HTML, skill, etc.)</td><td class="dim">Discard or archive</td></tr>
+    <tr><td>Is this noise (general AI hype, vendor marketing)?</td><td class="dim">Discard</td><td class="dim">—</td></tr>
+  </table>
+
+  <h3>Step 2 — Signal extraction format</h3>
+  <pre>SOURCE: [title + author]
+SIGNAL: [one sentence — the core claim]
+RELEVANT_TO: [which moswalk component(s)]
+VERDICT: validated | gap | partial | discard
+ACTION: [specific file to change, or "roadmap item #N", or "none"]
+UNBLOAT_TEST: [does adding this require removing something to stay lean?]</pre>
+
+  <h3>Step 3 — Disposition</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="label">Validated signal</div>
+      <div class="desc">Log in session_log.py as decision(). No code change unless it reveals a test gap. Keeps the audit trail of architectural choices.</div>
+    </div>
+    <div class="card">
+      <div class="label">Gap signal</div>
+      <div class="desc">Add to ROADMAP.md with: priority, unbloat test (what does this replace or reduce?), blocker (what must exist first?). Do not build immediately.</div>
+    </div>
+    <div class="card">
+      <div class="label">Invariant change</div>
+      <div class="desc">Immediate edit to permit_pathways.yaml or .claude/rules/. Run tests. Commit. This is the highest-priority disposition — Local Laws change, agency sequences change.</div>
+    </div>
+    <div class="card">
+      <div class="label">Format/UX signal</div>
+      <div class="desc">Queue as a skill improvement or output format update. HTML rendering of PathwayResult is an example of this disposition from today's intake.</div>
+    </div>
+  </div>
+
+  <h3>The intelligence_intake skill (wired into Claude Code)</h3>
+  <p>The skill at <code>.claude/skills/intelligence_intake.md</code> encodes this process. Trigger it with: <em>"process this article for moswalk"</em> or <em>"intake this PDF."</em> It will apply the filter, extract signals in the format above, and propose the disposition — without changing any code until you approve.</p>
+
+  <h3>Applied to six sources (Batch 1 + Batch 2)</h3>
+  <table>
+    <tr><th>Source</th><th>Signal</th><th>Verdict</th><th>Action</th></tr>
+    <tr>
+      <td>Blueprint — NYC Municipal Agent</td>
+      <td>HEP is the product surface; hooks are non-negotiable guardrails</td>
+      <td class="warn">Gap</td>
+      <td>Roadmap #01 (HEP) + #04 (hooks) — build this sprint</td>
+    </tr>
+    <tr>
+      <td>Blueprint — Skills architecture</td>
+      <td>CLAUDE.md &lt;200 lines, skills &lt;70 lines, hooks = deterministic guardrails</td>
+      <td class="ok">Validated</td>
+      <td>CLAUDE.md at 155 ✓; skills slightly large, trim if context issues arise</td>
+    </tr>
+    <tr>
+      <td>Skills guide — three-scenario test</td>
+      <td>Skills must pass happy path + edge case + stress before production</td>
+      <td class="accent">Partial</td>
+      <td>Add three-scenario test cases to tests/test_smoke.py — Roadmap #03</td>
+    </tr>
+    <tr>
+      <td>HTML effectiveness</td>
+      <td>HTML &gt; markdown for documents &gt;100 lines; use for client output</td>
+      <td class="ok">Validated</td>
+      <td>PathwayResult.to_html() — Roadmap #02</td>
+    </tr>
+    <tr>
+      <td>Shared brain first</td>
+      <td>agencies.yaml + permit_pathways.yaml IS the shared brain; session_log IS the private notebook</td>
+      <td class="ok">Validated</td>
+      <td>Architecture confirmed correct. No change needed.</td>
+    </tr>
+    <tr>
+      <td>Shared brain — capability not oxygen</td>
+      <td>Graceful degradation when shared brain unavailable</td>
+      <td class="ok">Validated</td>
+      <td>_KERNEL_AVAILABLE fallback already implements this</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--border)">
+      <td colspan="4" style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; padding-top:12px">Batch 2 — May 2026</td>
+    </tr>
+    <!-- Batch 2 rows follow, then Batch 3 marker below -->
+    <tr>
+      <td>Google engineer automation (Noisy/@noisyb0y1)</td>
+      <td>Karpathy CLAUDE.md: 40% → 3% convention violations. Lazy-load skills — all at once burns context fast.</td>
+      <td class="ok">Validated</td>
+      <td>Already implemented. Added lazy-load note to CLAUDE.md "What NOT to do."</td>
+    </tr>
+    <tr>
+      <td>Token inflation — Claude Code v2.1.100</td>
+      <td>20k hidden server-side tokens dilute CLAUDE.md instructions mid-session silently</td>
+      <td class="accent">Partial</td>
+      <td>Operational note added to CLAUDE.md: start fresh session if rule-following degrades. Not architectural.</td>
+    </tr>
+    <tr>
+      <td>Google engineer — 15-min polling agentic loop</td>
+      <td>classify → execute → PR workflow on a cron. Autonomous operation pattern for future moswalk loop.</td>
+      <td class="dim">Monitor</td>
+      <td>Premature — no autonomous loop in moswalk yet. Revisit post-ship Day 5.</td>
+    </tr>
+    <tr>
+      <td>Edge AI / TinyML (Techstrong AI)</td>
+      <td>On-device inference: lower latency, bandwidth, security exposure. CoreML = Apple's TinyML.</td>
+      <td class="ok">Validated</td>
+      <td>iPhone-as-inference-node architecture confirmed correct. No change.</td>
+    </tr>
+    <tr>
+      <td>Edge AI — sensitive data stays local</td>
+      <td>Local processing required for healthcare/finance-grade privacy. No cloud roundtrip.</td>
+      <td class="ok">Validated</td>
+      <td>local-first, no public endpoints, Tailscale mesh — already in spec. NY SHIELD Act compliance confirmed.</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--border)">
+      <td colspan="4" style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; padding-top:12px">Batch 3 — May 2026</td>
+    </tr>
+    <tr>
+      <td>Ashwin Gopinath — Price of Meaning</td>
+      <td>No-escape theorem: semantic memory always degrades. Principled path = semantic layer + exact episodic record.</td>
+      <td class="ok">Validated</td>
+      <td>agencies.yaml IS the exact episodic record. Never add embedding-based agency lookup. Neo4j = structural graph only (no dense embeddings). Architectural guardrail locked in.</td>
+    </tr>
+    <tr>
+      <td>Immanuel — Dockerfile takes</td>
+      <td>python:3.11-slim, layer order = cache, multi-stage builds, BuildKit cache mounts, pin by digest</td>
+      <td class="accent">Partial</td>
+      <td>Queue for Day 6+ containerization of swarm workers. Not immediate — no containers in stack yet.</td>
+    </tr>
+    <tr>
+      <td>Scala roadmap</td>
+      <td>Visual roadmap.sh overview of Scala ecosystem</td>
+      <td class="dim">Discarded</td>
+      <td>No moswalk relevance. Scala not in stack.</td>
+    </tr>
+    <tr>
+      <td>Nico — Unified Agentic Memory</td>
+      <td>4-tier memory (hot/atom/graph/vault), SM-2 spaced repetition on knowledge triples, evolution engine</td>
+      <td class="ok">Validated</td>
+      <td>session_log.py = core/hot tier ✓. SM-2 on regulatory triples (agency sequences, Local Law updates) queued post-ship. Evolution engine = intelligence_intake skill pattern.</td>
+    </tr>
+    <tr>
+      <td>AXI — Agent eXperience Interface</td>
+      <td>TOON format = ~40% token savings. Pre-computed aggregates. Contextual disclosure. Definitive empty states. 915-run benchmark: 100% success, lowest cost.</td>
+      <td class="ok">Implemented</td>
+      <td>Applied this session: PathwayResult.summary_table() TOON header + next[] lines. ConsultResult.to_llm_context() rewritten as TOON. 40/40 tests passing.</td>
+    </tr>
+  </table>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

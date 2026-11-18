@@ -228,10 +228,10 @@
     <section class="step" id="step-1" aria-labelledby="h-1">
       <p class="kicker">01 — Where</p>
       <h1 class="headline" id="h-1" tabindex="-1">Where is the building?</h1>
-      <p class="dek">Every building in New York sits inside its own set of rules. Give us the address and we'll trace the route from idea to permit.</p>
+      <p class="dek">Every building arrives carrying its own history: a century of code, a district, the currents of the block it stands on. Start with where it is.</p>
       <form id="form-1" novalidate>
         <label class="field" for="address">Street address, or BBL</label>
-        <input type="text" id="address" name="address" autocomplete="street-address" placeholder="245 Clinton Ave, or 3-00783-0001" required>
+        <input type="text" id="address" name="address" autocomplete="street-address" placeholder="245 Clinton Ave, or a BBL" required>
         <fieldset class="pills" id="borough-group">
           <legend>Borough</legend>
           <label class="pill"><input type="radio" name="borough" value="Manhattan"><span>Manhattan</span></label>
@@ -249,7 +249,7 @@
     <section class="step" id="step-2" aria-labelledby="h-2" hidden>
       <p class="kicker">02 — What</p>
       <h1 class="headline" id="h-2" tabindex="-1">What will you make?</h1>
-      <p class="dek">Pick the closest. The agencies, their order and the clock all follow from this choice.</p>
+      <p class="dek">Pick the closest. This sets the heading: which agencies, in what order, and how long the passage runs.</p>
       <div class="cards" id="cards"></div>
       <button class="back" type="button" data-back="1">← Back</button>
     </section>
@@ -258,7 +258,7 @@
     <section class="step" id="step-3" aria-labelledby="h-3" hidden>
       <p class="kicker">03 — The building</p>
       <h1 class="headline" id="h-3" tabindex="-1">The building, briefly.</h1>
-      <p class="dek">Three facts shape the sequence. "Not sure" is a fine answer: we'll mark it as an open question rather than guess.</p>
+      <p class="dek">Three facts set the course. "Not sure" is a fine answer: we'll leave it open on the chart rather than guess.</p>
       <form id="form-3" novalidate>
         <div class="facts">
           <fieldset class="pills">
@@ -294,7 +294,7 @@
     </section>
   </main>
 
-  <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing. MAST is built on mos.</p>
+  <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
 </div>
 
 <script>
@@ -404,14 +404,14 @@
     show("result");
     var r = $("result");
     r.textContent = "";
-    var h = el("h1", "headline small", "Tracing the route");
+    var h = el("h1", "headline small", "Taking bearings");
     h.id = "h-r"; h.tabIndex = -1;
     r.appendChild(h);
     r.appendChild(el("p", "loading", "Reading the chart"));
 
     var headers = { "Content-Type": "application/json" };
     var token = storageGet("mast-token");
-    if (token) headers["X-Moswalk-Token"] = token;
+    if (token) headers["X-Mast-Token"] = token;
 
     fetch("/consult", {
       method: "POST",
@@ -509,7 +509,7 @@
     r.appendChild(stats);
 
     // I — The sequence
-    r.appendChild(sectionTitle("I", "The sequence"));
+    r.appendChild(sectionTitle("I", "The course"));
     var ol = el("ol", "chain");
     steps.forEach(function (s, i) {
       var li = el("li", i === steps.length - 1 ? "last" : "");
@@ -581,7 +581,7 @@
     var o3 = el("div", "option work");
     o3.appendChild(el("div", "roman", tracks.length ? "iii." : "ii."));
     o3.appendChild(el("h3", null, "Work with MAST"));
-    o3.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and carries the file through each agency. Quote this reference when you get in touch:"));
+    o3.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and steers the file through each agency. Quote this reference when you get in touch:"));
     var ref = el("span", "ref", d.engagement_id);
     o3.appendChild(ref);
     var cb = el("button", "go no-print", "Copy reference"); cb.type = "button";

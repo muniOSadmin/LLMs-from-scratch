@@ -178,6 +178,15 @@ Three interactions from a question to a free, honest answer.
 `mast/web/index.html`, served at `/` by `mast/field/server.py`. One file, no external
 assets, nothing loaded from a CDN.
 
+**The idea under the name.** A mast gives a drifting thing a heading. Every property
+arrives like a piece of driftwood: shaped by its own history, carried by currents of
+code, district and block. MAST is what lets it take a direction. This stays beneath the
+copy, never on its surface: no ships, masts or driftwood named on the site. It shows up
+only as a quiet vocabulary (heading, course, bearings, currents, the chart, the
+passage) and in the promise to give each property purpose and insight.
+
+The site names only MAST: no engine, no predecessor company.
+
 **Design direction.** Domus for the editorial voice: a masthead, oversized grotesk
 headlines, italic serif decks, numbered sections and thin rules on warm paper.
 Archigram for the optimism: capsule controls, hard offset shadows, primary yellow, cyan

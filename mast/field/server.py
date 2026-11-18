@@ -230,7 +230,7 @@ class MoswalkHandler(BaseHTTPRequestHandler):
         """Return True if request is authorized (or auth is disabled)."""
         if not _SERVER_TOKEN:
             return True
-        auth = self.headers.get("X-Moswalk-Token", "").strip()
+        auth = (self.headers.get("X-Mast-Token") or self.headers.get("X-Moswalk-Token") or "").strip()
         return auth == _SERVER_TOKEN
 
     def do_GET(self):

@@ -187,6 +187,17 @@ passage) and in the promise to give each property purpose and insight.
 
 The site names only MAST: no engine, no predecessor company.
 
+**The horizon.** Below the centre of every screen, a triangulated surface recedes to the
+horizon, deforming on freshly seeded noise so it never repeats, with wind moving above
+it. A piece of driftwood bobs and wanders across it; a finger can press the surface,
+push the wood or stir the wind. When a visitor first moves forward, the stem of the T
+in the wordmark falls into the wood and becomes its mast. From then on the forces
+steer: the surface carries the site (borough, era, landmark, flood zone), the wind
+carries what bears on it (the project and its rules, then the pathway's agencies and
+time), and their sum is the heading, drawn as a course to a point on the horizon. Each
+property moves differently. Nothing in the scene is labelled. Reduced-motion settings
+get a still that reflects the same state.
+
 **Design direction.** Domus for the editorial voice: a masthead, oversized grotesk
 headlines, italic serif decks, numbered sections and thin rules on warm paper.
 Archigram for the optimism: capsule controls, hard offset shadows, primary yellow, cyan

@@ -138,7 +138,7 @@ mast/
 ├── prompts/intake_pipeline.py ← 8 Claude API prompt templates (Prompt 8 wired) ✓
 ├── field/mobile_api.py       ← FieldAPI: consult + archive_result → optimizer ✓
 ├── field/server.py           ← stdlib HTTPServer: GET / (front door), POST /consult, GET /health, GET /archive/signal ✓
-├── web/index.html            ← front door: 3 interactions → free pathway + ways forward (Domus × Archigram) ✓
+├── web/index.html            ← front door: 3 interactions → free pathway + ways forward; live horizon canvas (forces from answers steer the masted wood) ✓
 ├── vault/MOSWALK.md          ← business constitution (read by every workflow) ✓
 ├── queue_processor.py        ← QUEUE watcher: CONSULT/RESEARCH/PREMORTEM/INTAKE/OUTCOME ✓
 ├── pulse.py                  ← daily engagement pulse (session_log + HEP scan) ✓

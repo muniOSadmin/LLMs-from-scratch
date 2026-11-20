@@ -21,6 +21,7 @@
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
+  html, body { height: 100%; }
   body {
     margin: 0;
     background: var(--paper);
@@ -28,8 +29,19 @@
     font-family: var(--grotesk);
     font-size: 17px;
     line-height: 1.45;
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column; overflow: hidden;
   }
-  .page { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  .scroller { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
+  .page { max-width: 980px; margin: 0 auto; padding: 0 16px 40px; }
+
+  /* The stage — a surface that never repeats, below the centre of every screen */
+  .stage { flex: 0 0 clamp(170px, 32dvh, 400px); position: relative; min-height: 0; overflow: hidden; }
+  .stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  .stage canvas:active { cursor: grabbing; }
+  .falling-stem { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; will-change: transform; transition: background-color .35s ease; }
 
   /* Masthead — Domus */
   .mast-head {
@@ -40,11 +52,15 @@
     font-weight: 900; font-size: clamp(3rem, 12vw, 6.5rem); line-height: .82;
     letter-spacing: -.045em; margin: 0;
   }
+  .wordmark .t { display: inline-block; position: relative; width: .6em; height: .716em; margin-left: -.01em; vertical-align: baseline; }
+  .wordmark .t i { position: absolute; background: currentColor; }
+  .wordmark .t .bar { left: 0; right: 0; top: 0; height: .158em; }
+  .wordmark .t .stem { top: 0; left: 50%; width: .17em; margin-left: -.085em; height: 100%; transition: opacity .5s ease; }
+  .wordmark .t.masted .stem { opacity: .12; }
   .issue {
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
     font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
   }
-  .issue .pod { width: 86px; height: auto; margin-bottom: 6px; }
   .subrule { height: 6px; border-bottom: 1px solid var(--ink); margin-bottom: 18px; }
 
   /* Progress */
@@ -187,12 +203,14 @@
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (max-height: 520px) { .stage { flex-basis: clamp(110px, 30dvh, 160px); } }
   @media (max-width: 520px) {
     .stat + .stat { border-left: 0; border-top: 1px solid var(--ink); padding-left: 0; }
-    .issue .pod { width: 64px; }
   }
   @media print {
-    body { background: #fff; font-size: 12pt; }
+    body { background: #fff; font-size: 12pt; height: auto; display: block; overflow: visible; }
+    .scroller { overflow: visible; }
+    .stage, .falling-stem { display: none !important; }
     .progress, .go, .back, .no-print, .step:not(#step-result) { display: none !important; }
     .capsule, .option, .card { box-shadow: none; }
     .option.work, .option.free { background: #fff; }
@@ -200,17 +218,12 @@
 </style>
 </head>
 <body>
+<div class="scroller" id="scroller">
 <div class="page">
 
   <header class="mast-head">
-    <p class="wordmark">MAST</p>
+    <p class="wordmark"><span class="sr">MAST</span><span aria-hidden="true">MAS<span class="t" id="t-glyph"><i class="bar"></i><i class="stem" id="stem"></i></span></span></p>
     <div class="issue" aria-hidden="true">
-      <svg class="pod" viewBox="0 0 120 70" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round">
-        <rect x="8" y="6" width="104" height="34" rx="17" fill="#ffd23f"/>
-        <circle cx="34" cy="23" r="6" fill="#1ea5cf"/><circle cx="54" cy="23" r="6" fill="#1ea5cf"/>
-        <circle cx="74" cy="23" r="6" fill="#1ea5cf"/><circle cx="94" cy="23" r="6" fill="#d32a1f"/>
-        <path d="M24 40 L16 64 M44 40 L48 64 M76 40 L72 64 M96 40 L104 64"/>
-      </svg>
       <span>New York</span>
       <span id="issue-step">01 / 03</span>
     </div>
@@ -296,6 +309,451 @@
 
   <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
 </div>
+</div>
+<div class="stage" id="stage" aria-hidden="true"><canvas id="sea"></canvas></div>
+
+<script>
+(function () {
+  "use strict";
+  var canvas = document.getElementById("sea");
+  var stage = document.getElementById("stage");
+  var stem = document.getElementById("stem");
+  var tGlyph = document.getElementById("t-glyph");
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext("2d");
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  var PAPER = [242, 238, 228], SHADE = [168, 190, 196], INK = "#141414", RED = "#d32a1f", WOOD = "#ffd23f";
+
+  // Gradient noise, freshly seeded each visit so the surface never repeats.
+  var perm = new Uint8Array(512);
+  (function () {
+    var p = [], i, j, t;
+    for (i = 0; i < 256; i++) p[i] = i;
+    for (i = 255; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = p[i]; p[i] = p[j]; p[j] = t; }
+    for (i = 0; i < 512; i++) perm[i] = p[i & 255];
+  })();
+  function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function grad(hash, x, y, z) {
+    var h = hash & 15, u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14) ? x : z;
+    return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+  }
+  function noise(x, y, z) {
+    var fx = Math.floor(x), fy = Math.floor(y), fz = Math.floor(z);
+    var X = fx & 255, Y = fy & 255, Z = fz & 255;
+    x -= fx; y -= fy; z -= fz;
+    var u = fade(x), v = fade(y), w = fade(z);
+    var A = perm[X] + Y, AA = perm[A] + Z, AB = perm[A + 1] + Z;
+    var B = perm[X + 1] + Y, BA = perm[B] + Z, BB = perm[B + 1] + Z;
+    return lerp(
+      lerp(lerp(grad(perm[AA], x, y, z), grad(perm[BA], x - 1, y, z), u),
+           lerp(grad(perm[AB], x, y - 1, z), grad(perm[BB], x - 1, y - 1, z), u), v),
+      lerp(lerp(grad(perm[AA + 1], x, y, z - 1), grad(perm[BA + 1], x - 1, y, z - 1), u),
+           lerp(grad(perm[AB + 1], x, y - 1, z - 1), grad(perm[BB + 1], x - 1, y - 1, z - 1), u), v), w);
+  }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lerpAngle(a, b, t) { var d = Math.atan2(Math.sin(b - a), Math.cos(b - a)); return a + d * t; }
+
+  // ── Forces: the surface below is the site, the wind above is everything that bears on it ──
+  // Angles are bearings on the surface: 0 runs straight toward the horizon, positive to the right.
+  var BOROUGH_CURRENT = { "Manhattan": 0.15, "Brooklyn": -0.4, "Queens": 0.45, "Bronx": -0.6, "Staten Island": 0.7 };
+  var PROJECT_WIND = {
+    "interior alteration": [-0.45, 0.8], "exterior alteration": [0.35, 1.05], "change of use": [0.7, 1.2],
+    "new building": [-0.15, 1.45], "minor alteration": [-0.8, 0.6], "facade inspection": [0.95, 1.0]
+  };
+  var F = {}, D = {}, cur = null;
+  function derive() {
+    var unknown = 0;
+    ["era", "landmark", "flood"].forEach(function (k) { if (F[k] === "unknown") unknown++; });
+    var landmarked = F.landmark === "individual" || F.landmark === "historic_district";
+    var swell = 0.34 + (F.flood === "yes" ? 0.24 : 0) + (F.flood === "unknown" ? 0.08 : 0);
+    var chop = F.era === "pre1938" ? 1.0 : F.era === "mid" ? 0.75 : F.era === "post1987" ? 0.45 : 0.8;
+    var pace = landmarked ? 0.55 : 1.0;
+    var currentAng = (BOROUGH_CURRENT[F.borough] || 0) + (F.era === "pre1938" ? -0.15 : F.era === "post1987" ? 0.12 : 0);
+    var w = PROJECT_WIND[F.project] || [0, 0.85];
+    var gust = 0.3 + 0.07 * (F.agencies || 0) + 0.12 * unknown;
+    if (F.critical) gust *= 1 - 0.5 * clamp((F.saved || 0) / F.critical, 0, 1);
+    var waterWeight = 1 + (F.flood === "yes" ? 0.3 : 0) + (landmarked ? 0.3 : 0);
+    var hx = Math.sin(currentAng) * waterWeight + Math.sin(w[0]) * w[1] * 0.8;
+    var hz = Math.cos(currentAng) * waterWeight + Math.cos(w[0]) * w[1] * 0.8;
+    D = {
+      swell: swell, chop: chop, pace: pace, currentAng: currentAng,
+      windAng: w[0], windStr: w[1], gust: gust, restless: 0.35 + 0.15 * unknown,
+      heading: clamp(Math.atan2(hx, hz), -0.95, 0.95)
+    };
+    if (!cur) cur = Object.assign({}, D);
+  }
+  derive();
+
+  // ── Geometry ──
+  var W = 0, H = 0, hY = 0, f = 1, cx = 0, camH = 3.4, NEAR = 1.6, FAR = 46, COLS = 22, ROWS = 18;
+  var ox = 0, oz = 0;                       // where the surface is sampled: drift and travel
+  var ripples = [];
+  var ptr = { down: false, onSurface: false, x: 0, z: 0, sx: 0, sy: 0, lastRipple: 0 };
+  var gust = { x: 0, z: 0 };
+  var wood = { x: 0.5, z: 5.6, yaw: 0.9, vx: 0, vz: 0, vyaw: 0.15 };
+  var mode = "drift", pendingUnmast = false, travel = 0;
+
+  var SHAPE = [];
+  (function () {
+    var n = 14, i, th, b1 = Math.random() * 6, b2 = Math.random() * 6;
+    for (i = 0; i < n; i++) {
+      th = (i / n) * Math.PI * 2;
+      var r = 1 + 0.13 * Math.sin(3 * th + b1) + 0.08 * Math.cos(5 * th + b2);
+      SHAPE.push([Math.cos(th) * 1.5 * r, Math.sin(th) * 0.46 * r * (0.7 + 0.3 * Math.abs(Math.cos(th)))]);
+    }
+  })();
+
+  function resize() {
+    var r = stage.getBoundingClientRect();
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    canvas.width = Math.max(1, Math.round(W * dpr)); canvas.height = Math.max(1, Math.round(H * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    hY = H * 0.34; f = H * 0.62; cx = W / 2;
+    if (reduce) draw(0);
+  }
+  function halfWidthAt(z) { return z * (cx / f); }
+  function project(x, y, z) { return [cx + f * x / z, hY + f * (camH - y) / z]; }
+
+  function height(vx, vz, t) {
+    var x = vx + ox, z = vz + oz, p = cur.pace;
+    var h = cur.swell * noise(x * 0.16, z * 0.16, t * 0.11 * p)
+          + cur.swell * 0.55 * noise(x * 0.33 + 40, z * 0.33, t * 0.19 * p)
+          + 0.13 * cur.chop * noise(x * 0.8 + 90, z * 0.8, t * 0.45 * p);
+    for (var i = 0; i < ripples.length; i++) {
+      var r = ripples[i], age = t - r.t0, dx = x - r.x, dz = z - r.z, d = Math.sqrt(dx * dx + dz * dz);
+      h += r.amp * Math.exp(-age * 0.9) * Math.exp(-d * 0.35) * Math.sin(d * 3.2 - age * 5.5);
+    }
+    if (ptr.down && ptr.onSurface) {
+      var px = vx - ptr.x, pz = vz - ptr.z;
+      h -= 0.5 * Math.exp(-(px * px + pz * pz) / 1.6);
+    }
+    return h;
+  }
+
+  // ── Masting: the stem of the T leaves the wordmark and becomes the mast ──
+  var MAST_LEN = 2.3;
+  function mastWorld(t) {
+    var h = height(wood.x, wood.z, t), e = 0.25;
+    var gx = (height(wood.x + e, wood.z, t) - height(wood.x - e, wood.z, t)) / (2 * e);
+    var gz = (height(wood.x, wood.z + e, t) - height(wood.x, wood.z - e, t)) / (2 * e);
+    var nx = -gx * 1.4, ny = 1, nz = -gz * 1.4, nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    var base = [wood.x, h + 0.12, wood.z];
+    return { base: base, top: [base[0] + nx / nl * MAST_LEN, base[1] + ny / nl * MAST_LEN, base[2] + nz / nl * MAST_LEN] };
+  }
+  var lastT = 0;
+  function mastOnScreen() {
+    var m = mastWorld(lastT), r = canvas.getBoundingClientRect();
+    var b = project(m.base[0], m.base[1], m.base[2]), tp = project(m.top[0], m.top[1], m.top[2]);
+    return { bx: r.left + b[0], by: r.top + b[1], tx: r.left + tp[0], ty: r.top + tp[1], w: Math.max(2.5, f * 0.1 / wood.z) };
+  }
+  function animateStem(fromStem, done) {
+    var s = stem.getBoundingClientRect();
+    var el = document.createElement("div");
+    el.className = "falling-stem";
+    document.body.appendChild(el);
+    var t0 = performance.now(), dur = 1250;
+    function place(k) {
+      var e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      if (!fromStem) e = 1 - e;
+      var m = mastOnScreen();
+      var w = lerp(s.width, m.w, e), hgt = lerp(s.height, Math.max(6, m.by - m.ty), e);
+      var x = lerp(s.left + s.width / 2, m.tx, e) - w / 2, y = lerp(s.top, m.ty, e);
+      el.style.width = w + "px"; el.style.height = hgt + "px";
+      el.style.transform = "translate(" + x + "px," + y + "px)";
+      el.style.background = e > 0.55 ? RED : INK;
+    }
+    function step(now) {
+      var k = Math.min(1, (now - t0) / dur);
+      place(k);
+      if (k < 1) requestAnimationFrame(step); else { el.remove(); done(); }
+    }
+    place(0);
+    requestAnimationFrame(step);
+  }
+  function still() {
+    cur = Object.assign({}, D);
+    travel = mode === "masted" ? 1 : 0;
+    if (travel) { wood.x = 0; wood.z = 5.2; wood.yaw = D.heading; }
+    draw(lastT);
+  }
+  function mast() {
+    if (mode !== "drift") return;
+    tGlyph.classList.add("masted");
+    if (reduce) { mode = "masted"; still(); return; }
+    mode = "falling";
+    animateStem(true, function () {
+      mode = "masted";
+      if (pendingUnmast) { pendingUnmast = false; unmast(); }
+    });
+  }
+  function unmast() {
+    if (mode === "falling") { pendingUnmast = true; return; }
+    if (mode !== "masted") return;
+    if (reduce) { mode = "drift"; tGlyph.classList.remove("masted"); still(); return; }
+    mode = "rising";
+    animateStem(false, function () { mode = "drift"; tGlyph.classList.remove("masted"); });
+  }
+
+  // ── Touch: press and drag the surface, push the wood, stir the wind ──
+  function local(e) { var r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  function pointerAt(p) {
+    ptr.sx = p[0]; ptr.sy = p[1];
+    ptr.onSurface = p[1] > hY + 4;
+    if (ptr.onSurface) { ptr.z = f * camH / (p[1] - hY); ptr.x = (p[0] - cx) * ptr.z / f; }
+  }
+  function addRipple(amp) {
+    if (!ptr.onSurface) return;
+    ripples.push({ x: ptr.x + ox, z: ptr.z + oz, t0: lastT, amp: amp });
+    if (ripples.length > 28) ripples.shift();
+  }
+  canvas.addEventListener("pointerdown", function (e) {
+    ptr.down = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    pointerAt(local(e));
+    addRipple(0.55);
+    ptr.lastRipple = lastT;
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    if (!ptr.down) return;
+    var p = local(e), dx = p[0] - ptr.sx, dy = p[1] - ptr.sy;
+    pointerAt(p);
+    if (!ptr.onSurface) { gust.x = clamp(gust.x + dx * 0.03, -4, 4); gust.z = clamp(gust.z - dy * 0.03, -4, 4); }
+    else if (lastT - ptr.lastRipple > 0.07) { addRipple(0.3); ptr.lastRipple = lastT; }
+  });
+  function release() { ptr.down = false; }
+  canvas.addEventListener("pointerup", release);
+  canvas.addEventListener("pointercancel", release);
+
+  // ── Wind: strokes in the same perspective as the surface ──
+  var gusts = [];
+  function spawnGust(g, anywhere, receding) {
+    g.z = anywhere ? lerp(NEAR + 1, FAR, Math.random())
+        : receding ? lerp(NEAR + 1, FAR * 0.45, Math.random()) : lerp(FAR * 0.55, FAR, Math.random());
+    g.alt = camH + 0.4 + Math.random() * 5;
+    g.x = (Math.random() * 2 - 1) * halfWidthAt(g.z) * 1.3;
+    g.len = 0.6 + Math.random() * 1.6;
+    g.seed = Math.random() * 100;
+  }
+  for (var gi = 0; gi < 80; gi++) { var g = {}; gusts.push(g); }
+
+  // ── Simulation ──
+  function update(t, dt) {
+    var k = 1 - Math.exp(-dt * 0.8);
+    ["swell", "chop", "pace", "windStr", "gust", "restless"].forEach(function (key) { cur[key] += (D[key] - cur[key]) * k; });
+    cur.currentAng = lerpAngle(cur.currentAng, D.currentAng, k);
+    cur.windAng = lerpAngle(cur.windAng, D.windAng, k);
+    cur.heading = lerpAngle(cur.heading, D.heading, k);
+
+    var masted = mode === "masted";
+    travel += ((masted ? 1 : 0) - travel) * (1 - Math.exp(-dt * 0.6));
+
+    // The surface current: wandering while adrift, held by the site once masted.
+    var wander = noise(t * 0.04, 3.1, 7.7) * Math.PI * 1.6;
+    var curAng = lerpAngle(wander, cur.currentAng, travel);
+    ox += Math.sin(curAng) * 0.22 * dt;
+    oz += Math.cos(curAng) * 0.22 * dt;
+    var speed = 0.85 * travel;
+    var tvx = Math.sin(cur.heading) * speed, tvz = Math.cos(cur.heading) * speed;
+    ox += tvx * dt; oz += tvz * dt;
+
+    ripples = ripples.filter(function (r) { return t - r.t0 < 6; });
+    gust.x *= Math.exp(-dt * 1.5); gust.z *= Math.exp(-dt * 1.5);
+
+    // The wood: adrift it follows slope, wander and touch; masted it keeps its heading.
+    var e = 0.3;
+    var gx = (height(wood.x + e, wood.z, t) - height(wood.x - e, wood.z, t)) / (2 * e);
+    var gz = (height(wood.x, wood.z + e, t) - height(wood.x, wood.z - e, t)) / (2 * e);
+    var ax = -gx * 1.6 + noise(t * 0.07, 1.3, 0) * 0.9 * (1 - travel);
+    var az = -gz * 1.6 + noise(t * 0.07, 5.9, 0) * 0.9 * (1 - travel);
+    var anchorX = 0, anchorZ = 5.2;
+    var hw = halfWidthAt(wood.z) * 0.7;
+    if (masted || travel > 0.01) { ax += (anchorX - wood.x) * 0.5 * travel; az += (anchorZ - wood.z) * 0.5 * travel; }
+    if (wood.x > hw) ax -= (wood.x - hw) * 2; if (wood.x < -hw) ax -= (wood.x + hw) * 2;
+    if (wood.z < 3.8) az += (3.8 - wood.z) * 2; if (wood.z > 8.5) az -= (wood.z - 8.5) * 2;
+    if (ptr.down && ptr.onSurface) {
+      var dx = wood.x - ptr.x, dz = wood.z - ptr.z, d = Math.sqrt(dx * dx + dz * dz) + 0.4;
+      if (d < 3.2) { ax += dx / d * 5 / d; az += dz / d * 5 / d; wood.vyaw += (dx > 0 ? 1 : -1) * 0.6 * dt; }
+    }
+    wood.vx = (wood.vx + ax * dt) * Math.exp(-dt * 1.3);
+    wood.vz = (wood.vz + az * dt) * Math.exp(-dt * 1.3);
+    wood.x += wood.vx * dt; wood.z += wood.vz * dt;
+    wood.vyaw = (wood.vyaw + noise(t * 0.09, 9.4, 0) * 0.5 * dt * (1 - travel)) * Math.exp(-dt * (0.4 + 3 * travel));
+    wood.yaw += wood.vyaw * dt;
+    if (travel > 0.01) wood.yaw = lerpAngle(wood.yaw, cur.heading, (1 - Math.exp(-dt * 2.2)) * travel);
+
+    // The wind: turbulent while adrift, organised by the forces once masted.
+    for (var i = 0; i < gusts.length; i++) {
+      var g = gusts[i];
+      if (g.z === undefined) spawnGust(g, true);
+      var chaos = noise(g.x * 0.08, g.z * 0.08 + g.seed, t * 0.15) * 4.2;
+      var ang = lerpAngle(chaos, cur.windAng + noise(g.seed, t * 0.2, 0) * cur.restless, travel);
+      var sp = (1.6 + cur.windStr * 1.6) * (1 + cur.gust * noise(t * 0.5, g.seed, 2));
+      g.vx = Math.sin(ang) * sp + gust.x - tvx * 3;
+      g.vz = Math.cos(ang) * sp + gust.z - tvz * 3;
+      g.x += g.vx * dt; g.z += g.vz * dt;
+      if (g.z < NEAR + 0.6 || g.z > FAR || Math.abs(g.x) > halfWidthAt(g.z) * 1.4) spawnGust(g, false, g.vz > 0);
+    }
+  }
+
+  // ── Drawing ──
+  var vx = [], vy = [], vh = [];
+  function shadeColor(n, fog) {
+    var light = clamp(n, 0, 1), kq = clamp((1 - light) * 2.4, 0, 1);
+    var r = lerp(PAPER[0], SHADE[0], kq), g = lerp(PAPER[1], SHADE[1], kq), b = lerp(PAPER[2], SHADE[2], kq);
+    r = lerp(r, PAPER[0], fog); g = lerp(g, PAPER[1], fog); b = lerp(b, PAPER[2], fog);
+    return "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
+  }
+  function faceShade(ax, ay, az, bx, by, bz, qx, qy, qz) {
+    var ux = bx - ax, uy = by - ay, uz = bz - az, wx = qx - ax, wy = qy - ay, wz = qz - az;
+    var nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+    var l = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+    if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    return (nx * -0.45 + ny * 0.78 + nz * 0.43) / l;
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    if (!W || !H) return;
+    var i, j;
+
+    // wind
+    for (i = 0; i < gusts.length; i++) {
+      var g = gusts[i];
+      if (g.z === undefined) spawnGust(g, true);
+      var vl = Math.sqrt((g.vx || 0) * (g.vx || 0) + (g.vz || 1) * (g.vz || 1)) || 1;
+      var a = project(g.x, g.alt, g.z);
+      var b = project(g.x - (g.vx || 0) / vl * g.len, g.alt, g.z - (g.vz || 1) / vl * g.len);
+      if (a[1] > hY - 2 && b[1] > hY - 2) continue;
+      ctx.strokeStyle = "rgba(20,20,20," + (0.12 + 0.55 * (1 - g.z / FAR)).toFixed(3) + ")";
+      ctx.lineWidth = Math.max(0.6, f * 0.03 / g.z);
+      ctx.beginPath(); ctx.moveTo(a[0], Math.min(a[1], hY - 2)); ctx.lineTo(b[0], Math.min(b[1], hY - 2)); ctx.stroke();
+    }
+
+    // the surface: a triangulated mesh receding to the horizon
+    var cols = COLS, rows = ROWS, idx = 0, zr, u, x, h, p;
+    for (i = 0; i <= rows; i++) {
+      zr = NEAR * Math.pow(FAR / NEAR, i / rows);
+      for (j = 0; j <= cols; j++) {
+        u = j / cols * 2 - 1;
+        x = u * halfWidthAt(zr) * 1.15;
+        h = height(x, zr, t);
+        p = project(x, h, zr);
+        idx = i * (cols + 1) + j;
+        vx[idx] = p[0]; vy[idx] = p[1]; vh[idx] = [x, h, zr];
+      }
+    }
+    for (i = rows - 1; i >= 0; i--) {
+      var zMid = NEAR * Math.pow(FAR / NEAR, (i + 0.5) / rows);
+      var fog = Math.pow(zMid / FAR, 0.6);
+      ctx.beginPath();
+      for (j = 0; j < cols; j++) {
+        var a0 = i * (cols + 1) + j, b0 = a0 + 1, c0 = a0 + cols + 1, d0 = c0 + 1;
+        var A = vh[a0], B = vh[b0], C = vh[c0], Dd = vh[d0];
+        ctx.fillStyle = shadeColor(faceShade(A[0], A[1], A[2], B[0], B[1], B[2], C[0], C[1], C[2]), fog);
+        ctx.beginPath(); ctx.moveTo(vx[a0], vy[a0]); ctx.lineTo(vx[b0], vy[b0]); ctx.lineTo(vx[c0], vy[c0]); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = shadeColor(faceShade(B[0], B[1], B[2], Dd[0], Dd[1], Dd[2], C[0], C[1], C[2]), fog);
+        ctx.beginPath(); ctx.moveTo(vx[b0], vy[b0]); ctx.lineTo(vx[d0], vy[d0]); ctx.lineTo(vx[c0], vy[c0]); ctx.closePath(); ctx.fill();
+      }
+      ctx.strokeStyle = "rgba(20,20,20," + (0.5 * (1 - fog) + 0.04).toFixed(3) + ")";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      for (j = 0; j < cols; j++) {
+        var a1 = i * (cols + 1) + j, b1 = a1 + 1, c1 = a1 + cols + 1, d1 = c1 + 1;
+        ctx.moveTo(vx[a1], vy[a1]); ctx.lineTo(vx[b1], vy[b1]);
+        ctx.moveTo(vx[a1], vy[a1]); ctx.lineTo(vx[c1], vy[c1]);
+        ctx.moveTo(vx[b1], vy[b1]); ctx.lineTo(vx[c1], vy[c1]);
+        if (j === cols - 1) { ctx.moveTo(vx[b1], vy[b1]); ctx.lineTo(vx[d1], vy[d1]); }
+      }
+      ctx.stroke();
+    }
+
+    // the horizon, a Domus rule
+    ctx.fillStyle = "rgb(242,238,228)";
+    ctx.fillRect(0, hY - 1, W, 1);
+    ctx.fillStyle = INK;
+    ctx.fillRect(0, Math.round(hY) - 1, W, 1.5);
+
+    var masted = mode === "masted";
+    // bearing: a point on the horizon and a course across the surface
+    if (travel > 0.02) {
+      var sh = Math.sin(cur.heading), ch = Math.cos(cur.heading);
+      ctx.globalAlpha = travel;
+      ctx.strokeStyle = RED; ctx.lineWidth = 2;
+      for (var s = 1; s < 16; s += 2) {
+        var z1 = wood.z + ch * s * 1.1, x1 = wood.x + sh * s * 1.1;
+        var z2 = wood.z + ch * (s + 1) * 1.1, x2 = wood.x + sh * (s + 1) * 1.1;
+        if (z2 > FAR) break;
+        var p1 = project(x1, height(x1, z1, t) + 0.03, z1), p2 = project(x2, height(x2, z2, t) + 0.03, z2);
+        ctx.globalAlpha = travel * (0.95 - s / 20);
+        ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+      }
+      ctx.globalAlpha = travel;
+      var hx = cx + f * Math.tan(cur.heading);
+      ctx.fillStyle = RED;
+      ctx.fillRect(hx - 1.5, hY - 12, 3, 12);
+      ctx.globalAlpha = 1;
+    }
+
+    // the driftwood
+    var cy = Math.cos(wood.yaw), sy = Math.sin(wood.yaw), pts = [];
+    for (i = 0; i < SHAPE.length; i++) {
+      var la = SHAPE[i][0], lb = SHAPE[i][1];
+      var wx = wood.x + sy * la + cy * lb, wz = wood.z + cy * la - sy * lb;
+      pts.push(project(wx, height(wx, wz, t) + 0.1, wz));
+    }
+    function outline(dx, dy) {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] + dx, pts[0][1] + dy);
+      for (var q = 1; q < pts.length; q++) ctx.lineTo(pts[q][0] + dx, pts[q][1] + dy);
+      ctx.closePath();
+    }
+    var lw = Math.max(1.5, f * 0.045 / wood.z);
+    ctx.lineJoin = "round";
+    outline(lw * 1.6, lw * 1.6); ctx.fillStyle = INK; ctx.fill();
+    outline(0, 0); ctx.fillStyle = WOOD; ctx.fill();
+    ctx.lineWidth = lw; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.lineWidth = Math.max(0.8, lw * 0.45); ctx.strokeStyle = "rgba(20,20,20,.55)";
+    [-0.13, 0.1].forEach(function (off) {
+      ctx.beginPath();
+      for (var q = 0; q <= 8; q++) {
+        var la2 = lerp(-1.05, 0.95, q / 8), wx2 = wood.x + sy * la2 + cy * off, wz2 = wood.z + cy * la2 - sy * off;
+        var pp = project(wx2, height(wx2, wz2, t) + 0.12, wz2);
+        if (q === 0) ctx.moveTo(pp[0], pp[1]); else ctx.lineTo(pp[0], pp[1]);
+      }
+      ctx.stroke();
+    });
+
+    // the mast
+    if (masted) {
+      var m = mastWorld(t), mb = project(m.base[0], m.base[1], m.base[2]), mt = project(m.top[0], m.top[1], m.top[2]);
+      ctx.strokeStyle = RED; ctx.lineCap = "butt"; ctx.lineWidth = Math.max(2.5, f * 0.1 / wood.z);
+      ctx.beginPath(); ctx.moveTo(mb[0], mb[1]); ctx.lineTo(mt[0], mt[1]); ctx.stroke();
+    }
+  }
+
+  function loop(now) {
+    var t = now / 1000, dt = lastT ? clamp(t - lastT, 0, 0.05) : 0;
+    lastT = t;
+    update(t, dt);
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener("resize", resize);
+  resize();
+  if (reduce) { lastT = 0; draw(0); } else requestAnimationFrame(loop);
+
+  window.MASTScene = {
+    setForces: function (o) { Object.assign(F, o); derive(); if (reduce) still(); },
+    mast: mast,
+    unmast: unmast,
+    reset: function () { unmast(); F = {}; derive(); }
+  };
+})();
+</script>
 
 <script>
 (function () {
@@ -335,7 +793,8 @@
     $("issue-step").textContent = step === "result" ? "Pathway" : ("0" + step + " / 03");
     var h = step === "result" ? $("h-r") : $("h-" + step);
     if (h) h.focus({ preventScroll: true });
-    window.scrollTo(0, 0);
+    $("scroller").scrollTop = 0;
+    if (String(step) !== "1" && window.MASTScene) MASTScene.mast();
   }
 
   // 01 — Where
@@ -355,6 +814,7 @@
     }
     state.address = raw;
     $("error-1").textContent = "";
+    if (window.MASTScene) MASTScene.setForces({ borough: state.borough });
     show(2);
   });
 
@@ -367,7 +827,11 @@
     b.appendChild(el("span", "t", p.t));
     b.appendChild(el("span", "d", p.d));
     b.appendChild(el("span", "c", "DOB filing " + p.filing));
-    b.addEventListener("click", function () { state.project = PROJECTS[i]; show(3); });
+    b.addEventListener("click", function () {
+      state.project = PROJECTS[i];
+      if (window.MASTScene) MASTScene.setForces({ project: PROJECTS[i].project });
+      show(3);
+    });
     $("cards").appendChild(b);
   });
 
@@ -395,6 +859,7 @@
 
     state.flags = flags;
     state.unknowns = unknowns;
+    if (window.MASTScene) MASTScene.setForces({ era: era, landmark: lm, flood: fl });
     consult();
   });
 
@@ -491,6 +956,7 @@
     var r = $("result"); r.textContent = "";
     var steps = d.agency_pathway || [];
     var tracks = d.track_details || [];
+    if (window.MASTScene) MASTScene.setForces({ agencies: steps.length, critical: d.critical_path_days, saved: d.days_saved });
 
     r.appendChild(el("p", "kicker", "Your pathway — " + state.project.t));
     r.appendChild(heading(state.address));
@@ -603,6 +1069,7 @@
     again.addEventListener("click", function () {
       $("form-1").reset(); $("form-3").reset();
       state = { address: "", borough: "", bbl: "", project: null, flags: {}, unknowns: [] };
+      if (window.MASTScene) MASTScene.reset();
       show(1);
     });
     r.appendChild(again);

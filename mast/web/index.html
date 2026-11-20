@@ -33,12 +33,12 @@
     display: flex; flex-direction: column; overflow: hidden;
   }
   .scroller { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
-            mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
-  .page { max-width: 980px; margin: 0 auto; padding: 0 16px 40px; }
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent); }
+  .page { max-width: 980px; margin: 0 auto; padding: 0 16px 4px; }
 
   /* The stage — a surface that never repeats, below the centre of every screen */
-  .stage { flex: 0 0 clamp(170px, 32dvh, 400px); position: relative; min-height: 0; overflow: hidden; }
+  .stage { flex: 0 0 clamp(150px, 28dvh, 380px); position: relative; min-height: 0; overflow: hidden; }
   .stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
   .stage canvas:active { cursor: grabbing; }
   .falling-stem { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; will-change: transform; transition: background-color .35s ease; }
@@ -46,10 +46,10 @@
   /* Masthead — Domus */
   .mast-head {
     display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
-    padding: 20px 0 10px; border-bottom: 3px solid var(--ink);
+    padding: clamp(8px, 1.6vh, 18px) 0 8px; border-bottom: 3px solid var(--ink);
   }
   .wordmark {
-    font-weight: 900; font-size: clamp(3rem, 12vw, 6.5rem); line-height: .82;
+    font-weight: 900; font-size: clamp(2.3rem, min(11vw, 6.6vh), 5rem); line-height: .82;
     letter-spacing: -.045em; margin: 0;
   }
   .wordmark .t { display: inline-block; position: relative; width: .6em; height: .716em; margin-left: -.01em; vertical-align: baseline; }
@@ -59,48 +59,49 @@
   .wordmark .t.masted .stem { opacity: .12; }
   .issue {
     display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
-    font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
   }
-  .subrule { height: 6px; border-bottom: 1px solid var(--ink); margin-bottom: 18px; }
+  .subrule { height: 4px; border-bottom: 1px solid var(--ink); margin-bottom: clamp(8px, 1.4vh, 14px); }
 
   /* Progress */
-  .progress { display: flex; gap: 0; list-style: none; margin: 0 0 28px; padding: 0; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
-  .progress li { flex: 1; padding: 8px 0 0; border-top: 4px solid var(--paper-deep); color: var(--muted); }
+  .progress { display: flex; gap: 0; list-style: none; margin: 0 0 clamp(10px, 2vh, 22px); padding: 0; font-family: var(--mono); font-size: 11px; white-space: nowrap; text-transform: uppercase; letter-spacing: .06em; }
+  .progress li { flex: 1; padding: 5px 0 0; border-top: 4px solid var(--paper-deep); color: var(--muted); }
   .progress li + li { margin-left: 6px; }
   .progress li.on { border-top-color: var(--red); color: var(--ink); }
   .progress li.done { border-top-color: var(--ink); color: var(--ink); }
 
   /* Editorial type */
-  .kicker { font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin: 0 0 10px; }
+  .kicker { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin: 0; }
+  .kick-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 clamp(4px, .8vh, 8px); }
   .headline {
-    font-weight: 900; font-size: clamp(2.5rem, 9vw, 5.6rem); line-height: .9; letter-spacing: -.035em;
-    margin: 0 0 18px; outline: none;
+    font-weight: 900; font-size: clamp(1.75rem, min(8.2vw, 6vh), 4.4rem); line-height: .92; letter-spacing: -.035em;
+    margin: 0 0 clamp(6px, 1.3vh, 14px); outline: none;
   }
   .headline.small { font-size: clamp(1.9rem, 6.5vw, 3.6rem); }
-  .dek { font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, 2.6vw, 1.4rem); line-height: 1.35; max-width: 34em; margin: 0 0 28px; color: #2c2a26; }
+  .dek { font-family: var(--serif); font-style: italic; font-size: clamp(.95rem, min(4vw, 2.3vh), 1.25rem); line-height: 1.32; max-width: 36em; margin: 0 0 clamp(10px, 2vh, 22px); color: #2c2a26; }
 
   /* Controls — Archigram capsules */
-  label.field { display: block; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  label.field { display: block; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
   input[type=text] {
-    width: 100%; font: inherit; font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 700;
-    padding: 16px 20px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink);
+    width: 100%; font: inherit; font-size: clamp(1.05rem, min(4.4vw, 2.6vh), 1.4rem); font-weight: 700;
+    padding: clamp(9px, 1.5vh, 14px) 18px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink);
   }
   input[type=text]:focus { outline: none; box-shadow: var(--shadow); }
-  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; border: 0; }
-  .pills legend { width: 100%; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; padding: 0; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: clamp(8px, 1.6vh, 16px) 0 0; padding: 0; border: 0; }
+  .pills legend { width: 100%; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; padding: 0; }
   .pill { position: relative; }
   .pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
   .pill span {
-    display: inline-block; padding: 10px 16px; border: 2px solid var(--ink); border-radius: 999px;
-    font-weight: 700; font-size: 15px; background: transparent; cursor: pointer; user-select: none;
+    display: inline-block; padding: clamp(6px, 1vh, 9px) 12px; border: 2px solid var(--ink); border-radius: 999px;
+    font-weight: 700; font-size: 14px; background: transparent; cursor: pointer; user-select: none;
   }
   .pill input:checked + span { background: var(--ink); color: var(--paper); }
   .pill input:focus-visible + span { box-shadow: 0 0 0 3px var(--cyan); }
 
   .go {
-    display: inline-flex; align-items: center; gap: 12px; margin-top: 28px;
-    font: inherit; font-weight: 900; font-size: 1.15rem; letter-spacing: -.01em;
-    padding: 16px 28px; border: 3px solid var(--ink); border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 12px; margin-top: clamp(12px, 2.2vh, 24px);
+    font: inherit; font-weight: 900; font-size: 1.05rem; letter-spacing: -.01em;
+    padding: clamp(10px, 1.6vh, 15px) 24px; border: 3px solid var(--ink); border-radius: 999px;
     background: var(--yellow); color: var(--ink); cursor: pointer; box-shadow: var(--shadow);
     transition: transform .08s ease, box-shadow .08s ease;
   }
@@ -108,33 +109,34 @@
   .go:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
   .go:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
   .go[disabled] { opacity: .55; cursor: progress; }
-  .back { margin-top: 28px; margin-left: 16px; background: none; border: 0; font: inherit; font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; text-decoration: underline; cursor: pointer; color: var(--ink); }
-  .error { color: var(--red); font-weight: 700; margin: 14px 0 0; min-height: 1.4em; }
+  .back { padding: 0; background: none; border: 0; font: inherit; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; text-decoration: underline; cursor: pointer; color: var(--ink); }
+  .error { color: var(--red); font-weight: 700; margin: 8px 0 0; }
+  .error:empty { display: none; }
 
   /* Step 2 cards */
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1.4vh, 14px); }
   .card {
     text-align: left; font: inherit; color: var(--ink); background: #fff; cursor: pointer;
-    border: 3px solid var(--ink); border-radius: 28px; padding: 20px 20px 18px; box-shadow: var(--shadow);
-    display: grid; grid-template-columns: 56px 1fr; gap: 4px 14px; align-items: start;
+    border: 3px solid var(--ink); border-radius: 22px; padding: clamp(9px, 1.5vh, 16px) 14px; box-shadow: 4px 4px 0 var(--ink);
+    display: block;
     transition: transform .08s ease, box-shadow .08s ease;
   }
   .card:hover { transform: translate(-1px, -1px); box-shadow: 7px 7px 0 var(--ink); }
   .card:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
   .card:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
   .card .glyph {
-    grid-row: span 3; width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--ink);
-    display: grid; place-items: center; font-weight: 900; font-size: 24px;
+    float: left; margin: 0 8px 2px 0; width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--ink);
+    display: grid; place-items: center; font-weight: 900; font-size: 12px; line-height: 1;
   }
   .card:nth-child(3n+1) .glyph { background: var(--yellow); }
   .card:nth-child(3n+2) .glyph { background: var(--cyan); }
   .card:nth-child(3n+3) .glyph { background: var(--red); color: #fff; }
-  .card .t { font-weight: 900; font-size: 1.25rem; line-height: 1.05; letter-spacing: -.01em; }
-  .card .d { font-family: var(--serif); font-style: italic; font-size: .98rem; color: #3a3732; }
-  .card .c { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .card .t { display: block; min-height: 28px; font-weight: 900; font-size: clamp(.92rem, 2.1vh, 1.15rem); line-height: 1.12; letter-spacing: -.01em; }
+  .card .d { display: block; clear: both; margin-top: 3px; font-family: var(--serif); font-style: italic; font-size: clamp(.8rem, 1.8vh, .95rem); line-height: 1.25; color: #3a3732; }
+  .card .c { display: none; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 
   /* Step 3 */
-  .facts { display: grid; gap: 22px; }
+  .facts { display: grid; gap: clamp(8px, 1.6vh, 18px); }
   .facts .pills { margin: 0; }
 
   /* Result */
@@ -195,7 +197,9 @@
   .track details p { margin: 8px 0 0; }
   .ref { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; display: inline-block; word-break: break-all; }
 
-  .fine { margin-top: 48px; padding-top: 14px; border-top: 3px solid var(--ink); font-family: var(--serif); font-style: italic; font-size: .95rem; color: #3a3732; }
+  .fine { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; margin: 0; padding: 14px 16px 6px; text-align: center; pointer-events: none;
+    font-family: var(--serif); font-style: italic; font-size: 11px; line-height: 1.3; color: #3a3732;
+    background: linear-gradient(rgba(242,238,228,0), rgba(242,238,228,.94) 55%); }
   .loading { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 30px 0; }
   .loading::after { content: "…"; animation: blink 1s steps(2) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
@@ -204,6 +208,8 @@
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   @media (max-height: 520px) { .stage { flex-basis: clamp(110px, 30dvh, 160px); } }
+  @media (max-width: 720px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-height: 700px) { .step:not(#step-1) .dek { display: none; } #step-1 .dek { font-size: .9rem; line-height: 1.24; margin-bottom: 6px; } }
   @media (max-width: 520px) {
     .stat + .stat { border-left: 0; border-top: 1px solid var(--ink); padding-left: 0; }
   }
@@ -211,6 +217,7 @@
     body { background: #fff; font-size: 12pt; height: auto; display: block; overflow: visible; }
     .scroller { overflow: visible; }
     .stage, .falling-stem { display: none !important; }
+    .fine { position: static; background: none; font-size: 10pt; text-align: left; }
     .progress, .go, .back, .no-print, .step:not(#step-result) { display: none !important; }
     .capsule, .option, .card { box-shadow: none; }
     .option.work, .option.free { background: #fff; }
@@ -233,7 +240,7 @@
   <ol class="progress no-print" id="progress" aria-label="Progress">
     <li data-p="1">01 Where</li>
     <li data-p="2">02 What</li>
-    <li data-p="3">03 The building</li>
+    <li data-p="3">03 Building</li>
   </ol>
 
   <main>
@@ -260,31 +267,30 @@
 
     <!-- 02 — What -->
     <section class="step" id="step-2" aria-labelledby="h-2" hidden>
-      <p class="kicker">02 — What</p>
+      <div class="kick-row"><p class="kicker">02 — What</p><button class="back" type="button" data-back="1">← Back</button></div>
       <h1 class="headline" id="h-2" tabindex="-1">What will you make?</h1>
-      <p class="dek">Pick the closest. This sets the heading: which agencies, in what order, and how long the passage runs.</p>
+      <p class="dek">Pick the closest. It sets the heading: which agencies, in what order, how long.</p>
       <div class="cards" id="cards"></div>
-      <button class="back" type="button" data-back="1">← Back</button>
     </section>
 
     <!-- 03 — The building -->
     <section class="step" id="step-3" aria-labelledby="h-3" hidden>
-      <p class="kicker">03 — The building</p>
+      <div class="kick-row"><p class="kicker">03 — The building</p><button class="back" type="button" data-back="2">← Back</button></div>
       <h1 class="headline" id="h-3" tabindex="-1">The building, briefly.</h1>
-      <p class="dek">Three facts set the course. "Not sure" is a fine answer: we'll leave it open on the chart rather than guess.</p>
+      <p class="dek">Three facts set the course. "Not sure" is fine: we'll leave it open on the chart.</p>
       <form id="form-3" novalidate>
         <div class="facts">
           <fieldset class="pills">
             <legend>When was it built?</legend>
             <label class="pill"><input type="radio" name="era" value="pre1938"><span>Before 1938</span></label>
-            <label class="pill"><input type="radio" name="era" value="mid"><span>1938 – 1986</span></label>
-            <label class="pill"><input type="radio" name="era" value="post1987"><span>1987 or later</span></label>
+            <label class="pill"><input type="radio" name="era" value="mid"><span>1938–86</span></label>
+            <label class="pill"><input type="radio" name="era" value="post1987"><span>1987 on</span></label>
             <label class="pill"><input type="radio" name="era" value="unknown" checked><span>Not sure</span></label>
           </fieldset>
           <fieldset class="pills">
-            <legend>Is it a landmark?</legend>
-            <label class="pill"><input type="radio" name="landmark" value="individual"><span>Individual landmark</span></label>
-            <label class="pill"><input type="radio" name="landmark" value="historic_district"><span>In a historic district</span></label>
+            <legend>Landmark, or in a historic district?</legend>
+            <label class="pill"><input type="radio" name="landmark" value="individual"><span>Landmark</span></label>
+            <label class="pill"><input type="radio" name="landmark" value="historic_district"><span>District</span></label>
             <label class="pill"><input type="radio" name="landmark" value="no"><span>No</span></label>
             <label class="pill"><input type="radio" name="landmark" value="unknown" checked><span>Not sure</span></label>
           </fieldset>
@@ -297,7 +303,6 @@
         </div>
         <p class="error" id="error-3" role="alert"></p>
         <button class="go" type="submit" id="go-3">See the pathway <span aria-hidden="true">→</span></button>
-        <button class="back" type="button" data-back="2">← Back</button>
       </form>
     </section>
 
@@ -307,10 +312,10 @@
     </section>
   </main>
 
-  <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
 </div>
 </div>
 <div class="stage" id="stage" aria-hidden="true"><canvas id="sea"></canvas></div>
+<p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
 
 <script>
 (function () {
@@ -392,7 +397,7 @@
   var ripples = [];
   var ptr = { down: false, onSurface: false, x: 0, z: 0, sx: 0, sy: 0, lastRipple: 0 };
   var gust = { x: 0, z: 0 };
-  var wood = { x: 0.5, z: 5.6, yaw: 0.9, vx: 0, vz: 0, vyaw: 0.15 };
+  var wood = { x: 0.5, z: 6, yaw: 0.9, vx: 0, vz: 0, vyaw: 0.15 };
   var mode = "drift", pendingUnmast = false, travel = 0;
 
   var SHAPE = [];
@@ -476,7 +481,7 @@
   function still() {
     cur = Object.assign({}, D);
     travel = mode === "masted" ? 1 : 0;
-    if (travel) { wood.x = 0; wood.z = 5.2; wood.yaw = D.heading; }
+    if (travel) { wood.x = 0; wood.z = 5.6; wood.yaw = D.heading; }
     draw(lastT);
   }
   function mast() {
@@ -568,11 +573,11 @@
     var gz = (height(wood.x, wood.z + e, t) - height(wood.x, wood.z - e, t)) / (2 * e);
     var ax = -gx * 1.6 + noise(t * 0.07, 1.3, 0) * 0.9 * (1 - travel);
     var az = -gz * 1.6 + noise(t * 0.07, 5.9, 0) * 0.9 * (1 - travel);
-    var anchorX = 0, anchorZ = 5.2;
+    var anchorX = 0, anchorZ = 5.6;
     var hw = halfWidthAt(wood.z) * 0.7;
     if (masted || travel > 0.01) { ax += (anchorX - wood.x) * 0.5 * travel; az += (anchorZ - wood.z) * 0.5 * travel; }
     if (wood.x > hw) ax -= (wood.x - hw) * 2; if (wood.x < -hw) ax -= (wood.x + hw) * 2;
-    if (wood.z < 3.8) az += (3.8 - wood.z) * 2; if (wood.z > 8.5) az -= (wood.z - 8.5) * 2;
+    if (wood.z < 4.4) az += (4.4 - wood.z) * 2; if (wood.z > 8.5) az -= (wood.z - 8.5) * 2;
     if (ptr.down && ptr.onSurface) {
       var dx = wood.x - ptr.x, dz = wood.z - ptr.z, d = Math.sqrt(dx * dx + dz * dz) + 0.4;
       if (d < 3.2) { ax += dx / d * 5 / d; az += dz / d * 5 / d; wood.vyaw += (dx > 0 ? 1 : -1) * 0.6 * dt; }
@@ -760,12 +765,12 @@
   "use strict";
 
   var PROJECTS = [
-    { g: "I",  t: "Remake the interior",        d: "Kitchens, baths, layouts, finishes.",                 filing: "A2", project: "interior alteration" },
-    { g: "F",  t: "Change the face",            d: "Façade, windows, storefront, roof.",                  filing: "A2", project: "exterior alteration" },
-    { g: "+",  t: "Add a unit or change the use", d: "New dwelling unit, conversion, occupancy change.",  filing: "A1", project: "change of use" },
+    { g: "I",  t: "Remake the interior",        d: "Kitchens, baths, layouts.",                 filing: "A2", project: "interior alteration" },
+    { g: "F",  t: "Change the face",            d: "Façade, windows, roof.",                  filing: "A2", project: "exterior alteration" },
+    { g: "+",  t: "Add a unit",                  d: "New unit or change of use.",  filing: "A1", project: "change of use" },
     { g: "N",  t: "Build from the ground",      d: "A new building on the lot.",                          filing: "NB", project: "new building" },
-    { g: "S",  t: "Small work, equipment",      d: "Boilers, scaffolds, minor repairs.",                  filing: "A3", project: "minor alteration" },
-    { g: "LL", t: "Façade inspection (FISP)",   d: "Local Law 11 cycle for buildings over six stories.",  filing: "TR6", project: "facade inspection" }
+    { g: "S",  t: "Small work, equipment",      d: "Boilers, scaffolds, repairs.",                  filing: "A3", project: "minor alteration" },
+    { g: "LL", t: "Façade inspection",          d: "Local Law 11 (FISP) cycle.",  filing: "TR6", project: "facade inspection" }
   ];
   var ERA_YEAR = { pre1938: 1920, mid: 1960, post1987: 2000 };
   var BOROUGH_BY_DIGIT = { "1": "Manhattan", "2": "Bronx", "3": "Brooklyn", "4": "Queens", "5": "Staten Island" };

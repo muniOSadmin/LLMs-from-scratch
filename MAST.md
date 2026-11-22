@@ -167,13 +167,17 @@ Three interactions from a question to a free, honest answer.
 02  What           one tap: interior, façade, new unit, new building, small work, FISP
 03  The building   era, landmark, flood zone ("Not sure" is a valid answer)
         ↓
-    The pathway    agencies in legal order, days standard vs. with professional tracks,
-                   open questions named rather than guessed
+    The pathway    one screen: days standard vs. with professional tracks, chart
+                   certainty, the agencies as a row of capsules, open questions
+                   named rather than guessed; each opens its detail in a sheet
         ↓
-    Ways forward   i.   keep the brief (free)
+    Ways forward   i.   keep the brief (free; prints the full detail)
                    ii.  formal speed tracks this project may qualify for
-                   iii. work with MAST: a licensed professional carries the file
+                   iii. work with MAST: a licensed professional steers the file
 ```
+
+No screen scrolls: every step and the pathway fit above the horizon, from the smallest
+iPhone to a desktop. Detail lives in sheets; the printed brief carries all of it.
 
 `mast/web/index.html`, served at `/` by `mast/field/server.py`. One file, no external
 assets, nothing loaded from a CDN.

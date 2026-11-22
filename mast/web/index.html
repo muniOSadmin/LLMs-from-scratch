@@ -139,63 +139,79 @@
   .facts { display: grid; gap: clamp(8px, 1.6vh, 18px); }
   .facts .pills { margin: 0; }
 
-  /* Result */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); margin: 6px 0 36px; }
-  .stat { padding: 16px 16px 18px 0; }
-  .stat + .stat { border-left: 1px solid var(--ink); padding-left: 16px; }
-  .stat .n { font-weight: 900; font-size: clamp(2.6rem, 8vw, 4.4rem); line-height: .9; letter-spacing: -.04em; }
-  .stat .n small { font-size: .38em; letter-spacing: 0; font-weight: 700; margin-left: 4px; }
-  .stat .l { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-top: 8px; }
-  .stat.fast .n { color: var(--red); }
+  /* Result — one screen; detail opens in a sheet */
+  .lbl { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: clamp(8px, 1.6vh, 18px) 0 6px; }
+  .sum-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .sum-stats .stat { padding: clamp(5px, 1vh, 12px) 10px clamp(5px, 1vh, 12px) 0; }
+  .sum-stats .stat + .stat { border-left: 1px solid var(--ink); padding-left: 10px; }
+  .sum-stats .n { font-weight: 900; font-size: clamp(1.7rem, min(8vw, 5.4vh), 3.4rem); line-height: .9; letter-spacing: -.04em; }
+  .sum-stats .n small { font-size: .4em; letter-spacing: 0; font-weight: 700; margin-left: 2px; }
+  .sum-stats .l { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; white-space: nowrap; }
+  .sum-stats .fast .n { color: var(--red); }
 
-  .section-title { display: flex; align-items: baseline; gap: 14px; border-top: 1px solid var(--ink); padding-top: 12px; margin: 40px 0 18px; }
-  .section-title .num { font-weight: 900; font-size: 2.2rem; line-height: 1; color: var(--red); letter-spacing: -.03em; }
-  .section-title h2 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -.02em; }
-
-  /* Walking chain */
-  .chain { list-style: none; margin: 0; padding: 0; position: relative; }
-  .chain::before { content: ""; position: absolute; left: 31px; top: 20px; bottom: 20px; border-left: 4px solid var(--ink); }
-  .chain li { position: relative; display: grid; grid-template-columns: 66px 1fr; gap: 14px; margin-bottom: 16px; }
-  .chain .node {
-    position: relative; z-index: 1; width: 66px; height: 66px; border: 3px solid var(--ink); border-radius: 50%;
-    background: var(--yellow); display: grid; place-items: center; font-weight: 900; font-size: 14px; letter-spacing: -.01em;
+  .course { display: flex; flex-wrap: wrap; align-items: center; row-gap: 8px; }
+  .course .link { width: 14px; height: 3px; background: var(--ink); flex: 0 0 auto; }
+  .ag {
+    font: inherit; color: var(--ink); cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px;
+    border: 2.5px solid var(--ink); border-radius: 999px; padding: clamp(5px, .9vh, 8px) 12px; background: var(--yellow);
+    box-shadow: 3px 3px 0 var(--ink);
   }
-  .chain li:nth-child(2n) .node { background: var(--cyan); }
-  .chain li.last .node { background: var(--red); color: #fff; }
-  .capsule { background: #fff; border: 3px solid var(--ink); border-radius: 26px; padding: 14px 18px; box-shadow: var(--shadow); }
-  .capsule .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-  .capsule .name { font-weight: 900; font-size: 1.12rem; line-height: 1.15; }
-  .capsule .days { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
-  .capsule .why { font-family: var(--serif); font-style: italic; color: #3a3732; margin-top: 4px; }
-  .capsule .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ag:nth-of-type(2n) { background: var(--cyan); }
+  .ag.last { background: var(--red); color: #fff; }
+  .ag .code { font-weight: 900; font-size: 15px; letter-spacing: -.01em; }
+  .ag .d { font-family: var(--mono); font-size: 11px; }
+  .ag:focus-visible, .qbtn:focus-visible, .way:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+  .qbtn { margin-left: 14px; padding: 0; background: none; border: 0; font: inherit; font-family: var(--serif); font-style: italic; font-size: .98rem; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  .ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(6px, 1vh, 12px); }
+  .way {
+    text-align: left; font: inherit; color: var(--ink); cursor: pointer; background: #fff;
+    border: 3px solid var(--ink); border-radius: 20px; padding: clamp(7px, 1.1vh, 12px) 14px; box-shadow: 4px 4px 0 var(--ink);
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .way:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+  .way:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .way.free { background: var(--yellow); }
+  .way.work { background-color: var(--cyan); background-image: radial-gradient(rgba(20,20,20,.18) 1.2px, transparent 1.3px); background-size: 9px 9px; }
+  .way .r { font-family: var(--serif); font-style: italic; font-size: .9rem; }
+  .way .h { font-weight: 900; font-size: clamp(1rem, 2.3vh, 1.2rem); line-height: 1.05; letter-spacing: -.01em; }
+  .way .s { font-size: 12.5px; }
+
+  /* Sheet */
+  .sheet {
+    width: min(640px, calc(100% - 24px)); max-height: 82dvh; margin: auto auto 12px; padding: 0;
+    border: 3px solid var(--ink); border-radius: 24px; background: var(--paper); color: var(--ink); box-shadow: 6px 6px 0 var(--ink);
+  }
+  .sheet::backdrop { background: rgba(20,20,20,.38); }
+  .sheet .bar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px 10px; background: var(--paper); border-bottom: 1px solid var(--ink); }
+  .sheet .bar .kicker { margin: 0; }
+  .sheet .close { padding: 0; background: none; border: 0; font: inherit; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; text-decoration: underline; cursor: pointer; color: var(--ink); }
+  .sheet .body { padding: 14px 18px 20px; }
+  .sheet h2 { margin: 0 0 6px; font-size: 1.6rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
+  .sheet p { margin: 0 0 10px; }
+  .sheet .meta { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .sheet .why { font-family: var(--serif); font-style: italic; color: #3a3732; }
+  .sheet .go { margin-top: 8px; background: #fff; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .tag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 8px; }
   .tag.hot { background: var(--ink); color: var(--paper); }
-
   .notes { margin: 0; padding: 0; list-style: none; }
-  .notes li { padding: 12px 0; border-bottom: 1px solid #c9c2b2; font-family: var(--serif); font-size: 1.05rem; }
+  .notes li { padding: 10px 0; border-bottom: 1px solid #c9c2b2; font-family: var(--serif); font-size: 1.02rem; }
   .notes li strong { font-family: var(--grotesk); }
-
-  /* Options */
-  .options { display: grid; gap: 18px; }
-  .option { border: 3px solid var(--ink); border-radius: 28px; padding: 20px 22px; background: #fff; box-shadow: var(--shadow); }
-  .option.free { background: var(--yellow); }
-  .option.work {
-    background-color: var(--cyan);
-    background-image: radial-gradient(rgba(20,20,20,.18) 1.2px, transparent 1.3px);
-    background-size: 9px 9px;
-  }
-  .option .roman { font-family: var(--serif); font-style: italic; font-size: 1.1rem; }
-  .option h3 { margin: 2px 0 8px; font-size: 1.5rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
-  .option p { margin: 0 0 12px; max-width: 40em; }
-  .option .go { margin-top: 6px; background: #fff; }
-  .track { border-top: 1px solid var(--ink); padding: 12px 0 4px; }
-  .track:first-of-type { border-top: 0; }
+  .track { border-top: 1px solid var(--ink); padding: 12px 0 6px; }
+  .track:first-child { border-top: 0; padding-top: 0; }
   .track .tn { font-weight: 900; font-size: 1.08rem; }
-  .track .tm { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
-  .track details { margin-top: 6px; font-size: .95rem; }
-  .track summary { cursor: pointer; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
-  .track details p { margin: 8px 0 0; }
-  .ref { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; display: inline-block; word-break: break-all; }
+  .track .tm { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin: 2px 0 6px; }
+  .track p { font-size: .95rem; }
+  .ref { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; display: inline-block; word-break: break-all; }
+
+  /* The full brief exists only on paper */
+  .brief { display: none; }
+  .brief h2 { font-size: 13pt; margin: 14pt 0 4pt; border-top: 1px solid #000; padding-top: 6pt; }
+  .brief ol { margin: 0; padding-left: 18pt; }
+  .brief li { margin: 0 0 6pt; }
 
   .fine { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; margin: 0; padding: 14px 16px 6px; text-align: center; pointer-events: none;
     font-family: var(--serif); font-style: italic; font-size: 11px; line-height: 1.3; color: #3a3732;
@@ -209,18 +225,18 @@
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   @media (max-height: 520px) { .stage { flex-basis: clamp(110px, 30dvh, 160px); } }
   @media (max-width: 720px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-height: 760px) { .course-lbl { display: none; } }
   @media (max-height: 700px) { .step:not(#step-1) .dek { display: none; } #step-1 .dek { font-size: .9rem; line-height: 1.24; margin-bottom: 6px; } }
-  @media (max-width: 520px) {
-    .stat + .stat { border-left: 0; border-top: 1px solid var(--ink); padding-left: 0; }
+  @media (max-width: 600px) {
+    .ways { grid-template-columns: 1fr; }
   }
   @media print {
     body { background: #fff; font-size: 12pt; height: auto; display: block; overflow: visible; }
     .scroller { overflow: visible; }
     .stage, .falling-stem { display: none !important; }
     .fine { position: static; background: none; font-size: 10pt; text-align: left; }
-    .progress, .go, .back, .no-print, .step:not(#step-result) { display: none !important; }
-    .capsule, .option, .card { box-shadow: none; }
-    .option.work, .option.free { background: #fff; }
+    .progress, .go, .back, .no-print, .sheet, .ways, .course, .lbl, .step:not(#step-result) { display: none !important; }
+    .brief { display: block; }
   }
 </style>
 </head>
@@ -315,6 +331,10 @@
 </div>
 </div>
 <div class="stage" id="stage" aria-hidden="true"><canvas id="sea"></canvas></div>
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <div class="bar"><p class="kicker" id="sheet-kicker"></p><button class="close" type="button" id="sheet-close">Close</button></div>
+  <div class="body" id="sheet-body"></div>
+</dialog>
 <p class="fine">Regulatory information, not professional advice. A licensed architect, engineer, expediter or attorney is responsible for every filing.</p>
 
 <script>
@@ -941,143 +961,188 @@
     inp.focus();
   }
 
-  function sectionTitle(num, text) {
-    var d = el("div", "section-title");
-    d.appendChild(el("span", "num", num));
-    d.appendChild(el("h2", null, text));
-    return d;
+  // ── Sheet ──
+  var sheet = $("sheet");
+  function openSheet(kicker, build) {
+    $("sheet-kicker").textContent = kicker;
+    var body = $("sheet-body"); body.textContent = "";
+    build(body);
+    var h = body.querySelector("h2"); if (h) h.id = "sheet-title";
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute("open", "");
+    $("sheet-close").focus();
+  }
+  function closeSheet() { if (sheet.close) sheet.close(); else sheet.removeAttribute("open"); }
+  $("sheet-close").addEventListener("click", closeSheet);
+  sheet.addEventListener("click", function (e) { if (e.target === sheet) closeSheet(); });
+
+  function startOver() {
+    $("form-1").reset(); $("form-3").reset();
+    state = { address: "", borough: "", bbl: "", project: null, flags: {}, unknowns: [] };
+    if (window.MASTScene) MASTScene.reset();
+    show(1);
   }
 
-  function stat(n, label, cls) {
-    var s = el("div", "stat" + (cls ? " " + cls : ""));
+  function collectNotes(d) {
+    var notes = state.unknowns.map(function (u) { return [u[0], u[1]]; });
+    (d.escalation_flags || []).forEach(function (f) { notes.push(["From the chart", String(f).replace(/_/g, " ")]); });
+    return notes;
+  }
+  function agencyTags(s, d) {
+    var tags = el("div", "tags");
+    if (s.blocking) tags.appendChild(el("span", "tag hot", "Must clear first"));
+    if ((d.stale_agencies || []).indexOf(s.code) !== -1) tags.appendChild(el("span", "tag", "Verify current practice"));
+    return tags;
+  }
+  function notesList(notes) {
+    var ul = el("ul", "notes");
+    notes.forEach(function (n) {
+      var li = el("li");
+      li.appendChild(el("strong", null, n[0] + ". "));
+      li.appendChild(document.createTextNode(n[1]));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  function trackBlock(t) {
+    var tr = el("div", "track");
+    tr.appendChild(el("div", "tn", t.track));
+    tr.appendChild(el("div", "tm", t.agency + " · ~" + t.standard_days + " → ~" + t.optimized_days + " days · risk " + String(t.risk_level || "").toLowerCase()));
+    tr.appendChild(el("p", null, t.note));
+    tr.appendChild(el("p", "why", "Risk: " + t.risk));
+    return tr;
+  }
+  function sumStat(n, unit, label, cls) {
+    var st = el("div", "stat" + (cls ? " " + cls : ""));
     var big = el("div", "n", String(n));
-    big.appendChild(el("small", null, "days"));
-    s.appendChild(big);
-    s.appendChild(el("div", "l", label));
-    return s;
+    big.appendChild(el("small", null, unit));
+    st.appendChild(big);
+    st.appendChild(el("div", "l", label));
+    return st;
+  }
+  function wayBtn(cls, roman, title, sub, onClick) {
+    var b = el("button", "way" + (cls ? " " + cls : "")); b.type = "button";
+    b.appendChild(el("span", "r", roman));
+    b.appendChild(el("span", "h", title));
+    b.appendChild(el("span", "s", sub));
+    b.addEventListener("click", onClick);
+    return b;
   }
 
   function renderResult(d) {
     var r = $("result"); r.textContent = "";
     var steps = d.agency_pathway || [];
     var tracks = d.track_details || [];
+    var notes = collectNotes(d);
+    var saved = tracks.reduce(function (a, t) { return a + (t.days_saved || 0); }, 0);
+    var certainty = Math.round((d.overall_confidence || 0) * 100);
     if (window.MASTScene) MASTScene.setForces({ agencies: steps.length, critical: d.critical_path_days, saved: d.days_saved });
 
-    r.appendChild(el("p", "kicker", "Your pathway — " + state.project.t));
+    var kr = el("div", "kick-row");
+    kr.appendChild(el("p", "kicker", "Your pathway — " + state.project.t));
+    var again = el("button", "back no-print", "New pathway"); again.type = "button";
+    again.addEventListener("click", startOver);
+    kr.appendChild(again);
+    r.appendChild(kr);
     r.appendChild(heading(state.address));
-    r.appendChild(el("p", "dek",
-      steps.length + (steps.length === 1 ? " agency" : " agencies") + ", in this order. " +
-      "The chart below is the law as written; the passage depends on the people reading your file."));
+    r.appendChild(el("p", "dek", steps.length + (steps.length === 1 ? " agency" : " agencies") +
+      ", in this order. The chart is the law as written; the passage depends on who reads your file."));
 
-    var stats = el("div", "stats");
-    stats.appendChild(stat(d.critical_path_days, "Standard sequence"));
-    if (d.days_saved > 0) stats.appendChild(stat(d.optimized_days, "With professional tracks", "fast"));
-    var cert = el("div", "stat");
-    var cn = el("div", "n", Math.round((d.overall_confidence || 0) * 100) + "%");
-    cert.appendChild(cn);
-    cert.appendChild(el("div", "l", "Chart certainty"));
-    stats.appendChild(cert);
-    r.appendChild(stats);
+    var st = el("div", "sum-stats");
+    st.appendChild(sumStat(d.critical_path_days, "days", "Standard"));
+    if (d.days_saved > 0) st.appendChild(sumStat(d.optimized_days, "days", "With tracks", "fast"));
+    st.appendChild(sumStat(certainty, "%", "Chart certainty"));
+    r.appendChild(st);
 
-    // I — The sequence
-    r.appendChild(sectionTitle("I", "The course"));
-    var ol = el("ol", "chain");
+    // The course: one row of capsules, each opens its detail
+    r.appendChild(el("p", "lbl course-lbl", "The course"));
+    var course = el("div", "course");
     steps.forEach(function (s, i) {
-      var li = el("li", i === steps.length - 1 ? "last" : "");
-      li.appendChild(el("div", "node", s.code));
-      var cap = el("div", "capsule");
-      var top = el("div", "top");
-      top.appendChild(el("div", "name", s.full_name || s.code));
-      top.appendChild(el("div", "days", "~" + (s.estimated_days || 0) + " days"));
-      cap.appendChild(top);
-      if (s.triggered_by) cap.appendChild(el("div", "why", "Because: " + s.triggered_by));
-      var tags = el("div", "tags");
-      if (s.blocking) tags.appendChild(el("span", "tag hot", "Must clear first"));
-      if ((d.stale_agencies || []).indexOf(s.code) !== -1) tags.appendChild(el("span", "tag", "Verify current practice"));
-      if (tags.childNodes.length) cap.appendChild(tags);
-      li.appendChild(cap);
-      ol.appendChild(li);
-    });
-    r.appendChild(ol);
-
-    // II — Open questions & notes
-    var notes = [];
-    state.unknowns.forEach(function (u) { notes.push([u[0], u[1]]); });
-    (d.escalation_flags || []).forEach(function (f) { notes.push(["From the chart", String(f).replace(/_/g, " ")]); });
-    if (notes.length) {
-      r.appendChild(sectionTitle("II", state.unknowns.length ? "Open questions" : "Notes"));
-      var ul = el("ul", "notes");
-      notes.forEach(function (n) {
-        var li = el("li");
-        li.appendChild(el("strong", null, n[0] + ". "));
-        li.appendChild(document.createTextNode(n[1]));
-        ul.appendChild(li);
+      if (i) { var ln = el("span", "link"); ln.setAttribute("aria-hidden", "true"); course.appendChild(ln); }
+      var b = el("button", "ag" + (i === steps.length - 1 ? " last" : "")); b.type = "button";
+      b.appendChild(el("span", "code", s.code));
+      b.appendChild(el("span", "d", "~" + (s.estimated_days || 0) + "d"));
+      b.setAttribute("aria-label", (i + 1) + " of " + steps.length + ": " + (s.full_name || s.code) + ", about " + (s.estimated_days || 0) + " days. Details");
+      b.addEventListener("click", function () {
+        openSheet("The course — " + (i + 1) + " of " + steps.length, function (body) {
+          body.appendChild(el("h2", null, s.full_name || s.code));
+          body.appendChild(el("div", "meta", s.code + " · ~" + (s.estimated_days || 0) + " days" + (i ? " · after " + steps[i - 1].code : " · first")));
+          if (s.triggered_by) body.appendChild(el("p", "why", "Because: " + s.triggered_by));
+          var tags = agencyTags(s, d); if (tags.childNodes.length) body.appendChild(tags);
+        });
       });
-      r.appendChild(ul);
+      course.appendChild(b);
+    });
+    if (notes.length) {
+      var openCount = state.unknowns.length;
+      var q = el("button", "qbtn", openCount
+        ? openCount + (openCount === 1 ? " open question" : " open questions")
+        : notes.length + (notes.length === 1 ? " note" : " notes")); q.type = "button";
+      q.addEventListener("click", function () {
+        openSheet(openCount ? "Open questions" : "Notes", function (body) {
+          body.appendChild(el("h2", null, openCount ? "Left open on the chart" : "From the chart"));
+          body.appendChild(notesList(notes));
+        });
+      });
+      course.appendChild(q);
     }
+    r.appendChild(course);
 
     // Ways forward
-    r.appendChild(sectionTitle(notes.length ? "III" : "II", "Ways forward"));
-    var opts = el("div", "options");
-
-    var o1 = el("div", "option free");
-    o1.appendChild(el("div", "roman", "i."));
-    o1.appendChild(el("h3", null, "Keep this brief"));
-    o1.appendChild(el("p", null, "Free. Print it or save it as a PDF and take it to your architect, your contractor or the next meeting."));
-    var pb = el("button", "go no-print", "Print or save"); pb.type = "button";
-    pb.addEventListener("click", function () { window.print(); });
-    o1.appendChild(pb);
-    opts.appendChild(o1);
-
+    r.appendChild(el("p", "lbl", "Ways forward"));
+    var ways = el("div", "ways");
+    ways.appendChild(wayBtn("free", "i.", "Keep the brief", "Free · print or PDF", function () { window.print(); }));
     if (tracks.length) {
-      var o2 = el("div", "option");
-      o2.appendChild(el("div", "roman", "ii."));
-      var saved = tracks.reduce(function (a, t) { return a + (t.days_saved || 0); }, 0);
-      o2.appendChild(el("h3", null, "Faster, formal tracks: up to ~" + saved + " days saved"));
-      o2.appendChild(el("p", null, "Documented, legal procedures that this project may qualify for. Each needs a licensed professional to use it."));
-      tracks.forEach(function (t) {
-        var tr = el("div", "track");
-        tr.appendChild(el("div", "tn", t.track));
-        tr.appendChild(el("div", "tm", t.agency + " · ~" + t.standard_days + " → ~" + t.optimized_days + " days · risk " + String(t.risk_level || "").toLowerCase()));
-        var det = el("details");
-        det.appendChild(el("summary", null, "How it works and the risk"));
-        det.appendChild(el("p", null, t.note));
-        det.appendChild(el("p", null, "Risk: " + t.risk));
-        tr.appendChild(det);
-        o2.appendChild(tr);
-      });
-      opts.appendChild(o2);
+      ways.appendChild(wayBtn("", "ii.", "Faster tracks", "Up to ~" + saved + " days saved", function () {
+        openSheet("Ways forward — ii.", function (body) {
+          body.appendChild(el("h2", null, "Faster, formal tracks"));
+          body.appendChild(el("p", null, "Documented, legal procedures this project may qualify for. Each needs a licensed professional to use it."));
+          tracks.forEach(function (t) { body.appendChild(trackBlock(t)); });
+        });
+      }));
     }
+    ways.appendChild(wayBtn("work", tracks.length ? "iii." : "ii.", "Work with MAST", "A licensed professional steers the file", function () {
+      openSheet("Ways forward — " + (tracks.length ? "iii." : "ii."), function (body) {
+        body.appendChild(el("h2", null, "Work with MAST"));
+        body.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and steers the file through each agency. Quote this reference when you get in touch:"));
+        var ref = el("span", "ref", d.engagement_id);
+        body.appendChild(ref);
+        var cb = el("button", "go", "Copy reference"); cb.type = "button";
+        cb.addEventListener("click", function () {
+          var done = function () { cb.textContent = "Copied"; };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(d.engagement_id).then(done, function () {});
+          } else {
+            var range = document.createRange(); range.selectNodeContents(ref);
+            var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+          }
+        });
+        body.appendChild(el("br"));
+        body.appendChild(cb);
+      });
+    }));
+    r.appendChild(ways);
 
-    var o3 = el("div", "option work");
-    o3.appendChild(el("div", "roman", tracks.length ? "iii." : "ii."));
-    o3.appendChild(el("h3", null, "Work with MAST"));
-    o3.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and steers the file through each agency. Quote this reference when you get in touch:"));
-    var ref = el("span", "ref", d.engagement_id);
-    o3.appendChild(ref);
-    var cb = el("button", "go no-print", "Copy reference"); cb.type = "button";
-    cb.addEventListener("click", function () {
-      var done = function () { cb.textContent = "Copied"; };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(d.engagement_id).then(done, function () {});
-      } else {
-        var range = document.createRange(); range.selectNodeContents(ref);
-        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-      }
+    // The full brief, for paper
+    var brief = el("div", "brief");
+    brief.appendChild(el("h2", null, "The course"));
+    var ol = el("ol");
+    steps.forEach(function (s) {
+      var li = el("li");
+      li.appendChild(el("strong", null, (s.full_name || s.code) + " (" + s.code + "), ~" + (s.estimated_days || 0) + " days. "));
+      if (s.triggered_by) li.appendChild(document.createTextNode("Because: " + s.triggered_by + ". "));
+      if (s.blocking) li.appendChild(document.createTextNode("Must clear before the next step."));
+      ol.appendChild(li);
     });
-    o3.appendChild(document.createElement("br"));
-    o3.appendChild(cb);
-    opts.appendChild(o3);
-    r.appendChild(opts);
+    brief.appendChild(ol);
+    if (notes.length) { brief.appendChild(el("h2", null, openCount ? "Open questions" : "Notes")); brief.appendChild(notesList(notes)); }
+    if (tracks.length) {
+      brief.appendChild(el("h2", null, "Faster, formal tracks (up to ~" + saved + " days saved)"));
+      tracks.forEach(function (t) { brief.appendChild(trackBlock(t)); });
+    }
+    brief.appendChild(el("h2", null, "Reference"));
+    brief.appendChild(el("p", null, d.engagement_id));
+    r.appendChild(brief);
 
-    var again = el("button", "back no-print", "← Start a new pathway"); again.type = "button";
-    again.addEventListener("click", function () {
-      $("form-1").reset(); $("form-3").reset();
-      state = { address: "", borough: "", bbl: "", project: null, flags: {}, unknowns: [] };
-      if (window.MASTScene) MASTScene.reset();
-      show(1);
-    });
-    r.appendChild(again);
     $("h-r").focus({ preventScroll: true });
   }
 

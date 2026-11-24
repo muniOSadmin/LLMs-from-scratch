@@ -149,10 +149,12 @@
   .sum-stats .l { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; white-space: nowrap; }
   .sum-stats .fast .n { color: var(--red); }
 
-  .course { display: flex; flex-wrap: wrap; align-items: center; row-gap: 8px; }
+  .course-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: clamp(6px, 1.4vh, 16px) 0 6px; }
+  .course-head .lbl { margin: 0; }
+  .course { display: flex; flex-wrap: nowrap; align-items: center; overflow-x: auto; padding: 2px 4px 6px 0; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
   .course .link { width: 14px; height: 3px; background: var(--ink); flex: 0 0 auto; }
   .ag {
-    font: inherit; color: var(--ink); cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px;
+    font: inherit; color: var(--ink); cursor: pointer; display: inline-flex; align-items: baseline; gap: 6px; flex: 0 0 auto; white-space: nowrap;
     border: 2.5px solid var(--ink); border-radius: 999px; padding: clamp(5px, .9vh, 8px) 12px; background: var(--yellow);
     box-shadow: 3px 3px 0 var(--ink);
   }
@@ -161,7 +163,7 @@
   .ag .code { font-weight: 900; font-size: 15px; letter-spacing: -.01em; }
   .ag .d { font-family: var(--mono); font-size: 11px; }
   .ag:focus-visible, .qbtn:focus-visible, .way:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
-  .qbtn { margin-left: 14px; padding: 0; background: none; border: 0; font: inherit; font-family: var(--serif); font-style: italic; font-size: .98rem; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .qbtn { padding: 0; background: none; border: 0; font: inherit; font-family: var(--serif); font-style: italic; font-size: .98rem; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
   .ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(6px, 1vh, 12px); }
   .way {
@@ -209,11 +211,15 @@
 
   /* The full brief exists only on paper */
   .brief { display: none; }
+  .sheet .body h2 + .meta { margin-top: -2px; }
+  .sheet .body div > h2 { font-size: 1.1rem; margin: 14px 0 6px; padding-top: 10px; border-top: 1px solid var(--ink); }
+  .sheet .body ol { margin: 0; padding-left: 20px; }
+  .sheet .body ol li { margin-bottom: 8px; }
   .brief h2 { font-size: 13pt; margin: 14pt 0 4pt; border-top: 1px solid #000; padding-top: 6pt; }
   .brief ol { margin: 0; padding-left: 18pt; }
   .brief li { margin: 0 0 6pt; }
 
-  .fine { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; margin: 0; padding: 14px 16px 6px; text-align: center; pointer-events: none;
+  .fine { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; margin: 0; padding: 14px 16px calc(6px + env(safe-area-inset-bottom, 0px)); text-align: center; pointer-events: none;
     font-family: var(--serif); font-style: italic; font-size: 11px; line-height: 1.3; color: #3a3732;
     background: linear-gradient(rgba(242,238,228,0), rgba(242,238,228,.94) 55%); }
   .loading { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 30px 0; }
@@ -225,8 +231,7 @@
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   @media (max-height: 520px) { .stage { flex-basis: clamp(110px, 30dvh, 160px); } }
   @media (max-width: 720px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-height: 760px) { .course-lbl { display: none; } }
-  @media (max-height: 700px) { .step:not(#step-1) .dek { display: none; } #step-1 .dek { font-size: .9rem; line-height: 1.24; margin-bottom: 6px; } }
+  @media (max-height: 700px) { .step:not(#step-1) .dek { display: none; } #step-1 .dek { font-size: .9rem; line-height: 1.24; margin-bottom: 6px; } .course-head { margin: 4px 0; } .lbl { margin: 6px 0 4px; } }
   @media (max-width: 600px) {
     .ways { grid-template-columns: 1fr; }
   }
@@ -903,18 +908,20 @@
     var token = storageGet("mast-token");
     if (token) headers["X-Mast-Token"] = token;
 
-    fetch("/consult", {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({
-        bbl: state.bbl,
-        address: state.address,
-        borough: state.borough,
-        project: state.project.project,
-        filingType: state.project.filing,
-        flags: state.flags
-      })
-    }).then(function (res) {
+    var request = {
+      bbl: state.bbl,
+      address: state.address,
+      borough: state.borough,
+      project: state.project.project,
+      filingType: state.project.filing,
+      flags: state.flags
+    };
+    var call = window.MAST_OFFLINE
+      ? window.MAST_OFFLINE(request).then(function (data) {
+          return { status: 200, ok: true, json: function () { return Promise.resolve(data); } };
+        })
+      : fetch("/consult", { method: "POST", headers: headers, body: JSON.stringify(request) });
+    call.then(function (res) {
       if (res.status === 401) { renderToken(); return null; }
       return res.json().then(function (data) {
         if (!res.ok) throw new Error(data.error || ("Server returned " + res.status));
@@ -1038,7 +1045,7 @@
     if (window.MASTScene) MASTScene.setForces({ agencies: steps.length, critical: d.critical_path_days, saved: d.days_saved });
 
     var kr = el("div", "kick-row");
-    kr.appendChild(el("p", "kicker", "Your pathway — " + state.project.t));
+    kr.appendChild(el("p", "kicker", state.project.t));
     var again = el("button", "back no-print", "New pathway"); again.type = "button";
     again.addEventListener("click", startOver);
     kr.appendChild(again);
@@ -1054,8 +1061,11 @@
     r.appendChild(st);
 
     // The course: one row of capsules, each opens its detail
-    r.appendChild(el("p", "lbl course-lbl", "The course"));
+    var courseHead = el("div", "course-head");
+    courseHead.appendChild(el("p", "lbl", "The course"));
+    r.appendChild(courseHead);
     var course = el("div", "course");
+    course.setAttribute("aria-label", "The course, in order");
     steps.forEach(function (s, i) {
       if (i) { var ln = el("span", "link"); ln.setAttribute("aria-hidden", "true"); course.appendChild(ln); }
       var b = el("button", "ag" + (i === steps.length - 1 ? " last" : "")); b.type = "button";
@@ -1072,8 +1082,8 @@
       });
       course.appendChild(b);
     });
+    var openCount = state.unknowns.length;
     if (notes.length) {
-      var openCount = state.unknowns.length;
       var q = el("button", "qbtn", openCount
         ? openCount + (openCount === 1 ? " open question" : " open questions")
         : notes.length + (notes.length === 1 ? " note" : " notes")); q.type = "button";
@@ -1083,14 +1093,36 @@
           body.appendChild(notesList(notes));
         });
       });
-      course.appendChild(q);
+      courseHead.appendChild(q);
     }
     r.appendChild(course);
 
     // Ways forward
     r.appendChild(el("p", "lbl", "Ways forward"));
     var ways = el("div", "ways");
-    ways.appendChild(wayBtn("free", "i.", "Keep the brief", "Free · print or PDF", function () { window.print(); }));
+    ways.appendChild(wayBtn("free", "i.", "Keep the brief", "Free · full detail", function () {
+      openSheet("Ways forward — i.", function (body) {
+        body.appendChild(el("h2", null, "Your brief"));
+        body.appendChild(el("p", "meta", state.address + " · " + state.project.t));
+        var copy = el("div"); copy.appendChild(briefContent(d, steps, tracks, notes, saved, openCount));
+        body.appendChild(copy);
+        var row = el("div", "tags");
+        var cb = el("button", "go", "Copy brief"); cb.type = "button";
+        cb.addEventListener("click", function () {
+          var text = "MAST brief\n" + state.address + " · " + state.project.t + "\n\n" + copy.innerText;
+          var done = function () { cb.textContent = "Copied"; };
+          var fallback = function () { var range = document.createRange(); range.selectNodeContents(copy); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+        });
+        row.appendChild(cb);
+        if (!window.MAST_NO_PRINT) {
+          var pb = el("button", "go", "Print or save"); pb.type = "button";
+          pb.addEventListener("click", function () { closeSheet(); window.print(); });
+          row.appendChild(pb);
+        }
+        body.appendChild(row);
+      });
+    }));
     if (tracks.length) {
       ways.appendChild(wayBtn("", "ii.", "Faster tracks", "Up to ~" + saved + " days saved", function () {
         openSheet("Ways forward — ii.", function (body) {
@@ -1100,7 +1132,7 @@
         });
       }));
     }
-    ways.appendChild(wayBtn("work", tracks.length ? "iii." : "ii.", "Work with MAST", "A licensed professional steers the file", function () {
+    ways.appendChild(wayBtn("work", tracks.length ? "iii." : "ii.", "Work with MAST", "Licensed professional", function () {
       openSheet("Ways forward — " + (tracks.length ? "iii." : "ii."), function (body) {
         body.appendChild(el("h2", null, "Work with MAST"));
         body.appendChild(el("p", null, "A licensed professional reviews this pathway, settles the open questions and steers the file through each agency. Quote this reference when you get in touch:"));
@@ -1122,8 +1154,15 @@
     }));
     r.appendChild(ways);
 
-    // The full brief, for paper
     var brief = el("div", "brief");
+    brief.appendChild(briefContent(d, steps, tracks, notes, saved, openCount));
+    r.appendChild(brief);
+
+    $("h-r").focus({ preventScroll: true });
+  }
+
+  function briefContent(d, steps, tracks, notes, saved, openCount) {
+    var brief = document.createDocumentFragment();
     brief.appendChild(el("h2", null, "The course"));
     var ol = el("ol");
     steps.forEach(function (s) {
@@ -1141,9 +1180,7 @@
     }
     brief.appendChild(el("h2", null, "Reference"));
     brief.appendChild(el("p", null, d.engagement_id));
-    r.appendChild(brief);
-
-    $("h-r").focus({ preventScroll: true });
+    return brief;
   }
 
   show(1);
